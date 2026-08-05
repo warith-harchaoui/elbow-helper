@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "elbow-helper"
+version = "0.1.0"
+description = "Noise-robust knee/elbow detection: a conservative wrapper around a from-scratch Kneedle that either returns a knee with uncertainty or explicitly abstains."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "BSD-3-Clause" }
+authors = [{ name = "Warith Harchaoui", email = "warithmetics@deraison.ai" }]
+keywords = ["knee", "elbow", "kneedle", "model-selection", "k-means", "changepoint"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: BSD License",
+    "Topic :: Scientific/Engineering",
+    "Intended Audience :: Science/Research",
+]
+
+# Hard dependencies: numpy + os-helper ONLY.
+dependencies = [
+    "numpy>=1.24",
+    "os-helper>=1.8",
+]
+
+[project.optional-dependencies]
+# Plotting is opt-in and lazily imported; it is NOT a core dependency.
+plot = ["matplotlib>=3.5"]
+dev = ["pytest>=7"]
+
+[project.urls]
+Homepage = "https://github.com/warith-harchaoui/elbow-helper"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
