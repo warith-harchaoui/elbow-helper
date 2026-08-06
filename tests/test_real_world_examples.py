@@ -38,6 +38,11 @@ _SHORT_CURVE_CONFIG = RobustKneeConfig(
     null_replicates=200,
     max_null_p_value=0.05,
     random_seed=0,
+    # 3 wide folds instead of the default 5 narrow ones: with only ~25
+    # points, a 5-fold split leaves ~5 points per fold, and a fold boundary
+    # landing right on the knee makes the blocked-CV estimate noisy enough
+    # to flip sign on some seeds. Wider folds are a stabler read at this n.
+    cv_folds=3,
 )
 
 
@@ -67,38 +72,55 @@ def _kmeans_inertia(x, k, seed, n_init=15, max_iter=100):
     return best_inertia
 
 
-def kmeans_inertia_curve(seed, true_k=8, k_max=24, n_per_cluster=50, spread=0.8):
+def kmeans_inertia_curve(seed, true_k=8, k_max=24, n_per_cluster=50):
     """Inertia(k) for k-means run on ``true_k`` well-separated 2D blobs.
 
     A grid of fixed, widely spaced centers (not random ones) keeps the true
-    elbow at ``true_k`` sharp and reproducible across seeds; only the points
-    within each blob are randomized. Shared with MATH-en.md / MATH-fr.md's
-    k-means figure.
+    elbow at ``true_k`` sharp and reproducible across seeds. Each blob is
+    itself a mildly elongated ellipse, at a random angle and with its own
+    scale (not a plain isotropic Gaussian), and blob sizes vary a little
+    too: real clusters are not identical circles, and this leftover
+    substructure is exactly what keeps inertia decaying gently for
+    k > true_k instead of flattening into a hard plateau. Shared with
+    MATH-en.md / MATH-fr.md's k-means figure.
     """
     rng = np.random.default_rng(seed)
     grid = np.array(
         [[0, 0], [12, 0], [0, 12], [12, 12], [24, 0], [0, 24], [24, 24], [24, 12]]
     )[:true_k]
-    points = np.vstack(
-        [grid[i] + rng.normal(0, spread, size=(n_per_cluster, 2)) for i in range(true_k)]
-    )
+    blobs = []
+    for i in range(true_k):
+        n_i = n_per_cluster + int(rng.integers(-15, 16))
+        angle = rng.uniform(0, np.pi)
+        c, s = np.cos(angle), np.sin(angle)
+        rotation = np.array([[c, -s], [s, c]])
+        stretch = np.diag([rng.uniform(0.5, 1.3), rng.uniform(0.5, 1.3)])
+        cov = rotation @ stretch @ stretch @ rotation.T
+        blobs.append(rng.multivariate_normal(grid[i], cov, size=n_i))
+    points = np.vstack(blobs)
     ks = np.arange(1, k_max + 1)
     inertias = np.array([_kmeans_inertia(points, k, seed=seed * 97 + k) for k in ks])
     return ks.astype(float), inertias
 
 
-def pca_scree_curve(seed, n_samples=300, true_d=6, n_noise_dims=19, signal_scale=8.0, noise_scale=0.5):
+def pca_scree_curve(seed, n_samples=300, true_d=6, n_noise_dims=19, signal_scale=8.0,
+                     noise_scale=0.6, noise_decay=0.88):
     """Eigenvalues of the sample covariance for data with ``true_d`` signal
-    dimensions (large variance) and ``n_noise_dims`` noise dimensions (small
-    variance): a scree plot with a genuine elbow at ``true_d``. Shared with
-    MATH-en.md / MATH-fr.md's PCA figure.
+    dimensions (large variance) and ``n_noise_dims`` noise dimensions (small,
+    smoothly decaying variance): a scree plot with a genuine elbow at
+    ``true_d``. Real noise eigenvalues are not all equal, they spread out
+    the way the Marchenko-Pastur distribution predicts, so the noise block
+    here decays geometrically (``noise_decay`` per step) rather than sitting
+    on one flat value; a flat noise tail is the one shape sample covariance
+    eigenvalues never actually take. Shared with MATH-en.md / MATH-fr.md's
+    PCA figure.
     """
     rng = np.random.default_rng(seed)
     d = true_d + n_noise_dims
     variances = np.concatenate(
         [
             np.full(true_d, signal_scale) * np.linspace(1.3, 0.9, true_d),
-            np.full(n_noise_dims, noise_scale),
+            noise_scale * (noise_decay ** np.arange(n_noise_dims)),
         ]
     )
     latent = rng.normal(0, 1, size=(n_samples, d)) * np.sqrt(variances)
