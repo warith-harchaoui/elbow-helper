@@ -9,5 +9,6 @@ dist/
 diagnostics.png
 *.png
 !figures/*.png
+!assets/*.png
 *.docx
 .venv/
