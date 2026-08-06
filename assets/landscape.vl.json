@@ -1,0 +1,255 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": {
+    "text": "elbow-helper positioning map",
+    "subtitle": "PCA on 11 rated criteria across 8 knee/elbow detection approaches"
+  },
+  "width": 580,
+  "height": 440,
+  "config": {
+    "background": "#FFFFFF",
+    "font": "Roboto, Roboto Serif, Roboto Mono, system-ui, sans-serif",
+    "view": {
+      "stroke": null,
+      "cornerRadius": 10
+    },
+    "axis": {
+      "domain": true,
+      "domainColor": "#1D1D1F",
+      "labelColor": "#1D1D1F",
+      "titleColor": "#1D1D1F",
+      "grid": true,
+      "gridColor": "#E5E5EA",
+      "gridDash": [
+        2,
+        2
+      ],
+      "ticks": false,
+      "labelFont": "Roboto Mono",
+      "titleFont": "Roboto",
+      "titleFontWeight": "bold"
+    },
+    "axisTop": {
+      "domain": false,
+      "domainColor": null,
+      "labels": false,
+      "ticks": false,
+      "title": null
+    },
+    "axisRight": {
+      "domain": false,
+      "domainColor": null,
+      "labels": false,
+      "ticks": false,
+      "title": null
+    },
+    "title": {
+      "font": "Roboto",
+      "fontSize": 15,
+      "color": "#1D1D1F",
+      "subtitleFont": "Roboto",
+      "subtitleColor": "#8E8E93",
+      "subtitleFontSize": 11
+    }
+  },
+  "layer": [
+    {
+      "data": {
+        "values": [
+          {
+            "name": "elbow-helper",
+            "role": "best",
+            "x": 2.9164272935116733,
+            "y": 1.2200711494690362
+          },
+          {
+            "name": "kneed",
+            "role": "competitor",
+            "x": -1.0808044392035654,
+            "y": -1.2200711494690362
+          },
+          {
+            "name": "ruptures",
+            "role": "competitor",
+            "x": 1.7063941343830977,
+            "y": -1.120283939516748
+          },
+          {
+            "name": "kneebow",
+            "role": "competitor",
+            "x": -1.2494727812870403,
+            "y": -0.9983236450237392
+          },
+          {
+            "name": "Yellowbrick KElbowVisualizer",
+            "role": "competitor",
+            "x": -1.4423608359480897,
+            "y": -0.6507766333443483
+          },
+          {
+            "name": "R segmented package",
+            "role": "right",
+            "x": 2.9164272935116733,
+            "y": -0.2495883143232599
+          },
+          {
+            "name": "Manual eyeballing",
+            "role": "worst",
+            "x": -2.9164272935116733,
+            "y": 0.26643328278823186
+          },
+          {
+            "name": "Ask an LLM",
+            "role": "top",
+            "x": -1.9853518899475715,
+            "y": 1.2200711494690362
+          }
+        ]
+      },
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "size": 180,
+        "opacity": 0.9
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative",
+          "title": "Quick & Convenient  \u2190  \u2192  Statistically Rigorous",
+          "scale": {
+            "domain": [
+              -4.549626577878211,
+              4.549626577878211
+            ]
+          }
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative",
+          "title": "Deterministic, No Self-Doubt  \u2190  \u2192  Calibrated Judgment",
+          "scale": {
+            "domain": [
+              -1.9033109931716965,
+              1.9033109931716965
+            ]
+          }
+        },
+        "color": {
+          "field": "role",
+          "type": "nominal",
+          "legend": null,
+          "scale": {
+            "domain": [
+              "best",
+              "right",
+              "top",
+              "worst",
+              "competitor"
+            ],
+            "range": [
+              "#007AFF",
+              "#FF9500",
+              "#AF52DE",
+              "#8E8E93",
+              "#34C759"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "name": "elbow-helper",
+            "role": "best",
+            "x": 2.9164272935116733,
+            "y": 1.4640853793628434
+          },
+          {
+            "name": "kneed",
+            "role": "competitor",
+            "x": -1.0808044392035654,
+            "y": -1.4640853793628434
+          },
+          {
+            "name": "ruptures",
+            "role": "competitor",
+            "x": 1.7063941343830977,
+            "y": -0.8762697096229408
+          },
+          {
+            "name": "kneebow",
+            "role": "competitor",
+            "x": -1.2494727812870403,
+            "y": -0.7543094151299319
+          },
+          {
+            "name": "Yellowbrick KElbowVisualizer",
+            "role": "competitor",
+            "x": -1.4423608359480897,
+            "y": -0.40676240345054104
+          },
+          {
+            "name": "R segmented package",
+            "role": "right",
+            "x": 2.9164272935116733,
+            "y": -0.4936025442170672
+          },
+          {
+            "name": "Manual eyeballing",
+            "role": "worst",
+            "x": -3.8496840274354085,
+            "y": 0.26643328278823186
+          },
+          {
+            "name": "Ask an LLM",
+            "role": "top",
+            "x": -1.9853518899475715,
+            "y": 1.4640853793628434
+          }
+        ]
+      },
+      "mark": {
+        "type": "text",
+        "fontSize": 10.5,
+        "font": "Roboto",
+        "color": "#1D1D1F"
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              -4.549626577878211,
+              4.549626577878211
+            ]
+          }
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              -1.9033109931716965,
+              1.9033109931716965
+            ]
+          }
+        },
+        "text": {
+          "field": "name",
+          "type": "nominal"
+        },
+        "fontWeight": {
+          "condition": {
+            "test": "datum.role == 'best'",
+            "value": "bold"
+          },
+          "value": "normal"
+        }
+      }
+    }
+  ]
+}

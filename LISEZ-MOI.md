@@ -129,6 +129,10 @@ kl.knee, kl.all_knees
 
 `MATH-fr.md` ([🇬🇧 MATH-en.md](MATH-en.md)) démontre chaque formule que ce paquet met en œuvre, de la normalisation du pipeline à coude unique, du filtre de Spearman, de la courbe de différence Kneedle, du regroupement par persistance, de la pente de Theil-Sen, du BIC, de la validation croisée par blocs, du bootstrap et du test nul, jusqu'à la recherche multi-coudes derrière `robust_knees` (voir aussi `research/multiknee/RESULTS.md`). Rédigé intuition d'abord, avec un exemple travaillé avant chaque formule, pour des lecteurs allant de la fin du lycée à un doctorat en mathématiques appliquées. Les références se trouvent dans `references.bib`, y compris quelques renvois vers mes [livres IA préférés](https://deraison.ai/ai-books), là où une technique utilisée ici mérite un traitement à l'échelle d'un ouvrage. Copies compilées : `MATH-en.pdf`, `MATH-fr.pdf`.
 
+## Paysage
+
+[🗺️ Paysage](PAYSAGE.md) ([🇬🇧 LANDSCAPE.md](LANDSCAPE.md)) : comment `elbow-helper` se compare à `kneed`, `ruptures`, `kneebow`, au `KElbowVisualizer` de Yellowbrick, au paquet `segmented` de R, à l'estimation visuelle manuelle et au fait de demander à un LLM, noté sur 11 critères et positionné sur une carte ACP.
+
 ## Remerciements
 
 L'implémentation Kneedle réécrite de zéro dans `elbow_helper/kneedle.py` suit l'algorithme décrit par Satopää, Albrecht, Irwin et Raghavan (ICDCSW 2011) et sa logique de parcours, sa table d'orientation et son seuil de sensibilité suivent de près les choix d'implémentation de [`kneed`](https://github.com/arvkevi/kneed) par Kevin Arvai, publié sous licence BSD 3 clauses :

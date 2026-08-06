@@ -131,6 +131,10 @@ kl.knee, kl.all_knees
 
 `MATH-en.md` ([🇫🇷 MATH-fr.md](MATH-fr.md)) derives every formula this package runs, from the single-knee pipeline's normalisation, Spearman screen, Kneedle difference curve, persistence clustering, Theil-Sen slope, BIC, blocked cross-validation, bootstrap and null test, through to the multi-knee research behind `robust_knees` (see also `research/multiknee/RESULTS.md`). Written intuition-first, with a worked example before every formula, for readers from the end of high school through a Ph.D. in applied mathematics. Citations are in `references.bib`, including a few pointers into my own [Favourite AI books](https://deraison.ai/ai-books) where a technique used here deserves a book-length treatment. Compiled copies: `MATH-en.pdf`, `MATH-fr.pdf`.
 
+## Landscape
+
+[🗺️ Landscape](LANDSCAPE.md) ([🇫🇷 PAYSAGE.md](PAYSAGE.md)): how `elbow-helper` compares to `kneed`, `ruptures`, `kneebow`, Yellowbrick's `KElbowVisualizer`, R's `segmented` package, manual eyeballing and asking an LLM, rated on 11 criteria and positioned on a PCA map.
+
 ## Acknowledgements
 
 The from-scratch Kneedle implementation in `elbow_helper/kneedle.py` follows the algorithm described by Satopää, Albrecht, Irwin and Raghavan (ICDCSW 2011). Its traversal logic, orientation table and sensitivity threshold closely follow the implementation choices of [`kneed`](https://github.com/arvkevi/kneed) by Kevin Arvai, released under the BSD-3-Clause license:
