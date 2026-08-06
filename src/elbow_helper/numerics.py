@@ -6,7 +6,7 @@ slope, OLS + BIC) so the package keeps to a numpy-only core.
 
 Author
 ------
-`Warith Harchaoui, Ph.D. <https://www.linkedin.com/in/warith-harchaoui/>`_
+Warith Harchaoui, <warith.harchaoui@deraison.ai>
 """
 
 from __future__ import annotations
@@ -19,7 +19,18 @@ _EPS = 1e-12
 
 
 def rankdata(a: np.ndarray) -> np.ndarray:
-    """Rank values with ties averaged (``scipy.stats.rankdata`` semantics)."""
+    """Rank values with ties averaged (``scipy.stats.rankdata`` semantics).
+
+    Parameters
+    ----------
+    a : numpy.ndarray
+        One-dimensional array of values to rank.
+
+    Returns
+    -------
+    numpy.ndarray
+        Ranks, 1-indexed, ties resolved to the average rank of their group.
+    """
     a = np.asarray(a, dtype=float)
     order = np.argsort(a, kind="mergesort")
     ranks = np.empty(a.size, dtype=float)
@@ -39,7 +50,19 @@ def rankdata(a: np.ndarray) -> np.ndarray:
 
 
 def spearman(x: np.ndarray, y: np.ndarray) -> float:
-    """Spearman rank correlation coefficient between ``x`` and ``y``."""
+    """Spearman rank correlation coefficient between ``x`` and ``y``.
+
+    Parameters
+    ----------
+    x, y : numpy.ndarray
+        Equal-length arrays to correlate.
+
+    Returns
+    -------
+    float
+        Spearman's ``rho``, in ``[-1, 1]``; ``0.0`` if either array is
+        constant.
+    """
     rx = rankdata(x)
     ry = rankdata(y)
     rx = rx - rx.mean()
@@ -124,7 +147,17 @@ def peak_prominence(signal: np.ndarray, index: int) -> float:
 def theil_sen_slope(x: np.ndarray, y: np.ndarray) -> float:
     """Theil-Sen robust slope: the median of all pairwise slopes.
 
-    Returns ``nan`` when fewer than two distinct x values are available.
+    Parameters
+    ----------
+    x, y : numpy.ndarray
+        Equal-length arrays.
+
+    Returns
+    -------
+    float
+        The median of ``(y_j - y_i) / (x_j - x_i)`` over all pairs ``i < j``
+        with distinct ``x``; ``nan`` when fewer than two distinct x values
+        are available.
     """
     x = np.asarray(x, dtype=float)
     y = np.asarray(y, dtype=float)
@@ -140,7 +173,20 @@ def theil_sen_slope(x: np.ndarray, y: np.ndarray) -> float:
 
 
 def ols_rss(design: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, float]:
-    """Ordinary least squares fit; return ``(coefficients, residual_sum_sq)``."""
+    """Ordinary least squares fit; return ``(coefficients, residual_sum_sq)``.
+
+    Parameters
+    ----------
+    design : numpy.ndarray
+        Design matrix, one row per sample.
+    y : numpy.ndarray
+        Target values, one per row of ``design``.
+
+    Returns
+    -------
+    tuple of (numpy.ndarray, float)
+        The fitted coefficients and the residual sum of squares.
+    """
     coef, _, _, _ = np.linalg.lstsq(design, y, rcond=None)
     resid = y - design @ coef
     return coef, float(resid @ resid)
@@ -151,6 +197,20 @@ def bic(rss: float, n: int, n_params: int) -> float:
 
     ``BIC = n * ln(RSS / n) + k * ln(n)`` with ``k = n_params + 1`` (the extra
     parameter is the noise variance). Lower is better.
+
+    Parameters
+    ----------
+    rss : float
+        Residual sum of squares.
+    n : int
+        Number of data points.
+    n_params : int
+        Number of regression parameters (not counting the noise variance).
+
+    Returns
+    -------
+    float
+        The BIC score; lower is better.
     """
     rss = max(rss, _EPS)
     k = n_params + 1

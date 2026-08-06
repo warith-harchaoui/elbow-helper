@@ -8,7 +8,7 @@ the p-value is the usual ``(1 + #{null >= observed}) / (B + 1)``.
 
 Author
 ------
-`Warith Harchaoui, Ph.D. <https://www.linkedin.com/in/warith-harchaoui/>`_
+Warith Harchaoui, <warith.harchaoui@deraison.ai>
 """
 
 from __future__ import annotations

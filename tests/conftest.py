@@ -1,4 +1,9 @@
-"""Shared fixtures and synthetic-curve generators for the test suite."""
+"""Shared fixtures and synthetic-curve generators for the test suite.
+
+Author
+------
+Warith Harchaoui, <warith.harchaoui@deraison.ai>
+"""
 
 from __future__ import annotations
 

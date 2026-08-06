@@ -10,7 +10,7 @@ evidence.
 
 Author
 ------
-`Warith Harchaoui, Ph.D. <https://www.linkedin.com/in/warith-harchaoui/>`_
+Warith Harchaoui, <warith.harchaoui@deraison.ai>
 """
 
 from __future__ import annotations
@@ -31,7 +31,13 @@ from .smoothing import smooth_curve
 
 
 def _require_matplotlib():
-    """Import matplotlib or raise a clear, actionable error."""
+    """Import matplotlib or raise a clear, actionable error.
+
+    Returns
+    -------
+    module
+        The ``matplotlib.pyplot`` module.
+    """
     try:
         import matplotlib.pyplot as plt  # noqa: F401
         return plt
@@ -44,9 +50,9 @@ def _require_matplotlib():
 
 def plot_diagnostics(
     x,
-    y,
-    curve: str = "concave",
-    direction: str = "increasing",
+    y=None,
+    curve: Optional[str] = None,
+    direction: Optional[str] = None,
     config: Optional[RobustKneeConfig] = None,
     out: Optional[str] = None,
     show: bool = False,
@@ -61,9 +67,10 @@ def plot_diagnostics(
     Parameters
     ----------
     x, y : array-like
-        The curve.
-    curve, direction : str
-        Kneedle orientation (see :func:`robust_knee`).
+        The curve. ``y`` may be omitted, as in :func:`robust_knee`.
+    curve, direction : str, optional
+        Kneedle orientation (see :func:`robust_knee`). If omitted, inferred
+        from the data.
     config : RobustKneeConfig, optional
         Thresholds and replicate counts.
     out : str, optional
@@ -79,12 +86,19 @@ def plot_diagnostics(
     plt = _require_matplotlib()
     config = config or RobustKneeConfig()
 
-    result = robust_knee(x, y, curve=curve, direction=direction, config=config)
+    if y is None:
+        y = x
+        x = np.arange(len(np.asarray(y).ravel()), dtype=float)
 
     try:
         prepared = prepare_curve(x, y, curve, direction, config)
     except Abstain:
         prepared = None
+
+    curve = prepared.curve if prepared is not None else curve
+    direction = prepared.direction if prepared is not None else direction
+
+    result = robust_knee(x, y, curve=curve, direction=direction, config=config)
 
     fig, axes = plt.subplots(2, 2, figsize=(12, 8))
     ax1, ax2, ax3, ax4 = axes.ravel()
@@ -162,7 +176,19 @@ def plot_diagnostics(
 
 
 def _decision_text(result) -> str:
-    """A short textual diagnostic summary, always with the evidence."""
+    """A short textual diagnostic summary, always with the evidence.
+
+    Parameters
+    ----------
+    result : ClearKnee or NoClearKnee
+        The pipeline's result, as returned by :func:`robust_knee`.
+
+    Returns
+    -------
+    str
+        A multi-line summary: the decision, the point estimate and its
+        supporting evidence when clear, or the abstention reason otherwise.
+    """
     if result.is_clear:
         return (
             f"Decision: CLEAR_KNEE\n"

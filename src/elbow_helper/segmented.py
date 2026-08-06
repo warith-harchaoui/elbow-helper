@@ -7,7 +7,7 @@ term ``c * max(0, x - k)`` guarantees continuity at the knee.
 
 Author
 ------
-`Warith Harchaoui, Ph.D. <https://www.linkedin.com/in/warith-harchaoui/>`_
+Warith Harchaoui, <warith.harchaoui@deraison.ai>
 """
 
 from __future__ import annotations
@@ -22,17 +22,57 @@ _EPS = 1e-9
 
 
 def _design_single(x: np.ndarray) -> np.ndarray:
-    """Design matrix for ``y = a + b x``."""
+    """Design matrix for ``y = a + b x``.
+
+    Parameters
+    ----------
+    x : numpy.ndarray
+        Normalized ``x`` values.
+
+    Returns
+    -------
+    numpy.ndarray
+        Design matrix with an intercept column and an ``x`` column.
+    """
     return np.column_stack([np.ones_like(x), x])
 
 
 def _design_broken(x: np.ndarray, k: float) -> np.ndarray:
-    """Design matrix for the continuous broken line ``y = a + b x + c*relu(x-k)``."""
+    """Design matrix for the continuous broken line ``y = a + b x + c*relu(x-k)``.
+
+    Parameters
+    ----------
+    x : numpy.ndarray
+        Normalized ``x`` values.
+    k : float
+        Candidate knee location.
+
+    Returns
+    -------
+    numpy.ndarray
+        Design matrix with an intercept, ``x`` and ``max(0, x - k)`` column.
+    """
     return np.column_stack([np.ones_like(x), x, np.maximum(0.0, x - k)])
 
 
 def _blocked_cv_sse(x: np.ndarray, y: np.ndarray, k: float, folds: int) -> tuple:
-    """Blocked (contiguous) cross-validated SSE for single vs broken models."""
+    """Blocked (contiguous) cross-validated SSE for single vs broken models.
+
+    Parameters
+    ----------
+    x, y : numpy.ndarray
+        The normalized curve.
+    k : float
+        Candidate knee location, held fixed across folds.
+    folds : int
+        Requested number of contiguous folds (clamped to the data size).
+
+    Returns
+    -------
+    tuple of float
+        ``(sse_single, sse_broken)``, each the held-out sum of squared
+        errors summed over all folds.
+    """
     n = x.size
     folds = max(2, min(folds, n // 4)) if n >= 8 else 2
     bounds = np.linspace(0, n, folds + 1).astype(int)

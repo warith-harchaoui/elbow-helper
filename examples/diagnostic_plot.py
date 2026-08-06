@@ -4,6 +4,10 @@ Install the extra first::
 
     pip install -e ".[plot]"
     python examples/diagnostic_plot.py
+
+Author
+------
+Warith Harchaoui, <warith.harchaoui@deraison.ai>
 """
 
 from __future__ import annotations

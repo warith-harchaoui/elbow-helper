@@ -1,4 +1,9 @@
-"""Tests for the from-scratch, numpy-only Kneedle port."""
+"""Tests for the from-scratch, numpy-only Kneedle port.
+
+Author
+------
+Warith Harchaoui, <warith.harchaoui@deraison.ai>
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,9 @@
-"""End-to-end pipeline tests: clear knees accepted, no-knee curves abstained."""
+"""End-to-end pipeline tests: clear knees accepted, no-knee curves abstained.
+
+Author
+------
+Warith Harchaoui, <warith.harchaoui@deraison.ai>
+"""
 
 from __future__ import annotations
 

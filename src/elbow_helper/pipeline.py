@@ -2,12 +2,12 @@
 
 Chains preprocessing -> inner search -> segmented confirmation -> bootstrap ->
 null test, short-circuiting to an explicit :class:`NoClearKnee` at the first
-gate that fails, and accumulating diagnostics at every stage. Only a candidate
+gate that fails and accumulating diagnostics at every stage. Only a candidate
 that survives *all* gates is returned as a :class:`ClearKnee`.
 
 Author
 ------
-`Warith Harchaoui, Ph.D. <https://www.linkedin.com/in/warith-harchaoui/>`_
+Warith Harchaoui, <warith.harchaoui@deraison.ai>
 """
 
 from __future__ import annotations
@@ -27,22 +27,28 @@ from .types import ClearKnee, KneeResult, NoClearKnee, Reason
 
 def robust_knee(
     x,
-    y,
-    curve: str = "concave",
-    direction: str = "increasing",
+    y=None,
+    curve: Optional[str] = None,
+    direction: Optional[str] = None,
     config: Optional[RobustKneeConfig] = None,
 ) -> KneeResult:
-    """Detect a knee conservatively, or abstain with a reason.
+    """Detect a knee conservatively or abstain with a reason.
 
     Parameters
     ----------
     x, y : array-like
-        The curve. ``x`` need not be sorted or unique; preprocessing handles
-        cleaning, sorting, deduplication and normalization.
+        The curve: ``x[i]`` maps to ``y[i]``. ``x`` need not be sorted or
+        unique; preprocessing handles cleaning, sorting, deduplication and
+        normalization. ``y`` may be omitted, in which case ``x`` is taken to
+        be the sequence of y-values alone and the implicit x-axis
+        ``0, 1, ..., n-1`` is used.
     curve : str, optional
-        ``"concave"`` (knees, default) or ``"convex"`` (elbows).
+        ``"concave"`` (knees) or ``"convex"`` (elbows). If omitted, inferred
+        from the data: a curve lying above the chord connecting its
+        endpoints is concave, below is convex.
     direction : str, optional
-        ``"increasing"`` (default) or ``"decreasing"``.
+        ``"increasing"`` or ``"decreasing"``. If omitted, inferred from the
+        sign of the trend between ``x`` and ``y``.
     config : RobustKneeConfig, optional
         Thresholds and replicate counts. Defaults to :class:`RobustKneeConfig`.
 
@@ -52,8 +58,12 @@ def robust_knee(
         A :class:`ClearKnee` (with location, 90% interval and diagnostics) or a
         :class:`NoClearKnee` (with a reason code and diagnostics).
     """
+    if y is None:
+        y = x
+        x = np.arange(len(np.asarray(y).ravel()), dtype=float)
+
     config = config or RobustKneeConfig()
-    diagnostics: dict = {"curve": curve, "direction": direction}
+    diagnostics: dict = {"curve": curve or "auto", "direction": direction or "auto"}
 
     try:
         prepared = prepare_curve(x, y, curve, direction, config)
@@ -62,6 +72,7 @@ def robust_knee(
         return NoClearKnee(reason=a.reason, diagnostics=diagnostics)
 
     diagnostics.update(
+        curve=prepared.curve, direction=prepared.direction,
         n=prepared.n, spearman=round(prepared.spearman, 4),
         violation_rate=round(prepared.violation_rate, 4),
     )
@@ -161,11 +172,15 @@ def robust_knee(
 
 
 def robust_elbow(
-    x, y, config: Optional[RobustKneeConfig] = None
+    x, y=None, config: Optional[RobustKneeConfig] = None
 ) -> KneeResult:
     """Convenience wrapper for the classic convex-decreasing *elbow*.
 
     Equivalent to :func:`robust_knee` with ``curve="convex"`` and
-    ``direction="decreasing"`` — the k-means inertia / scree-plot case.
+    ``direction="decreasing"``, the k-means inertia / scree-plot case.
+    ``y`` may be omitted, as in :func:`robust_knee`.
     """
+    if y is None:
+        y = x
+        x = np.arange(len(np.asarray(y).ravel()), dtype=float)
     return robust_knee(x, y, curve="convex", direction="decreasing", config=config)

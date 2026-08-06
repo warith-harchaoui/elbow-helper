@@ -1,0 +1,211 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": {
+    "text": "The PCA scree plot",
+    "subtitle": "elbow_helper.robust_elbow detects the boundary between 6 signal components and 19 noise components"
+  },
+  "width": 520,
+  "height": 300,
+  "config": {
+    "background": "#FFFFFF",
+    "font": "Roboto, Roboto Serif, Roboto Mono, system-ui, sans-serif",
+    "view": {
+      "stroke": null,
+      "cornerRadius": 10
+    },
+    "axis": {
+      "domain": true,
+      "domainColor": "#1D1D1F",
+      "labelColor": "#1D1D1F",
+      "titleColor": "#1D1D1F",
+      "grid": false,
+      "ticks": false,
+      "labelFont": "Roboto Mono",
+      "titleFont": "Roboto"
+    },
+    "axisTop": {
+      "domain": false,
+      "domainColor": null,
+      "labels": false,
+      "ticks": false,
+      "title": null
+    },
+    "axisRight": {
+      "domain": false,
+      "domainColor": null,
+      "labels": false,
+      "ticks": false,
+      "title": null
+    },
+    "legend": {
+      "titleFont": "Roboto",
+      "labelFont": "Roboto",
+      "labelColor": "#1D1D1F",
+      "titleColor": "#1D1D1F"
+    },
+    "title": {
+      "font": "Roboto",
+      "fontSize": 14,
+      "color": "#1D1D1F",
+      "subtitleFont": "Roboto",
+      "subtitleColor": "#8E8E93",
+      "subtitleFontSize": 11
+    },
+    "line": {
+      "strokeWidth": 2
+    },
+    "point": {
+      "filled": true,
+      "size": 18
+    }
+  },
+  "layer": [
+    {
+      "data": {
+        "values": [
+          {
+            "x": 1.0,
+            "y": 11.189527187125973
+          },
+          {
+            "x": 2.0,
+            "y": 10.493307428410095
+          },
+          {
+            "x": 3.0,
+            "y": 10.11857122766368
+          },
+          {
+            "x": 4.0,
+            "y": 8.211321287641637
+          },
+          {
+            "x": 5.0,
+            "y": 7.319457970062305
+          },
+          {
+            "x": 6.0,
+            "y": 6.360354739012963
+          },
+          {
+            "x": 7.0,
+            "y": 0.709961497443096
+          },
+          {
+            "x": 8.0,
+            "y": 0.6992538663680402
+          },
+          {
+            "x": 9.0,
+            "y": 0.6512069069111067
+          },
+          {
+            "x": 10.0,
+            "y": 0.623392544255589
+          },
+          {
+            "x": 11.0,
+            "y": 0.5856938161437677
+          },
+          {
+            "x": 12.0,
+            "y": 0.5641143204006582
+          },
+          {
+            "x": 13.0,
+            "y": 0.5350194519600128
+          },
+          {
+            "x": 14.0,
+            "y": 0.5279821516217572
+          },
+          {
+            "x": 15.0,
+            "y": 0.5068144403656344
+          },
+          {
+            "x": 16.0,
+            "y": 0.4990510202584672
+          },
+          {
+            "x": 17.0,
+            "y": 0.4564483323646149
+          },
+          {
+            "x": 18.0,
+            "y": 0.43329062994858036
+          },
+          {
+            "x": 19.0,
+            "y": 0.42570442733230224
+          },
+          {
+            "x": 20.0,
+            "y": 0.40539328580040845
+          },
+          {
+            "x": 21.0,
+            "y": 0.3908904830628816
+          },
+          {
+            "x": 22.0,
+            "y": 0.3704242831209397
+          },
+          {
+            "x": 23.0,
+            "y": 0.3476107287634036
+          },
+          {
+            "x": 24.0,
+            "y": 0.30664659712586323
+          },
+          {
+            "x": 25.0,
+            "y": 0.28804077988870547
+          }
+        ]
+      },
+      "mark": {
+        "type": "line",
+        "color": "#007AFF",
+        "opacity": 0.85
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative",
+          "title": "principal component"
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative",
+          "title": "eigenvalue (explained variance)"
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "x": 7.500000000000001
+          }
+        ]
+      },
+      "mark": {
+        "type": "rule",
+        "strokeDash": [
+          4,
+          3
+        ],
+        "strokeWidth": 1.6,
+        "color": "#FF3B30"
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative"
+        }
+      }
+    }
+  ]
+}

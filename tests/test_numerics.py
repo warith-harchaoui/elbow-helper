@@ -1,4 +1,9 @@
-"""Tests for the numpy-only numerical primitives."""
+"""Tests for the numpy-only numerical primitives.
+
+Author
+------
+Warith Harchaoui, <warith.harchaoui@deraison.ai>
+"""
 
 from __future__ import annotations
 

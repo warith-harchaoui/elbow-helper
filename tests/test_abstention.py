@@ -1,4 +1,9 @@
-"""Tests that abstentions carry stable reason codes and diagnostics."""
+"""Tests that abstentions carry stable reason codes and diagnostics.
+
+Author
+------
+Warith Harchaoui, <warith.harchaoui@deraison.ai>
+"""
 
 from __future__ import annotations
 
@@ -11,7 +16,7 @@ CFG_REASONS = {
     Reason.INVALID_INPUT,
     Reason.ZERO_RANGE,
     Reason.INCOMPATIBLE_GLOBAL_SHAPE,
-    Reason.NO_KNEED_CANDIDATES,
+    Reason.NO_KNEE_CANDIDATES,
     Reason.ALL_CANDIDATES_WEAK,
     Reason.NO_PERSISTENT_CLUSTER,
     Reason.MULTIPLE_PLAUSIBLE_KNEES,

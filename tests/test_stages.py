@@ -1,4 +1,9 @@
-"""Tests for smoothing, candidate generation, clustering and segmentation."""
+"""Tests for smoothing, candidate generation, clustering and segmentation.
+
+Author
+------
+Warith Harchaoui, <warith.harchaoui@deraison.ai>
+"""
 
 from __future__ import annotations
 

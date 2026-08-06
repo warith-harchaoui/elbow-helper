@@ -3,6 +3,10 @@
 Run::
 
     python examples/clear_knee.py
+
+Author
+------
+Warith Harchaoui, <warith.harchaoui@deraison.ai>
 """
 
 from __future__ import annotations

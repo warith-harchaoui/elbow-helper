@@ -1,26 +1,26 @@
-"""A from-scratch, NumPy-only port of the Kneedle algorithm.
+"""A from-scratch, NumPy-only implementation of the Kneedle algorithm.
 
-This module reimplements :class:`kneed.KneeLocator`
-(`arvkevi/kneed <https://github.com/arvkevi/kneed>`_, Satopää, Albrecht, Irwin
-and Raghavan, ICDCSW 2011) so that ``elbow_helper`` depends on **numpy only**:
-no ``scipy`` and no ``kneed`` at runtime.
+This module implements the Kneedle algorithm (Satopää, Albrecht, Irwin and
+Raghavan, ICDCSW 2011) so that ``elbow_helper`` depends on **numpy only**: no
+``scipy`` at runtime. See the project's Acknowledgements section (README.md)
+for the implementation this module follows.
 
-Two scipy calls in the original are replaced:
+Two scipy calls in a typical implementation are replaced here:
 
 * ``scipy.interpolate.interp1d(x, y)(x)`` evaluated at the *same* ``x`` is the
   identity, so with ``interp_method="interp1d"`` the fitted line is just ``y``.
 * ``scipy.signal.argrelextrema(a, comparator, order, mode="clip")`` is a short
   NumPy helper (:func:`_argrelextrema`) that compares each sample against its
-  clip-indexed neighbours — bit-for-bit equivalent for 1-D input.
+  clip-indexed neighbours, bit-for-bit equivalent for 1-D input.
 
 The traversal logic in :meth:`KneeLocator.find_knee`, the ``transform_y``
 orientation table, the sensitivity threshold ``Tmx`` and the online-correction
-behaviour are ported verbatim so results match ``kneed`` for the supported
-inputs.
+behaviour follow the reference implementation closely, so results match it
+for the supported inputs.
 
 Author
 ------
-`Warith Harchaoui, Ph.D. <https://www.linkedin.com/in/warith-harchaoui/>`_
+Warith Harchaoui, <warith.harchaoui@deraison.ai>
 """
 
 from __future__ import annotations
@@ -72,7 +72,7 @@ def _argrelextrema(data: np.ndarray, comparator, order: int = 1) -> np.ndarray:
 class KneeLocator:
     """Locate the point of maximum curvature (knee/elbow) of a curve.
 
-    A NumPy-only reimplementation of ``kneed.KneeLocator`` with the same public
+    A NumPy-only implementation of the Kneedle algorithm, exposing the public
     surface used by this package: ``knee``, ``norm_knee``, ``all_knees``,
     ``all_norm_knees``, ``x_difference`` / ``y_difference`` and the extrema
     indices.
@@ -118,7 +118,7 @@ class KneeLocator:
         self.all_norm_knees: set = set()
         self.all_knees_y: list = []
         self.all_norm_knees_y: list = []
-        # Extension over the original kneed: one record per distinct knee,
+        # Extension over the base algorithm: one record per distinct knee,
         # pairing its data-space location, normalized location, and the index
         # of the generating peak on the difference curve (used for prominence).
         self.all_knee_records: list = []
@@ -181,12 +181,39 @@ class KneeLocator:
 
     @staticmethod
     def __normalize(a: np.ndarray) -> np.ndarray:
-        """Scale an array to ``[0, 1]``."""
+        """Scale an array to ``[0, 1]``.
+
+        Parameters
+        ----------
+        a : numpy.ndarray
+            One-dimensional array to rescale.
+
+        Returns
+        -------
+        numpy.ndarray
+            ``a`` linearly rescaled so its minimum is ``0`` and maximum ``1``.
+        """
         return (a - a.min()) / (a.max() - a.min())
 
     @staticmethod
     def transform_y(y: np.ndarray, direction: str, curve: str) -> np.ndarray:
-        """Orient ``y`` to a concave, increasing frame (elbows become knees)."""
+        """Orient ``y`` to a concave, increasing frame (elbows become knees).
+
+        Parameters
+        ----------
+        y : numpy.ndarray
+            Normalized ``y`` values.
+        direction : str
+            ``"increasing"`` or ``"decreasing"``.
+        curve : str
+            ``"concave"`` or ``"convex"``.
+
+        Returns
+        -------
+        numpy.ndarray
+            ``y``, flipped and/or mirrored so the concave-increasing bump
+            logic in :meth:`find_knee` applies unchanged.
+        """
         if direction == "decreasing":
             if curve == "concave":
                 y = np.flip(y)
@@ -197,7 +224,15 @@ class KneeLocator:
         return y
 
     def find_knee(self) -> Tuple[Optional[float], Optional[float]]:
-        """Traverse the difference curve and return ``(knee, norm_knee)``."""
+        """Traverse the difference curve and return ``(knee, norm_knee)``.
+
+        Returns
+        -------
+        tuple of (float or None), (float or None)
+            ``(knee, norm_knee)`` in data-space and normalized-space
+            coordinates respectively, or ``(None, None)`` if no candidate
+            clears its sensitivity threshold.
+        """
         if not self.maxima_indices.size:
             return None, None
 
@@ -271,16 +306,20 @@ class KneeLocator:
     # Elbow aliases, for callers who think in "elbows".
     @property
     def elbow(self):
+        """Alias for :attr:`knee`, for callers who think in "elbows"."""
         return self.knee
 
     @property
     def norm_elbow(self):
+        """Alias for :attr:`norm_knee`, for callers who think in "elbows"."""
         return self.norm_knee
 
     @property
     def all_elbows(self):
+        """Alias for :attr:`all_knees`, for callers who think in "elbows"."""
         return self.all_knees
 
     @property
     def all_norm_elbows(self):
+        """Alias for :attr:`all_norm_knees`, for callers who think in "elbows"."""
         return self.all_norm_knees

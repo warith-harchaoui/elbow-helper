@@ -7,7 +7,7 @@ winning cluster.
 
 Author
 ------
-`Warith Harchaoui, Ph.D. <https://www.linkedin.com/in/warith-harchaoui/>`_
+Warith Harchaoui, <warith.harchaoui@deraison.ai>
 """
 
 from __future__ import annotations
@@ -22,7 +22,18 @@ from .types import CandidateCluster, KneeCandidate, PreparedCurve, Reason
 
 
 def _longest_consecutive_run(ranks: List[int]) -> int:
-    """Longest run of consecutive integers present in ``ranks``."""
+    """Longest run of consecutive integers present in ``ranks``.
+
+    Parameters
+    ----------
+    ranks : list of int
+        Smoothing-scale ranks at which a cluster's members were observed.
+
+    Returns
+    -------
+    int
+        Length of the longest run of consecutive ranks, ``0`` if empty.
+    """
     if not ranks:
         return 0
     s = sorted(set(ranks))
@@ -117,7 +128,20 @@ def cluster_candidates(
 
 
 def _sensitivity_values(config: RobustKneeConfig, n: int) -> List[float]:
-    """The sensitivity grid (kept in sync with :mod:`candidates`)."""
+    """The sensitivity grid (kept in sync with :mod:`candidates`).
+
+    Parameters
+    ----------
+    config : RobustKneeConfig
+        Supplies ``sensitivity_fractions``.
+    n : int
+        Number of points in the curve.
+
+    Returns
+    -------
+    list of float
+        Distinct sensitivity values, sorted ascending.
+    """
     values = set()
     for frac in config.sensitivity_fractions:
         values.add(float(max(1, round(frac * n))))
@@ -125,7 +149,21 @@ def _sensitivity_values(config: RobustKneeConfig, n: int) -> List[float]:
 
 
 def _neighbor_shift(members: List[KneeCandidate], window_rank: dict) -> float:
-    """Max shift in per-window median location between adjacent windows."""
+    """Max shift in per-window median location between adjacent windows.
+
+    Parameters
+    ----------
+    members : list of KneeCandidate
+        A single cluster's member candidates.
+    window_rank : dict
+        Maps smoothing window size to its rank in the smoothing grid.
+
+    Returns
+    -------
+    float
+        Largest jump between consecutive windows' median normalized
+        location, ``0.0`` if the cluster spans fewer than two windows.
+    """
     by_window: dict = {}
     for m in members:
         by_window.setdefault(m.window, []).append(m.knee_x_norm)
@@ -137,7 +175,21 @@ def _neighbor_shift(members: List[KneeCandidate], window_rank: dict) -> float:
 
 
 def _is_persistent(cluster: CandidateCluster, config: RobustKneeConfig) -> bool:
-    """Apply the four persistence gates from the plan."""
+    """Apply the four persistence gates from the plan.
+
+    Parameters
+    ----------
+    cluster : CandidateCluster
+        A candidate cluster with its consecutive-scale, sensitivity-support,
+        MAD and neighbor-shift statistics already populated.
+    config : RobustKneeConfig
+        The four persistence thresholds to check against.
+
+    Returns
+    -------
+    bool
+        ``True`` iff all four persistence gates pass.
+    """
     return (
         cluster.consecutive_scales >= config.min_consecutive_scales
         and cluster.sensitivity_support >= config.min_sensitivity_support
@@ -149,7 +201,23 @@ def _is_persistent(cluster: CandidateCluster, config: RobustKneeConfig) -> bool:
 def _smallest_stable_window(
     cluster: CandidateCluster, windows: List[int], config: RobustKneeConfig
 ) -> int:
-    """Smallest window in the cluster's stable run with enough sensitivity support."""
+    """Smallest window in the cluster's stable run with enough sensitivity support.
+
+    Parameters
+    ----------
+    cluster : CandidateCluster
+        A cluster already flagged persistent.
+    windows : list of int
+        The full smoothing-window grid, ascending.
+    config : RobustKneeConfig
+        Supplies ``min_sensitivity_support``.
+
+    Returns
+    -------
+    int
+        The smallest window size meeting the sensitivity-support threshold,
+        or the smallest window the cluster appears in at all as a fallback.
+    """
     all_sens = len({m.sensitivity for m in cluster.members}) or 1
     by_window: dict = {}
     for m in cluster.members:

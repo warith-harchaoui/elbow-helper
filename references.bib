@@ -1,0 +1,215 @@
+% References for MATH.md.
+%
+% Verification status is noted in each entry's `note` field, matching the
+% evidence-marking convention used in MATH.md itself:
+%   verified    - title/venue/core claim confirmed via web search in this
+%                 project's research history.
+%   secondary   - reported via a secondary source (search snippet, summary
+%                 page), not read from the primary text.
+%   standard    - standard, widely cited technique; not independently
+%                 re-verified while compiling this bibliography.
+%
+% Plain UTF-8 is used throughout (no LaTeX escapes) for robust parsing by
+% pandoc's citation processor.
+
+@article{yao1988,
+  author  = {Yao, Yi-Ching},
+  title   = {Estimating the number of change-points via Schwarz' criterion},
+  journal = {Statistics and Probability Letters},
+  volume  = {6},
+  number  = {3},
+  pages   = {181--189},
+  year    = {1988},
+  note    = {verified: title, venue, and core claim (BIC-style penalty for the number of changepoints, with a weak-consistency proof in the least-squares setting) confirmed via web search.}
+}
+
+@article{zhangsiegmund2007,
+  author  = {Zhang, Nancy R. and Siegmund, David O.},
+  title   = {A Modified Bayes Information Criterion with Applications to the Analysis of Comparative Genomic Hybridization Data},
+  journal = {Biometrics},
+  volume  = {63},
+  number  = {1},
+  pages   = {22--32},
+  year    = {2007},
+  note    = {verified: title, venue, and core claim confirmed via web search. The exact penalty formula used in MATH.md (3 m ln n + sum ln(l_j over n)) is a secondary-source report, not read from the primary paper; the sign convention on the segment-length term was resolved empirically in this project, not taken from the paper.}
+}
+
+@article{biernacki2000,
+  author  = {Biernacki, Christophe and Celeux, Gael and Govaert, Gerard},
+  title   = {Assessing a Mixture Model for Clustering with the Integrated Completed Likelihood},
+  journal = {IEEE Transactions on Pattern Analysis and Machine Intelligence},
+  volume  = {22},
+  number  = {7},
+  pages   = {719--725},
+  year    = {2000},
+  note    = {verified: title, venue, and core claim (BIC plus an entropy correction for classification uncertainty) confirmed via web search.}
+}
+
+@article{rigaill2012,
+  author  = {Rigaill, Guillem and Lebarbier, Emilie and Robin, Stephane},
+  title   = {Exact posterior distributions over the segmentation space and model selection for multiple change-point detection problems},
+  journal = {Statistics and Computing},
+  volume  = {22},
+  number  = {4},
+  pages   = {917--929},
+  year    = {2012},
+  note    = {verified: title, venue, and core claim (exact, non-asymptotic posterior over the discrete segmentation space via a forward-backward dynamic program) confirmed via web search. The specific ICL formula used in MATH.md is a secondary-source reconstruction, not read from the primary paper.}
+}
+
+@article{cleynen2013,
+  author  = {Cleynen, Alice and Luong, Thanh Mai and Rigaill, Guillem and Nuel, Gregory},
+  title   = {Fast estimation of the ICL criterion for change-point detection problems, with applications to Next-Generation Sequencing data},
+  journal = {Computational Statistics and Data Analysis},
+  year    = {2013},
+  note    = {verified: title and venue confirmed via web search (earlier posted as arXiv 1211.3210). Builds directly on rigaill2012, reducing the cost of computing ICL from quadratic to linear in the number of segments; this project implements the simpler quadratic version.}
+}
+
+@article{killick2012,
+  author  = {Killick, Rebecca and Fearnhead, Paul and Eckley, Idris A.},
+  title   = {Optimal Detection of Changepoints With a Linear Computational Cost},
+  journal = {Journal of the American Statistical Association},
+  volume  = {107},
+  number  = {500},
+  pages   = {1590--1598},
+  year    = {2012},
+  note    = {verified: title, venue, and core claim (PELT: pruned exact dynamic programming, provably discarding future-suboptimal candidates) confirmed via web search. Not separately reimplemented here: for a fixed additive penalty, PELT is a pruning speed-up over the same optimal-partitioning recursion this project implements directly, so it would reproduce identical k-selection numbers, only faster.}
+}
+
+@article{fryzlewicz2014,
+  author  = {Fryzlewicz, Piotr},
+  title   = {Wild Binary Segmentation for Multiple Change-Point Detection},
+  journal = {The Annals of Statistics},
+  volume  = {42},
+  number  = {6},
+  pages   = {2243--2281},
+  year    = {2014},
+  note    = {standard: cited in this project as the textbook motivation for why binary segmentation's greedy, whole-series-first splitting can miss or mis-place changepoints, the exact failure mode this project measured directly for greedy binary segmentation; not independently re-verified via search while writing MATH.md.}
+}
+
+@inproceedings{satopaa2011,
+  author    = {Satopaa, Ville and Albrecht, Jeannie and Irwin, David and Raghavan, Barath},
+  title     = {Finding a Kneedle in a Haystack: Detecting Knee Points in System Behavior},
+  booktitle = {2011 31st International Conference on Distributed Computing Systems Workshops (ICDCSW)},
+  year      = {2011},
+  note      = {The paper behind the Kneedle algorithm elbow-helper's single-knee pipeline implements from scratch (see the project's own Acknowledgements section, README.md). Cited here by author and venue only, without the paper's own pun in the title, per this project's own style choice.}
+}
+
+@misc{davies1977,
+  author = {Davies, Robert B.},
+  title  = {Hypothesis Testing when a Nuisance Parameter is Present Only Under the Alternative},
+  year   = {1977},
+  note   = {standard: cited in this project's sibling literature research as the standard reference for testing a single changepoint's significance while correcting for the search over its unknown location; not independently verified via search and not implemented in this project (the FWER gate in MATH.md uses a permutation test instead, not Davies' asymptotic approximation).}
+}
+
+@article{frick2014,
+  author  = {Frick, Klaus and Munk, Axel and Sieling, Hannes},
+  title   = {Multiscale Change Point Inference},
+  journal = {Journal of the Royal Statistical Society: Series B},
+  year    = {2014},
+  note    = {standard: cited in this project's sibling literature research as SMUCE, a multiscale test statistic with an explicit family-wise error guarantee on the number of estimated changepoints; not independently verified via search and not implemented in this project (the FWER gate in MATH.md is a simpler sequential permutation test, not SMUCE).}
+}
+
+% --- Classical statistical tools used throughout the single-knee pipeline ---
+% Canonical citations for widely taught methods; not independently
+% re-verified via search, standard textbook attributions.
+
+@article{spearman1904,
+  author  = {Spearman, Charles},
+  title   = {The Proof and Measurement of Association between Two Things},
+  journal = {American Journal of Psychology},
+  volume  = {15},
+  number  = {1},
+  pages   = {72--101},
+  year    = {1904},
+  note    = {standard: canonical citation for rank correlation, used in MATH.md's preprocessing section.}
+}
+
+@article{theil1950,
+  author  = {Theil, Henri},
+  title   = {A Rank-Invariant Method of Linear and Polynomial Regression Analysis},
+  journal = {Proceedings of the Royal Netherlands Academy of Sciences},
+  volume  = {53},
+  year    = {1950},
+  note    = {standard: origin of the median-of-pairwise-slopes estimator, extended by sen1968.}
+}
+
+@article{sen1968,
+  author  = {Sen, Pranab Kumar},
+  title   = {Estimates of the Regression Coefficient Based on Kendall's Tau},
+  journal = {Journal of the American Statistical Association},
+  volume  = {63},
+  number  = {324},
+  pages   = {1379--1389},
+  year    = {1968},
+  note    = {standard: the Theil-Sen slope estimator elbow-helper uses for the robust local slope contrast (see MATH.md).}
+}
+
+@article{schwarz1978,
+  author  = {Schwarz, Gideon},
+  title   = {Estimating the Dimension of a Model},
+  journal = {The Annals of Statistics},
+  volume  = {6},
+  number  = {2},
+  pages   = {461--464},
+  year    = {1978},
+  note    = {standard: the original Bayesian Information Criterion (BIC) derivation, the basis for every BIC-family criterion in this project.}
+}
+
+@article{efron1979,
+  author  = {Efron, Bradley},
+  title   = {Bootstrap Methods: Another Look at the Jackknife},
+  journal = {The Annals of Statistics},
+  volume  = {7},
+  number  = {1},
+  pages   = {1--26},
+  year    = {1979},
+  note    = {standard: the origin of the bootstrap resampling method elbow-helper's single-knee pipeline uses to test knee stability.}
+}
+
+% --- Further-reading pointers, not primary sources for a specific claim ---
+% From the author's own curated book list (https://deraison.ai/ai-books),
+% cited only where directly relevant to a technique used in this project.
+% These are recommended for a deeper or more accessible treatment, not
+% attributed as the origin of any specific formula above.
+
+@book{hastie2009esl,
+  author    = {Hastie, Trevor and Tibshirani, Robert and Friedman, Jerome},
+  title     = {The Elements of Statistical Learning},
+  edition   = {2nd},
+  publisher = {Springer},
+  year      = {2009},
+  note      = {further reading: covers BIC, cross-validation, and the bootstrap with the theoretical depth behind their bias-variance trade-offs; the reference this project's author returns to for restoring conceptual precision on model-selection criteria.}
+}
+
+@book{bouveyron2021mbc,
+  author    = {Bouveyron, Charles and Celeux, Gilles and Murphy, T. Brendan and Raftery, Adrian E.},
+  title     = {Model-Based Clustering and Classification for Data Science},
+  publisher = {Cambridge University Press},
+  year      = {2021},
+  note      = {further reading: a book-length treatment of mixture models and model selection by (among others) Gilles Celeux, a co-author of biernacki2000, the ICL paper this project's multi-knee criterion builds on.}
+}
+
+@book{cormen2022algorithms,
+  author    = {Cormen, Thomas H. and Leiserson, Charles E. and Rivest, Ronald L. and Stein, Clifford},
+  title     = {Introduction to Algorithms},
+  edition   = {4th},
+  publisher = {MIT Press},
+  year      = {2022},
+  note      = {further reading: the standard reference for dynamic programming, the technique behind this project's optimal-partitioning breakpoint search.}
+}
+
+@book{bishop2006prml,
+  author    = {Bishop, Christopher M.},
+  title     = {Pattern Recognition and Machine Learning},
+  publisher = {Springer},
+  year      = {2006},
+  note      = {further reading: a probabilistic, Bayesian-model-selection treatment that motivates why criteria like BIC and ICL take the form they do.}
+}
+
+@book{lopezdeprado2018financial,
+  author    = {L{\'o}pez de Prado, Marcos},
+  title     = {Advances in Financial Machine Learning},
+  publisher = {Wiley},
+  year      = {2018},
+  note      = {further reading: a sustained argument for validation rigor on ordered, sequential data (leakage-free cross-validation, realistic backtesting), the same concern behind this project's blocked cross-validation.}
+}

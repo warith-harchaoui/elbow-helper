@@ -1,0 +1,207 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": {
+    "text": "Le coude d'inertie du k-means",
+    "subtitle": "elbow_helper.robust_elbow d\u00e9tecte k=8, le vrai nombre de groupes"
+  },
+  "width": 520,
+  "height": 300,
+  "config": {
+    "background": "#FFFFFF",
+    "font": "Roboto, Roboto Serif, Roboto Mono, system-ui, sans-serif",
+    "view": {
+      "stroke": null,
+      "cornerRadius": 10
+    },
+    "axis": {
+      "domain": true,
+      "domainColor": "#1D1D1F",
+      "labelColor": "#1D1D1F",
+      "titleColor": "#1D1D1F",
+      "grid": false,
+      "ticks": false,
+      "labelFont": "Roboto Mono",
+      "titleFont": "Roboto"
+    },
+    "axisTop": {
+      "domain": false,
+      "domainColor": null,
+      "labels": false,
+      "ticks": false,
+      "title": null
+    },
+    "axisRight": {
+      "domain": false,
+      "domainColor": null,
+      "labels": false,
+      "ticks": false,
+      "title": null
+    },
+    "legend": {
+      "titleFont": "Roboto",
+      "labelFont": "Roboto",
+      "labelColor": "#1D1D1F",
+      "titleColor": "#1D1D1F"
+    },
+    "title": {
+      "font": "Roboto",
+      "fontSize": 14,
+      "color": "#1D1D1F",
+      "subtitleFont": "Roboto",
+      "subtitleColor": "#8E8E93",
+      "subtitleFontSize": 11
+    },
+    "line": {
+      "strokeWidth": 2
+    },
+    "point": {
+      "filled": true,
+      "size": 18
+    }
+  },
+  "layer": [
+    {
+      "data": {
+        "values": [
+          {
+            "x": 1.0,
+            "y": 78978.77337916644
+          },
+          {
+            "x": 2.0,
+            "y": 43658.13534169721
+          },
+          {
+            "x": 3.0,
+            "y": 27291.423996661462
+          },
+          {
+            "x": 4.0,
+            "y": 17068.52215900432
+          },
+          {
+            "x": 5.0,
+            "y": 11061.672017109253
+          },
+          {
+            "x": 6.0,
+            "y": 7471.201834522145
+          },
+          {
+            "x": 7.0,
+            "y": 3984.913736811278
+          },
+          {
+            "x": 8.0,
+            "y": 509.86798175794564
+          },
+          {
+            "x": 9.0,
+            "y": 476.89894791156894
+          },
+          {
+            "x": 10.0,
+            "y": 466.52790580229663
+          },
+          {
+            "x": 11.0,
+            "y": 430.68324052160403
+          },
+          {
+            "x": 12.0,
+            "y": 403.15400812996006
+          },
+          {
+            "x": 13.0,
+            "y": 381.83930687950334
+          },
+          {
+            "x": 14.0,
+            "y": 371.5134680337675
+          },
+          {
+            "x": 15.0,
+            "y": 343.478691955076
+          },
+          {
+            "x": 16.0,
+            "y": 334.21565029225053
+          },
+          {
+            "x": 17.0,
+            "y": 303.75787561819527
+          },
+          {
+            "x": 18.0,
+            "y": 281.6897744713231
+          },
+          {
+            "x": 19.0,
+            "y": 281.9031382402897
+          },
+          {
+            "x": 20.0,
+            "y": 276.26243688674185
+          },
+          {
+            "x": 21.0,
+            "y": 284.2659215345976
+          },
+          {
+            "x": 22.0,
+            "y": 235.46968277311953
+          },
+          {
+            "x": 23.0,
+            "y": 245.33273248554858
+          },
+          {
+            "x": 24.0,
+            "y": 228.81509328611628
+          }
+        ]
+      },
+      "mark": {
+        "type": "line",
+        "color": "#007AFF",
+        "opacity": 0.85
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative",
+          "title": "k (nombre de groupes)"
+        },
+        "y": {
+          "field": "y",
+          "type": "quantitative",
+          "title": "inertie (somme des carr\u00e9s intra-groupe)"
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "x": 8.0
+          }
+        ]
+      },
+      "mark": {
+        "type": "rule",
+        "strokeDash": [
+          4,
+          3
+        ],
+        "strokeWidth": 1.6,
+        "color": "#FF3B30"
+      },
+      "encoding": {
+        "x": {
+          "field": "x",
+          "type": "quantitative"
+        }
+      }
+    }
+  ]
+}

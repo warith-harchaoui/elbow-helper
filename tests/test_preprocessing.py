@@ -1,4 +1,9 @@
-"""Tests for Phase 1 preprocessing and its abstention signals."""
+"""Tests for Phase 1 preprocessing and its abstention signals.
+
+Author
+------
+Warith Harchaoui, <warith.harchaoui@deraison.ai>
+"""
 
 from __future__ import annotations
 

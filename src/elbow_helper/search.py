@@ -7,7 +7,7 @@ priority: passed model confirmation, cluster dominance, prominence-to-noise.
 
 Author
 ------
-`Warith Harchaoui, Ph.D. <https://www.linkedin.com/in/warith-harchaoui/>`_
+Warith Harchaoui, <warith.harchaoui@deraison.ai>
 """
 
 from __future__ import annotations
@@ -57,12 +57,12 @@ def run_search(
     Returns
     -------
     SearchResult
-        ``detected`` with the winning cluster and statistic, or an abstention
+        ``detected`` with the winning cluster and statistic or an abstention
         with a reason code.
     """
     candidates = generate_candidates(prepared, config)
     if not candidates:
-        return SearchResult(False, reason=Reason.NO_KNEED_CANDIDATES)
+        return SearchResult(False, reason=Reason.NO_KNEE_CANDIDATES)
 
     filtered = [c for c in candidates if passes_basic_filters(c, prepared.n, config)]
     if not filtered:

@@ -6,7 +6,7 @@ implemented in pure NumPy (no ``scipy.ndimage``).
 
 Author
 ------
-`Warith Harchaoui, Ph.D. <https://www.linkedin.com/in/warith-harchaoui/>`_
+Warith Harchaoui, <warith.harchaoui@deraison.ai>
 """
 
 from __future__ import annotations
@@ -19,7 +19,18 @@ from .config import RobustKneeConfig
 
 
 def _nearest_odd(v: float) -> int:
-    """Round ``v`` to the nearest odd integer ``>= 1``."""
+    """Round ``v`` to the nearest odd integer ``>= 1``.
+
+    Parameters
+    ----------
+    v : float
+        Value to round.
+
+    Returns
+    -------
+    int
+        The nearest odd integer, at least ``1``.
+    """
     w = int(round(v))
     if w < 1:
         w = 1
@@ -53,7 +64,18 @@ def smoothing_grid(n: int, config: RobustKneeConfig) -> List[int]:
 
 
 def _gaussian_kernel(window: int) -> np.ndarray:
-    """A normalized Gaussian kernel whose support approximates ``window``."""
+    """A normalized Gaussian kernel whose support approximates ``window``.
+
+    Parameters
+    ----------
+    window : int
+        Approximate support width, in samples.
+
+    Returns
+    -------
+    numpy.ndarray
+        A 1-D kernel summing to ``1.0``.
+    """
     # Treat the window as ~ +/- 2 sigma of support.
     sigma = max(window / 4.0, 0.5)
     radius = max(int(window // 2), 1)

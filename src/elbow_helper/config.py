@@ -10,7 +10,7 @@ counts so the full pipeline runs in seconds. For validation-grade runs raise
 
 Author
 ------
-`Warith Harchaoui, Ph.D. <https://www.linkedin.com/in/warith-harchaoui/>`_
+Warith Harchaoui, <warith.harchaoui@deraison.ai>
 """
 
 from __future__ import annotations
@@ -95,4 +95,36 @@ class RobustKneeConfig:
         RobustKneeConfig
             A new, independent configuration.
         """
+        return replace(self, **changes)
+
+
+@dataclass(frozen=True)
+class RobustKneesConfig:
+    """Immutable settings for :func:`elbow_helper.robust_knees` (plural).
+
+    The multi-knee search ships the combination validated in
+    ``research/multiknee/RESULTS.md``: dynamic-program search, the
+    subtractive-sign modified BIC as the selection criterion, and a
+    Bonferroni-gated sequential permutation test layered on top by default,
+    matching this package's design priority of minimising false-positive
+    knees. Use :meth:`with_` to derive a tweaked copy.
+    """
+
+    # --- data adequacy ---
+    min_samples: int = 20
+
+    # --- search ---
+    k_max: int = 4
+    min_seg_fraction: float = 0.08
+
+    # --- false-positive control ---
+    fwer_alpha: float = 0.05
+    fwer_permutations: int = 200
+    require_fwer_confirmation: bool = True
+
+    # --- reproducibility ---
+    random_seed: Optional[int] = None
+
+    def with_(self, **changes) -> "RobustKneesConfig":
+        """Return a copy of this config with ``changes`` applied."""
         return replace(self, **changes)
