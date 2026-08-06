@@ -23,7 +23,6 @@ How `elbow-helper` compares to *every other way of finding a knee*. Each approac
 | **Manual eyeballing** | ⭐ | ⭐ | ⭐⭐⭐ | ⭐⭐ | ⭐ | ⭐ | ⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐ | ⭐ |
 | **Ask an LLM** | ⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ | ⭐ | ⭐⭐ | ⭐ | ⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐ | ⭐ |
 
-(A tool that always answers scores ⭐ on "explicit abstention", not because it is dishonest, but because refusing to answer was never a state it can be in. That gap is exactly what `elbow-helper` was built to close.)
 
 ## Per-tool write-up
 

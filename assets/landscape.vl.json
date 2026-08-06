@@ -250,49 +250,57 @@
             "name": "elbow-helper",
             "x": 2.9164272935116733,
             "y": 1.4640853793628434,
-            "weight": "bold"
+            "weight": "bold",
+            "align": "center"
           },
           {
             "name": "kneed",
             "x": -1.0808044392035654,
             "y": -1.4640853793628434,
-            "weight": "normal"
+            "weight": "normal",
+            "align": "center"
           },
           {
             "name": "ruptures",
-            "x": 1.7063941343830977,
-            "y": -0.8762697096229408,
-            "weight": "normal"
+            "x": 1.443915677967047,
+            "y": -1.120283939516748,
+            "weight": "normal",
+            "align": "right"
           },
           {
             "name": "kneebow",
-            "x": -1.2494727812870403,
-            "y": -0.7543094151299319,
-            "weight": "normal"
+            "x": -0.9869943248709897,
+            "y": -0.9983236450237392,
+            "weight": "normal",
+            "align": "left"
           },
           {
             "name": "Yellowbrick KElbowVisualizer",
-            "x": -1.4423608359480897,
-            "y": -0.40676240345054104,
-            "weight": "normal"
+            "x": -1.1798823795320392,
+            "y": -0.6507766333443483,
+            "weight": "normal",
+            "align": "left"
           },
           {
             "name": "R segmented package",
-            "x": 2.9164272935116733,
-            "y": -0.4936025442170672,
-            "weight": "normal"
+            "x": 2.653948837095623,
+            "y": -0.2495883143232599,
+            "weight": "normal",
+            "align": "right"
           },
           {
             "name": "Manual eyeballing",
             "x": -2.9164272935116733,
             "y": 0.5104475126820391,
-            "weight": "normal"
+            "weight": "normal",
+            "align": "center"
           },
           {
             "name": "Ask an LLM",
             "x": -1.9853518899475715,
             "y": 1.4640853793628434,
-            "weight": "normal"
+            "weight": "normal",
+            "align": "center"
           }
         ]
       },
@@ -331,6 +339,10 @@
         },
         "fontWeight": {
           "field": "weight",
+          "type": "nominal"
+        },
+        "align": {
+          "field": "align",
           "type": "nominal"
         }
       }

@@ -23,7 +23,8 @@ Comment `elbow-helper` se compare à *toutes les autres façons de trouver un co
 | **Estimation visuelle manuelle** | ⭐ | ⭐ | ⭐⭐⭐ | ⭐⭐ | ⭐ | ⭐ | ⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐ | ⭐ |
 | **Demander à un LLM** | ⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ | ⭐ | ⭐⭐ | ⭐ | ⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐ | ⭐ |
 
-(Un outil qui répond toujours obtient ⭐ en « abstention explicite », non par malhonnêteté, mais parce que refuser de répondre n'a jamais fait partie de ses états possibles. C'est précisément cet écart qu'`elbow-helper` a été construit pour combler.)
+
+
 
 ## Fiche par outil
 
