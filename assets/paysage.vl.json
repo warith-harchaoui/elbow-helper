@@ -179,7 +179,7 @@
             "y": -0.9983236450237392
           },
           {
-            "name": "Yellowbrick KElbowVisualizer",
+            "name": "KElbowVisualizer",
             "color": "#28CD41",
             "x": -1.4423608359480897,
             "y": -0.6507766333443483
@@ -249,58 +249,50 @@
           {
             "name": "elbow-helper",
             "x": 2.9164272935116733,
-            "y": 1.4640853793628434,
-            "weight": "bold",
-            "align": "center"
+            "y": 1.586092494309747,
+            "weight": "bold"
           },
           {
             "name": "kneed",
             "x": -1.0808044392035654,
-            "y": -1.4640853793628434,
-            "weight": "normal",
-            "align": "center"
+            "y": -1.7080996092566507,
+            "weight": "normal"
           },
           {
             "name": "ruptures",
-            "x": 1.443915677967047,
-            "y": -1.120283939516748,
-            "weight": "normal",
-            "align": "right"
+            "x": 1.7063941343830977,
+            "y": -1.5595095533256011,
+            "weight": "normal"
           },
           {
             "name": "kneebow",
-            "x": -0.9869943248709897,
+            "x": -2.999329157394044,
             "y": -0.9983236450237392,
-            "weight": "normal",
-            "align": "left"
+            "weight": "normal"
           },
           {
-            "name": "Yellowbrick KElbowVisualizer",
-            "x": -1.1798823795320392,
-            "y": -0.6507766333443483,
-            "weight": "normal",
-            "align": "left"
+            "name": "KElbowVisualizer",
+            "x": -1.4423608359480897,
+            "y": -0.16274817355673382,
+            "weight": "normal"
           },
           {
             "name": "Paquet R segmented",
-            "x": 2.653948837095623,
-            "y": -0.2495883143232599,
-            "weight": "normal",
-            "align": "right"
+            "x": 2.9164272935116733,
+            "y": 0.1896372994855931,
+            "weight": "normal"
           },
           {
             "name": "Estimation visuelle manuelle",
             "x": -2.9164272935116733,
-            "y": 0.5104475126820391,
-            "weight": "normal",
-            "align": "center"
+            "y": 0.6324546276289427,
+            "weight": "normal"
           },
           {
             "name": "Demander \u00e0 un LLM",
             "x": -1.9853518899475715,
-            "y": 1.4640853793628434,
-            "weight": "normal",
-            "align": "center"
+            "y": 1.586092494309747,
+            "weight": "normal"
           }
         ]
       },
@@ -339,10 +331,6 @@
         },
         "fontWeight": {
           "field": "weight",
-          "type": "nominal"
-        },
-        "align": {
-          "field": "align",
           "type": "nominal"
         }
       }
