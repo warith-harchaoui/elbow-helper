@@ -12,3 +12,4 @@ diagnostics.png
 !assets/*.png
 *.docx
 .venv/
+.private/

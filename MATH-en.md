@@ -92,7 +92,7 @@ $$C[0][t] = \operatorname{cost}(0, t)$$
 
 $$C[k][t] = \min_{s} \Big( C[k-1][s] + \operatorname{cost}(s, t) \Big)$$
 
-where $s$ ranges over cut points that leave every segment at least `min_seg` points long. Solving this for every $k$ up to $k_{\max}$ and every $t$ up to $n$ costs $O(k_{\max} \cdot n^2)$, each cell an $O(n)$ minimization over $O(1)$ segment costs from Section 6. Backpointers recover the actual cut positions. `research/multiknee/tests/test_segmentation.py::test_dp_matches_brute_force_small_n` checks this against literal enumeration of every valid partition on small inputs, so its correctness is verified empirically, not just asserted from the textbook recursion [@cormen2022algorithms].
+where $s$ ranges over cut points that leave every segment at least `min_seg` points long. Solving this for every $k$ up to $k_{\max}$ and every $t$ up to $n$ costs $O(k_{\max} \cdot n^2)$, each cell an $O(n)$ minimization over $O(1)$ segment costs from Section 6. Backpointers recover the actual cut positions. `research/multiknee/tests/test_segmentation.py::test_dp_matches_brute_force_small_n` checks this against literal enumeration of every valid partition on small inputs, so its correctness is verified empirically, not just asserted from the textbook recursion [@cormen2022algorithms; @dasgupta2006algorithms].
 
 This is the same recursion underlying Yao [-@yao1988], Zhang and Siegmund [-@zhangsiegmund2007], and PELT, "Pruned Exact Linear Time", due to Killick, Fearnhead and Eckley [-@killick2012]. PELT is this recursion with a pruning step added that provably never removes the optimum for an additive penalty, so it returns identical answers, only faster. No separate PELT implementation was built for that reason: it would reproduce these numbers exactly.
 
@@ -292,4 +292,5 @@ For a deeper or more rigorous treatment of the ideas above than this note attemp
 - Bishop on the Bayesian model-selection framing that motivates BIC and ICL [-@bishop2006prml]
 - Bouveyron, Celeux, Murphy and Raftery on mixture models and model-based clustering at book length [-@bouveyron2021mbc]
 - Cormen, Leiserson, Rivest and Stein on dynamic programming in general [-@cormen2022algorithms]
+- Dasgupta, Papadimitriou and Vazirani on dynamic programming again, leaner and intuition-first: this project's own favourite treatment of the recursion behind Section 7 [-@dasgupta2006algorithms]
 - López de Prado on validation rigor for ordered, sequential data [-@lopezdeprado2018financial]
