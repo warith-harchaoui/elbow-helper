@@ -137,7 +137,6 @@ def dp_optimal_partition(
 
     # C[k] and back[k] indexed by t = 0..n; C[k][t] = best cost of t points in
     # k+1 segments. back[k][t] = the last cut point s achieving that optimum.
-    NEG = None
     C = [np.full(n + 1, np.inf) for _ in range(max_k + 1)]
     back = [np.full(n + 1, -1, dtype=int) for _ in range(max_k + 1)]
 

@@ -70,7 +70,6 @@ def cluster_candidates(
 
     windows = smoothing_grid(prepared.n, config)
     window_rank = {w: i for i, w in enumerate(windows)}
-    n_sensitivities = len({c.sensitivity for c in candidates}) or 1
 
     ordered = sorted(candidates, key=lambda c: c.knee_x_norm)
     clusters_members: List[List[KneeCandidate]] = []

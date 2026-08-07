@@ -27,7 +27,7 @@ Warith Harchaoui, <warith.harchaoui@deraison.ai>
 
 from __future__ import annotations
 
-from typing import List, Optional, Sequence, Tuple
+from typing import List, Sequence, Tuple
 
 import numpy as np
 
@@ -103,8 +103,6 @@ def sequential_fwer_gate(
     """
     x = np.asarray(x, dtype=float)
     y = np.asarray(y, dtype=float)
-    n = x.size
-    table = SegmentCostTable(x, y)
     rng = np.random.default_rng(seed)
 
     k_max = len(segmentations) - 1
