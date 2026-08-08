@@ -62,6 +62,216 @@ is noisy (Part~\ref{part:noise})?
 
 \clearpage
 
+\part{Introduction}
+\label{sec:intro}
+
+A knee or an elbow, on a curve of diminishing returns, marks the point
+past which more input stops buying much more output. Existing detectors
+are good at proposing where that point sits; what they lack is a notion
+of confidence, so a single point estimate on a noisy curve is easy to
+over-trust in practice. \code{elbow-helper} wraps a from-scratch locator
+in a conservative decision procedure and refuses to answer outright when
+the evidence is weak.
+
+This note derives, from first principles, every piece of mathematics the
+package runs. Several of its model-selection criteria, scores that reward
+a good fit while penalizing extra complexity, trace back to the same
+Gaussian log-likelihood: single-knee $\mathrm{BIC}$, the Bayesian
+Information Criterion (Section~\ref{sec:bic-cv}); the several-knee
+$\mathrm{BIC}(k)$ of Section~\ref{sec:several-bic}; its stricter cousin
+the modified Bayesian Information Criterion, $\mathrm{mBIC}$
+(Section~\ref{sec:mbic}); and a version that also charges for ambiguous
+segment boundaries, the Integrated Completed Likelihood, $\mathrm{ICL}$
+(Section~\ref{sec:icl}). This Introduction derives that shared foundation
+once, in natural log throughout, before any of those sections adds its
+own penalty term on top.
+
+\section{From raw likelihood to a bounded score}
+\label{sec:likelihood-intro}
+
+Start from the raw likelihood, before taking any logarithm at all, and
+take it \emph{per observation} from the outset: the geometric mean of the
+$n$ individual Gaussian densities, rather than their raw product. Under a
+generative model $y_i = f(x_i;\theta) + \varepsilon_i$ with $\varepsilon_i$
+i.i.d.\ $\mathcal N(0,\sigma^2)$ ($f$ any of the curve models this note
+fits, a single line, a broken line, or a $k$-segment piecewise line;
+$\theta$ its shape parameters):
+
+\begin{equation}
+L(\theta,\sigma^2) := \left(\prod_{i=1}^n (2\pi\sigma^2)^{-1/2}
+\exp\!\left(-\frac{(y_i - f(x_i;\theta))^2}{2\sigma^2}\right)\right)^{1/n}
+\end{equation}
+
+The product of $n$ identical prefactors and the product of exponentials
+both collapse cleanly under the $1/n$ root: a product of exponentials is
+an exponential of a sum, and that sum divided by $n$ is a mean.
+
+\begin{equation}
+L(\theta,\sigma^2) = (2\pi\sigma^2)^{-1/2}
+\exp\!\left(-\frac{1}{2\sigma^2}\cdot\frac{1}{n}\sum_{i=1}^n (y_i - f(x_i;\theta))^2\right)
+= (2\pi\sigma^2)^{-1/2}\exp\!\left(-\frac{\mathrm{MSE}(\theta)}{2\sigma^2}\right)
+\end{equation}
+
+the average per-point squared error, the mean squared error
+$\mathrm{MSE}(\theta) := \frac{1}{n}\sum_i (y_i - f(x_i;\theta))^2$.
+$L$ is already an $\exp$ expression, base $e$, straight from the Gaussian
+density's own definition, before any analyst chooses to take a logarithm
+for convenience. Taking $\ln$ of $L$ therefore does not introduce a base;
+it undoes the one already there:
+
+\begin{equation}
+\ell(\theta,\sigma^2) := \ln L(\theta,\sigma^2)
+= -\frac{1}{2}\ln(2\pi\sigma^2) - \frac{\mathrm{MSE}(\theta)}{2\sigma^2}
+\end{equation}
+
+Minimizing $\mathrm{MSE}$ over $\theta$ at fixed $\sigma^2$ is maximizing
+$\ell$ over $\theta$, the reason ordinary least squares and Gaussian
+maximum likelihood are one procedure, not two. Profiling out $\sigma^2$ at
+its best-supported value, the maximum likelihood estimate (MLE)
+$\hat\sigma^2 = \mathrm{MSE}$, and exponentiating $-2\ell$, the
+conventional scaling for an information criterion, undoes the $\ln$ and
+lands on a single clean per-observation quantity, the measure information
+theory calls perplexity:
+
+\begin{equation}
+\mathrm{PPL}(\theta) := \exp\!\big(-2\,\ell(\theta,\hat\sigma^2)\big) = 2\pi e \cdot \mathrm{MSE}(\theta)
+\end{equation}
+
+Scaling this per-observation perplexity back up to the full $n$-point
+sample recovers the negative log-likelihood, $\mathrm{NLL}$, every
+$\mathrm{BIC}$-family formula in this note is built from, written here
+through the residual sum of squares, $RSS(\theta) := \sum_i (y_i -
+f(x_i;\theta))^2$, the un-averaged numerator $\mathrm{MSE}$ divides by
+$n$:
+
+\begin{equation}
+\mathrm{NLL} := n \ln \mathrm{PPL}(\theta) = n \ln\!\left(\frac{RSS}{n}\right) + n(1 + \ln 2\pi)
+\end{equation}
+
+the same $n\ln(RSS/n)$ term every $\mathrm{BIC}$-family formula in this
+note opens with.
+
+\textbf{Extreme cases, without a sigmoid.} $\mathrm{PPL}$ is a genuine
+improvement over the raw $\mathrm{NLL}$ it is built from at exactly one
+end: $\mathrm{NLL}$ runs over $(-\infty, +\infty)$, but exponentiating
+automatically fixes the lower tail, $\mathrm{PPL} = 2\pi e \cdot
+\mathrm{MSE}(\theta) \ge 0$ always, with $\mathrm{PPL} = 0$ at a perfect
+fit ($\mathrm{MSE} \to 0$): the Gaussian degeneracy behind BIC's whole
+reason to exist, a model with as many parameters as points drives
+$\mathrm{MSE}$ to zero and its raw likelihood to infinity. The upper end
+is still unresolved: $\mathrm{MSE} \to \infty$ is not a meaningful worst
+case; it is merely unbounded, not a real reference point any fit would
+sit near. The sample
+mean $\bar y$ is not a good worst-case reference either: it is the
+\emph{unique} constant that \emph{minimizes} $\mathrm{MSE}$ among all
+constants, the best trivial predictor there is, not a bad one. That is
+exactly why normalizing against it (the textbook $R^2$) can still go
+negative: a real fit is easy to make worse than the one constant nothing
+else can beat. A genuinely pessimistic, finite worst case instead picks
+the single \emph{observed} point that is hardest to predict everything
+else from:
+
+\begin{equation}
+y_{\text{bad}} := \operatorname*{arg\,max}_{y_j \in \{y_1,\dots,y_n\}}
+\frac{1}{n}\sum_i (y_i - y_j)^2, \qquad
+\mathrm{MSE}_{\text{worst}} := \frac{1}{n}\sum_i (y_i - y_{\text{bad}})^2
+\end{equation}
+
+Since $\bar y$ uniquely minimizes $\mathrm{MSE}$ among constants, any other
+constant, an actual observed value most of all, scores strictly worse:
+$\mathrm{MSE}_{\text{worst}} > \mathrm{Var}(y)$ always. Normalizing against
+this harder-to-beat ceiling instead,
+
+\begin{equation}
+1 - \frac{\mathrm{MSE}(\theta)}{\mathrm{MSE}_{\text{worst}}} = 1 - \frac{\mathrm{PPL}(\theta)}{\mathrm{PPL}_{\text{worst}}}
+\end{equation}
+
+gives a score anchored at $1$ for a perfect fit and at $0$ for a fit
+exactly as bad as $y_{\text{bad}}$ itself, with a far higher bar to cross
+into negative territory than the mean-based $R^2$ ever offers, since
+$\mathrm{MSE}_{\text{worst}} > \mathrm{Var}(y)$ by construction, built
+entirely from $\mathrm{MSE}$ against a real, deliberately pessimistic
+reference point, with no Bayes factor or posterior probability anywhere
+in the derivation. This is a stricter cousin of $R^2$, not $R^2$ itself,
+$R^2$ keeps $\bar y$ as its baseline and accepts the occasional negative
+score in exchange. \code{elbow\_helper.plotting}'s diagnostic legend takes
+a different route again, converting $\Delta\mathrm{BIC}$ directly into a
+posterior probability via a Bayes factor \citep{kassraftery1995}, a valid
+alternative normalization built on the same $\mathrm{NLL}$ but not the one
+derived here.
+
+Every $\mathrm{BIC}$-family quantity in this note inherits this same
+natural-log base by construction: each is $\mathrm{NLL}$ plus a complexity
+penalty, never a likelihood rederived from scratch. Changing the log base
+anywhere downstream would mean rederiving the Gaussian density itself in
+that base, not rescaling a finished number.
+
+\section{Related Work}
+\label{sec:related-work}
+
+\textbf{Knee and elbow heuristics.} Satopaa, Albrecht, Irwin and
+Raghavan's Kneedle \citep{satopaa2011} locates a knee via the same
+difference-from-chord geometry Section~\ref{sec:diff-curve} builds on, as
+a single point estimate with no confidence machinery.
+\code{elbow-helper}'s locator borrows that geometric intuition and wraps
+it in the decision procedure this note derives.
+
+\textbf{Changepoint detection and segmentation.} Killick, Fearnhead and
+Eckley's pruned dynamic-programming algorithm, Pruned Exact Linear Time
+(PELT) \citep{killick2012}, achieves exact, optimal segmentation at linear
+cost, the same optimal-substructure principle Section~\ref{sec:dp} is
+built on too, restricted here to a small $k_{\max}$ rather than PELT's
+penalty-driven unbounded $k$. Fryzlewicz's
+Wild Binary Segmentation \citep{fryzlewicz2014} is the greedy alternative
+to exact dynamic programming behind Section~\ref{sec:greedy}'s comparison.
+Yao \citep{yao1988} first analyzed estimating the number of changepoints
+via Schwarz's criterion, the direct ancestor of the several-knee
+$\mathrm{BIC}(k)$ criterion in Section~\ref{sec:several-bic}.
+
+\textbf{Model selection criteria.} Schwarz \citep{schwarz1978} is
+$\mathrm{BIC}$'s origin. Zhang and Siegmund \citep{zhangsiegmund2007}
+correct $\mathrm{BIC}$'s undercharging for breakpoint-location freedom,
+the $\mathrm{mBIC}$ of Section~\ref{sec:mbic}. Biernacki, Celeux and
+Govaert \citep{biernacki2000} introduce the Integrated Completed
+Likelihood for mixture models, adapted to changepoints in
+Section~\ref{sec:icl} via Rigaill, Lebarbier and Robin's exact
+forward-backward posterior over segmentations \citep{rigaill2012},
+further accelerated by Cleynen, Luong, Rigaill and Nuel
+\citep{cleynen2013}. Kass and Raftery \citep{kassraftery1995} supply the
+Bayes-factor route from a raw likelihood difference to a posterior
+probability, the alternative normalization noted above.
+
+\textbf{Sequential and multiscale testing.} Davies \citep{davies1977}
+addresses hypothesis testing when a nuisance parameter, here the
+breakpoint location, exists only under the alternative, a problem
+Section~\ref{sec:fwer}'s sequential test runs into directly. Frick, Munk
+and Sieling's Simultaneous MUlti-scale Change-point Estimator (SMUCE)
+\citep{frick2014} gives the same kind of guarantee across every scale at
+once, cited alongside it.
+
+\textbf{Robust and classical statistics.} Spearman's rank correlation
+\citep{spearman1904} screens for a monotonic trend before any knee search
+runs. Theil \citep{theil1950} and Sen \citep{sen1968} give the
+outlier-robust slope estimator behind the Theil-Sen contrast check.
+Efron's bootstrap \citep{efron1979} is the resampling method behind the
+stability check.
+
+\textbf{Methodology.} L\'opez de Prado \citep{lopezdeprado2018financial}
+argues at length for contiguous, not shuffled, cross-validation on
+ordered sequential data, the reasoning behind this project's blocked
+cross-validation.
+
+\textbf{Further reading.} Hastie, Tibshirani and Friedman
+\citep{hastie2009esl}, Bishop \citep{bishop2006prml}, Bouveyron, Celeux,
+Murphy and Raftery \citep{bouveyron2021mbc}, Cormen, Leiserson, Rivest and
+Stein \citep{cormen2022algorithms}, and Dasgupta, Papadimitriou and
+Vazirani \citep{dasgupta2006algorithms} are cited throughout as accessible
+textbook treatments, not as the origin of any specific claim above; a few,
+drawn from the author's own curated
+\href{https://deraison.ai/ai-books}{book list}, are pointed to only where
+directly relevant.
+
+\clearpage
 
 \part{One knee, the geometry of a bend}
 \label{part:one}
@@ -96,6 +306,7 @@ Percentiles absorb a handful of extreme points without distorting the shape
 that matters (\code{src/elbow\_helper/preprocessing.py}).
 
 \section{The difference-curve bump: what ``knee'' means, exactly}
+\label{sec:diff-curve}
 
 \textbf{Intuition.} A textbook knee, shaped like $\sqrt{x}$, rises fast then
 levels off. Subtracting the straight diagonal line joining the curve's two
@@ -181,6 +392,31 @@ perfect circles either. The figure below plots inertia on a logarithmic
 axis for this reason: the drop at $k=8$ is so much larger than the tail's
 own gentle decay that a linear axis would flatten the tail to the eye even
 though the underlying numbers keep falling.
+
+\textbf{Reading the evidence legend, ahead of its own derivation.} The
+figure below is this note's first with the full diagnostic legend
+\code{elbow\_helper.plotting} draws next to every confirmed knee, five
+numbers Parts~\ref{part:several}--\ref{part:noise} derive properly later;
+in plain language ahead of that: \emph{detection probability}
+(Section~\ref{sec:bootstrap}) is how often the identical knee reappears
+under a residual bootstrap redo: close to $100\%$ means the knee is not
+an artefact of this one particular noise draw. \emph{null p} (null
+$p$-value, Section~\ref{sec:null-test}) is how surprising the observed
+knee would be if the true curve were a straight line: small means a
+straight-line explanation is implausible. \emph{slope contrast}
+(Section~\ref{sec:theilsen}) is a $[0,1]$ score for how sharply the slope
+actually changes at the knee: near $100\%$ means the two sides point in
+essentially opposite or wildly different directions. \emph{posterior
+probability} (Section~\ref{sec:bic-cv}) is the BIC-derived odds, under a
+Bayes-factor approximation, that a broken line genuinely fits better than
+a single straight one rather than by chance. \emph{fit quality}
+(Section~\ref{sec:likelihood-intro}, already derived) is how close the
+confirmed broken-line fit sits to the data relative to a deliberately
+pessimistic worst case: $100\%$ at a perfect fit. Every one of the five
+is a bounded, justified $[0,1]$ score, not a raw, scale-dependent
+statistic a reader has to calibrate by eye; four read strong evidence as
+a number near $100\%$, only null $p$ runs the other way, small rather
+than large, exactly a $p$-value's usual convention.
 
 \begin{figure}[h]
 \centering
@@ -310,6 +546,7 @@ faster. No separate PELT implementation was built for that reason: it would
 reproduce these numbers exactly.
 
 \section{Greedy binary segmentation: the faster, worse alternative}
+\label{sec:greedy}
 
 \textbf{Intuition.} Instead of solving the whole problem exactly,
 repeatedly make the single best choice available right now: find the one
@@ -415,6 +652,7 @@ contributes one candidate to a pool; nothing is trusted yet, this stage
 only \emph{proposes}.
 
 \section{Only count it if it survives everywhere: persistence clustering}
+\label{sec:persistence}
 
 \textbf{Intuition.} A genuine knee should show up at nearly every smoothing
 width and every sensitivity, wandering only slightly. A knee that is really
@@ -429,6 +667,7 @@ explicitly refuses to pick a winner (\code{MULTIPLE\_PLAUSIBLE\_KNEES}),
 rather than guess (\code{src/elbow\_helper/\allowbreak clustering.py}).
 
 \section{Confirming the slope: the Theil-Sen contrast}
+\label{sec:theilsen}
 
 \textbf{Intuition.} The ordinary way to estimate a slope, fit a line
 through a bunch of points, is easily thrown off by a single bad point far
@@ -471,9 +710,27 @@ Schwarz's fix for this, charges each extra parameter a fixed toll, in units
 of how much the log-likelihood must improve to be worth it, so that a model
 is only preferred if it clears that bar.
 
-\textbf{Formula.} For a Gaussian ordinary-least-squares fit with $n$
-points, $p$ free parameters (including the noise variance itself), and
-$RSS$ the residual sum of squares:
+\textbf{Where the log base comes from.} Section~\ref{sec:likelihood-intro}
+derives, from the raw Gaussian likelihood $L(\theta,\sigma^2)$, that the
+negative log-likelihood
+
+\begin{equation}
+\mathrm{NLL} = n \ln\!\left(\frac{RSS}{n}\right) + n(1 + \ln 2\pi)
+\end{equation}
+
+is natural-log by construction, inherited from the Gaussian density's own
+$\exp$, not chosen freely, and that its extreme cases are best read
+through $\mathrm{MSE}_{\text{worst}}$, a deliberately pessimistic finite
+baseline, rather than through $\mathrm{MSE} \to \infty$ or the
+easily-beaten sample mean. Every $\mathrm{BIC}$-family formula in this
+note, including the one below, opens with this same $n\ln(RSS/n)$ term.
+
+\textbf{Formula.} Schwarz's fix for the overfitting problem in this
+section's Intuition paragraph adds a complexity penalty, $p \ln n$, on top
+of this same $\mathrm{NLL}$, through a Laplace approximation to the
+model's marginal likelihood carried out in the same natural log
+throughout. Dropping the additive constant $n(1+\ln 2\pi)$, which cancels
+when comparing two models on the same data:
 
 \begin{equation}
 \mathrm{BIC} = n \ln\!\left(\frac{RSS}{n}\right) + p \ln n
@@ -532,6 +789,7 @@ Prado's book on financial machine learning argues for at length, in the
 context of ordered, sequential data \citeyearpar{lopezdeprado2018financial}.
 
 \section{Bootstrap: does the knee survive a redo?}
+\label{sec:bootstrap}
 
 \textbf{Intuition.} If the data collection were repeated, would the same
 knee show up again, or was this run's knee a fluke of this run's
@@ -614,6 +872,7 @@ $\frac{1}{2}\ln n$ per parameter, the Laplace-approximation argument behind
 BIC, assumes exactly the regularity that breaks down here.
 
 \section{Modified BIC: Zhang and Siegmund's fix and a sign convention resolved by testing}
+\label{sec:mbic}
 
 \textbf{Intuition.} If plain BIC undercharges for the freedom to place
 breakpoints, the fix is to charge more, specifically to charge \emph{more
@@ -658,6 +917,7 @@ still beats plain BIC (0.77 vs.\ 0.65) but leaves an 11\% false-positive
 rate. \textbf{The subtractive form is the one shipped.}
 
 \section{ICL: from mixture models to changepoints, including a bug this project found and fixed}
+\label{sec:icl}
 
 \textbf{Intuition.} Biernacki, Celeux and Govaert's Integrated Completed
 Likelihood, developed for choosing the number of clusters in a mixture
@@ -744,6 +1004,7 @@ section instead), but the derivation carries over exactly, because the log
 base was never a free choice to begin with.
 
 \section{A sequential test controlling the family-wise error rate}
+\label{sec:fwer}
 
 \textbf{Intuition.} Independent of any BIC-family score, a more direct
 question can be asked at each step: walking the sequence of segmentations
@@ -767,10 +1028,10 @@ correction across up to $k_{\max}$ sequential tests. The procedure stops at
 the first breakpoint that fails, so it can never ``skip'' a rejected
 breakpoint and accept a later one. Bonferroni is conservative for
 independent tests; these sequential tests are not independent, each
-conditions on the model accepted at the previous step, which keeps the true
-family-wise error rate, the probability of accepting at least one spurious
-breakpoint anywhere in the sequence, at most as large as the nominal
-$\alpha$, not larger.
+conditions on the model accepted at the previous step, which keeps the
+true family-wise error rate (FWER), the probability of accepting at
+least one spurious breakpoint anywhere in the sequence, at most as large
+as the nominal $\alpha$, not larger.
 
 \code{RESULTS.md} shows this reaching a 0\% false-positive rate at
 $\text{true } k = 0$ and 0.82 overall accuracy, in the same tier as the
@@ -823,7 +1084,7 @@ five different noise draws tested
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.8\textwidth]{figures/sigmoid_staircase.png}
+\includegraphics[width=0.8\textwidth]{figures/sigmoid_staircase_en.png}
 \caption{A smooth staircase built from three logistic sigmoids, with
 \code{elbow\_helper.robust\_knees}'s six detected breakpoints (dashed red
 lines) each bracketing one rise's start and end.}

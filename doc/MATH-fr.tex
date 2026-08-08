@@ -65,6 +65,243 @@ l'autre réponse une fois les données bruitées (partie~\ref{part:bruit})~?
 
 \clearpage
 
+\part{Introduction}
+\label{sec:intro}
+
+Sur une courbe à rendements décroissants, un coude marque l'endroit où
+chaque unité supplémentaire investie rapporte de moins en moins. Les
+détecteurs existants savent bien proposer un point~; ce qui leur manque
+est une notion de confiance, si bien qu'une estimation ponctuelle isolée
+sur une courbe bruitée est facile à surinterpréter. \code{elbow-helper}
+enveloppe un repéreur réécrit de zéro dans une procédure de décision
+prudente et refuse de trancher franchement quand les preuves sont trop
+minces.
+
+Cette note dérive, à partir des principes de base, chaque brique
+mathématique que le paquet met en œuvre. Plusieurs de ses critères de
+sélection de modèle, des scores qui récompensent un bon ajustement tout en
+pénalisant la complexité superflue, remontent à la même log-vraisemblance
+gaussienne~: le $\mathrm{BIC}$ à coude unique, le critère d'information
+bayésien (section~\ref{sec:bic-vc})~; le $\mathrm{BIC}(k)$ à plusieurs
+coudes de la section~\ref{sec:several-bic}~; son cousin plus strict, le
+BIC modifié, $\mathrm{mBIC}$ (section~\ref{sec:mbic})~; et une version qui
+facture aussi l'ambiguïté des frontières de segments, la vraisemblance
+complétée intégrée, $\mathrm{ICL}$ (section~\ref{sec:icl}). Cette
+introduction dérive ce socle commun une seule fois, en logarithme naturel
+de bout en bout, avant qu'aucune de
+ces sections n'y ajoute son propre terme de pénalité.
+
+\section{De la vraisemblance brute à un score borné}
+\label{sec:likelihood-intro}
+
+Partons de la vraisemblance brute, avant tout logarithme, et prenons-la
+\emph{par observation} dès le départ~: la moyenne géométrique des $n$
+densités gaussiennes individuelles, plutôt que leur produit brut. Sous un
+modèle génératif $y_i = f(x_i;\theta) + \varepsilon_i$ avec $\varepsilon_i$
+i.i.d.\ $\mathcal N(0,\sigma^2)$ ($f$ n'importe lequel des modèles de
+courbe que cette note ajuste, une droite simple, une ligne brisée, ou une
+ligne brisée à $k$ segments~; $\theta$ ses paramètres de forme)~:
+
+\begin{equation}
+L(\theta,\sigma^2) := \left(\prod_{i=1}^n (2\pi\sigma^2)^{-1/2}
+\exp\!\left(-\frac{(y_i - f(x_i;\theta))^2}{2\sigma^2}\right)\right)^{1/n}
+\end{equation}
+
+Le produit de $n$ préfacteurs identiques et le produit d'exponentielles
+s'effondrent proprement sous la racine $1/n$~: un produit d'exponentielles
+est une exponentielle d'une somme, et cette somme divisée par $n$ est une
+moyenne.
+
+\begin{equation}
+L(\theta,\sigma^2) = (2\pi\sigma^2)^{-1/2}
+\exp\!\left(-\frac{1}{2\sigma^2}\cdot\frac{1}{n}\sum_{i=1}^n (y_i - f(x_i;\theta))^2\right)
+= (2\pi\sigma^2)^{-1/2}\exp\!\left(-\frac{\mathrm{MSE}(\theta)}{2\sigma^2}\right)
+\end{equation}
+
+l'erreur quadratique moyenne par point, $\mathrm{MSE}(\theta) :=
+\frac{1}{n}\sum_i (y_i - f(x_i;\theta))^2$. $L$
+est déjà une expression en $\exp$, en base $e$, directement issue de la
+définition même de la densité gaussienne, avant qu'un analyste choisisse
+de prendre un logarithme par commodité. Prendre le $\ln$ de $L$
+n'introduit donc pas de base~: il défait celle qui est déjà là~:
+
+\begin{equation}
+\ell(\theta,\sigma^2) := \ln L(\theta,\sigma^2)
+= -\frac{1}{2}\ln(2\pi\sigma^2) - \frac{\mathrm{MSE}(\theta)}{2\sigma^2}
+\end{equation}
+
+Minimiser $\mathrm{MSE}$ sur $\theta$ à $\sigma^2$ fixé revient à
+maximiser $\ell$ sur $\theta$~: c'est pourquoi les moindres carrés
+ordinaires et le maximum de vraisemblance gaussien forment une seule et
+même procédure. En profilant $\sigma^2$ à sa valeur la mieux soutenue par
+les données, l'estimateur du maximum de vraisemblance (EMV) $\hat\sigma^2
+= \mathrm{MSE}$, puis en exponentiant $-2\ell$, l'échelle conventionnelle
+d'un critère d'information, on défait le $\ln$ et on obtient une seule
+quantité limpide par observation, la mesure que la théorie de
+l'information appelle perplexité~:
+
+\begin{equation}
+\mathrm{PPL}(\theta) := \exp\!\big(-2\,\ell(\theta,\hat\sigma^2)\big) = 2\pi e \cdot \mathrm{MSE}(\theta)
+\end{equation}
+
+En remontant cette perplexité par observation à l'échelle de
+l'échantillon complet à $n$ points, on retrouve la log-vraisemblance
+négative, $\mathrm{NLL}$, dont part toute formule de la famille
+$\mathrm{BIC}$ dans cette note, écrite ici via la somme des carrés des
+résidus, $RSS(\theta) := \sum_i (y_i - f(x_i;\theta))^2$, le numérateur
+non moyenné que $\mathrm{MSE}$ divise par $n$~:
+
+\begin{equation}
+\mathrm{NLL} := n \ln \mathrm{PPL}(\theta) = n \ln\!\left(\frac{RSS}{n}\right) + n(1 + \ln 2\pi)
+\end{equation}
+
+le même terme $n\ln(RSS/n)$ par lequel s'ouvre toute formule de la
+famille $\mathrm{BIC}$ dans cette note, mesuré en \emph{nats}~: l'analogue
+en logarithme naturel du bit, un nat est l'information gagnée par un
+événement $1/e$ fois moins probable que la certitude, l'unité dans
+laquelle toute quantité construite avec $\ln$ plutôt que $\log_2$
+s'exprime implicitement. Chaque log-vraisemblance, chaque
+$\mathrm{NLL}$, $\mathrm{BIC}$, $\mathrm{mBIC}$ et $\mathrm{ICL}$ dans
+cette note est un compte de nats, pas un nombre sans unité, ce qui
+explique en partie pourquoi une valeur brute comme «~$282,4$ nats~» ne se
+lit pas comme un score borné~: les nats s'accumulent avec $n$ et avec
+l'échelle propre de la log-vraisemblance, exactement la motivation
+derrière les scores bornés dérivés plus bas.
+
+\textbf{Cas extrêmes.} Le $\mathrm{PPL}$ est une
+amélioration véritable par rapport au $\mathrm{NLL}$ brut dont il est
+issu, sur exactement un côté~: le $\mathrm{NLL}$ parcourt $(-\infty,
++\infty)$, mais exponentier corrige automatiquement la queue inférieure,
+$\mathrm{PPL} = 2\pi e \cdot \mathrm{MSE}(\theta) \ge 0$ toujours, avec
+$\mathrm{PPL} = 0$ à l'ajustement parfait ($\mathrm{MSE} \to 0$)~: la
+dégénérescence gaussienne qui justifie l'existence même du BIC, un modèle
+avec autant de paramètres que de points pousse le $\mathrm{MSE}$ vers zéro
+et sa vraisemblance brute vers l'infini. Le côté supérieur reste non
+résolu~: $\mathrm{MSE} \to \infty$ n'est pas un pire cas significatif~; il
+est simplement non borné, pas un vrai point de référence près duquel un
+ajustement se situerait. La moyenne
+d'échantillon $\bar y$ n'est pas non plus une bonne référence de pire
+cas~: c'est l'\emph{unique} constante qui \emph{minimise} le
+$\mathrm{MSE}$ parmi toutes les constantes, le meilleur prédicteur
+trivial qui soit, pas un mauvais. C'est exactement pourquoi normaliser
+contre elle (le $R^2$ classique) peut encore donner un résultat négatif~:
+un ajustement réel est facile à rendre pire que la seule constante que
+rien d'autre ne peut battre. Un pire cas vraiment pessimiste et fini
+choisit plutôt le point \emph{observé} le plus difficile à partir duquel
+prédire tous les autres~:
+
+\begin{equation}
+y_{\text{mauvais}} := \operatorname*{arg\,max}_{y_j \in \{y_1,\dots,y_n\}}
+\frac{1}{n}\sum_i (y_i - y_j)^2, \qquad
+\mathrm{MSE}_{\text{pire}} := \frac{1}{n}\sum_i (y_i - y_{\text{mauvais}})^2
+\end{equation}
+
+Comme $\bar y$ minimise le $\mathrm{MSE}$ de façon unique parmi les
+constantes, toute autre constante, une valeur effectivement observée en
+premier lieu, obtient un score strictement pire~: $\mathrm{MSE}_{\text{pire}}
+> \mathrm{Var}(y)$ toujours. Normaliser contre ce plafond plus difficile à
+battre donne à la place
+
+\begin{equation}
+1 - \frac{\mathrm{MSE}(\theta)}{\mathrm{MSE}_{\text{pire}}} = 1 - \frac{\mathrm{PPL}(\theta)}{\mathrm{PPL}_{\text{pire}}}
+\end{equation}
+
+un score ancré à $1$ pour un ajustement parfait et à $0$ pour un
+ajustement aussi mauvais que $y_{\text{mauvais}}$ lui-même, avec une
+barre bien plus haute à franchir pour tomber en territoire négatif que ce
+que le $R^2$ fondé sur la moyenne offre jamais, puisque
+$\mathrm{MSE}_{\text{pire}} > \mathrm{Var}(y)$ par construction, construit
+entièrement à partir du $\mathrm{MSE}$ contre un point de référence réel
+et délibérément pessimiste, sans facteur de Bayes ni probabilité a
+posteriori nulle part dans la dérivation. C'est un cousin plus strict du
+$R^2$, pas le $R^2$ lui-même~: le $R^2$ garde $\bar y$ comme référence et
+accepte en échange un score parfois négatif. La légende de diagnostic
+d'\code{elbow\_helper.plotting} prend une autre voie~: elle convertit le
+$\Delta\mathrm{BIC}$ directement en probabilité a posteriori via un
+facteur de Bayes \citep{kassraftery1995}, une normalisation alternative
+tout aussi valable, construite sur le même $\mathrm{NLL}$ mais différente
+de celle dérivée ici.
+
+Toute quantité de la famille $\mathrm{BIC}$ dans cette note hérite de
+cette même base naturelle par construction~: chacune est le
+$\mathrm{NLL}$ plus une pénalité de complexité, jamais une vraisemblance
+redérivée depuis zéro. Changer la base du logarithme n'importe où en aval
+reviendrait à redériver la densité gaussienne elle-même dans cette base,
+pas à redimensionner un nombre déjà obtenu.
+
+\section{Travaux connexes}
+\label{sec:related-work}
+
+\textbf{Heuristiques de coude et d'elbow.} Le Kneedle de Satopaa,
+Albrecht, Irwin et Raghavan \citep{satopaa2011} repère un coude via la
+même géométrie de distance à la corde que la section~\ref{sec:diff-curve}
+construit, comme une estimation ponctuelle sans machinerie de confiance.
+Le repéreur d'\code{elbow-helper} emprunte cette intuition géométrique et
+l'enveloppe dans la procédure de décision que cette note dérive.
+
+\textbf{Détection de points de rupture et segmentation.} L'algorithme de
+programmation dynamique élaguée de Killick, Fearnhead et Eckley, Pruned
+Exact Linear Time (PELT) \citep{killick2012}, atteint une segmentation
+exacte et optimale à coût linéaire, le même principe de sous-structure
+optimale sur lequel repose aussi la section~\ref{sec:dp}, restreint ici à
+un petit $k_{\max}$ plutôt qu'au $k$ non borné piloté par pénalité de
+PELT. La segmentation binaire
+sauvage de Fryzlewicz \citep{fryzlewicz2014} est l'alternative gloutonne
+à la programmation dynamique exacte derrière la comparaison de la
+section~\ref{sec:greedy}. Yao \citep{yao1988} a le premier analysé
+l'estimation du nombre de points de rupture via le critère de Schwarz,
+l'ancêtre direct du critère $\mathrm{BIC}(k)$ à plusieurs coudes de la
+section~\ref{sec:several-bic}.
+
+\textbf{Critères de sélection de modèle.} Schwarz \citep{schwarz1978} est
+à l'origine du $\mathrm{BIC}$. Zhang et Siegmund \citep{zhangsiegmund2007}
+corrigent la sous-facturation du $\mathrm{BIC}$ pour la liberté de
+placement des points de rupture, le $\mathrm{mBIC}$ de la
+section~\ref{sec:mbic}. Biernacki, Celeux et Govaert
+\citep{biernacki2000} introduisent la vraisemblance complétée intégrée
+pour les modèles de mélange, adaptée aux points de rupture dans la
+section~\ref{sec:icl} via la distribution a posteriori exacte de Rigaill,
+Lebarbier et Robin par passage avant-arrière sur les segmentations
+\citep{rigaill2012}, encore accélérée par Cleynen, Luong, Rigaill et Nuel
+\citep{cleynen2013}. Kass et Raftery \citep{kassraftery1995} fournissent
+la voie du facteur de Bayes, d'une différence de vraisemblance brute
+jusqu'à une probabilité a posteriori, la normalisation alternative notée
+ci-dessus.
+
+\textbf{Tests séquentiels et multi-échelles.} Davies \citep{davies1977}
+traite le test d'hypothèse quand un paramètre de nuisance, ici
+l'emplacement du point de rupture, n'existe que sous l'hypothèse
+alternative, un problème auquel le test séquentiel de la
+section~\ref{sec:fwer} se heurte directement. Le Simultaneous MUlti-scale
+Change-point Estimator de Frick, Munk et Sieling (SMUCE)
+\citep{frick2014} donne cette même garantie à chaque échelle à la fois,
+cité aux côtés de celui-ci.
+
+\textbf{Statistique robuste et classique.} La corrélation de rang de
+Spearman \citep{spearman1904} filtre la présence d'une tendance monotone
+avant toute recherche de coude. Theil \citep{theil1950} et Sen
+\citep{sen1968} fournissent l'estimateur de pente robuste aux valeurs
+aberrantes derrière le contraste de Theil-Sen. Le bootstrap d'Efron
+\citep{efron1979} est la méthode de rééchantillonnage derrière le test de
+stabilité.
+
+\textbf{Méthodologie.} L\'opez de Prado \citep{lopezdeprado2018financial}
+défend longuement la validation croisée contiguë, non mélangée, sur des
+données ordonnées et séquentielles, le raisonnement derrière la
+validation croisée par blocs de ce projet.
+
+\textbf{Pour aller plus loin.} Hastie, Tibshirani et Friedman
+\citep{hastie2009esl}, Bishop \citep{bishop2006prml}, Bouveyron, Celeux,
+Murphy et Raftery \citep{bouveyron2021mbc}, Cormen, Leiserson, Rivest et
+Stein \citep{cormen2022algorithms}, et Dasgupta, Papadimitriou et
+Vazirani \citep{dasgupta2006algorithms} sont cités tout au long de cette
+note comme traitements pédagogiques accessibles, non comme l'origine
+d'une affirmation particulière ci-dessus~; quelques-uns, tirés de la
+\href{https://deraison.ai/ai-books}{liste de livres} personnellement
+tenue par l'auteur, ne sont indiqués que là où directement pertinents.
+
+\clearpage
+
 \part{Un coude, la géométrie d'une pliure}
 \label{part:un}
 
@@ -101,6 +338,7 @@ de zéro. Les percentiles absorbent quelques points extrêmes sans déformer
 la forme qui compte (\code{src/elbow\_helper/preprocessing.py}).
 
 \section{La bosse de la courbe de différence~: ce que « coude » veut dire, précisément}
+\label{sec:diff-curve}
 
 \textbf{Intuition.} Un coude d'école, en forme de $\sqrt{x}$, monte vite
 puis se stabilise. Si l'on soustrait de la courbe elle-même la droite
@@ -194,6 +432,34 @@ logarithmique pour cette raison précise~: la chute à $k=8$ est tellement
 plus grande que la lente décroissance de la traîne qu'un axe linéaire
 aplatirait cette dernière à l'œil, alors même que les valeurs continuent
 bel et bien de baisser.
+
+\textbf{Lire la légende de preuves, avant sa propre dérivation.} La
+figure ci-dessous est la première de cette note avec la légende de
+diagnostic complète qu'\code{elbow\_helper.plotting} dessine à côté de
+chaque coude confirmé, cinq nombres que les parties~\ref{part:plusieurs}
+et~\ref{part:bruit} dérivent proprement plus loin~; en langage clair par
+avance~: la \emph{probabilité de détection} (section~\ref{sec:bootstrap})
+est la fréquence à laquelle le même coude réapparaît sous une reprise par
+bootstrap des résidus~: proche de $100\%$ signifie que le coude n'est pas
+un artefact de ce seul tirage de bruit. Le \emph{p (nul)} (valeur $p$ du
+test nul, section~\ref{sec:null-test}) est le degré de surprise qu'aurait
+le coude observé si la vraie courbe était une droite~: petit signifie
+qu'une explication par une simple droite est peu plausible. Le
+\emph{contraste de pente} (section~\ref{sec:theilsen}) est un score
+$[0,1]$ pour la netteté du changement de pente au coude~: proche de
+$100\%$ signifie que les deux côtés pointent dans des directions
+essentiellement opposées ou très différentes. La \emph{probabilité a
+posteriori} (section~\ref{sec:bic-vc}) est la cote dérivée du BIC, sous
+une approximation par facteur de Bayes, qu'une ligne brisée s'ajuste
+réellement mieux qu'une simple droite plutôt que par hasard. La
+\emph{qualité d'ajustement} (section~\ref{sec:likelihood-intro}, déjà
+dérivée) est la proximité de l'ajustement en ligne brisée confirmé aux
+données, relative à un pire cas délibérément pessimiste~: $100\%$ à
+l'ajustement parfait. Chacun de ces cinq nombres est un score $[0,1]$
+borné et justifié, pas une statistique brute et dépendante d'une échelle
+qu'il faudrait calibrer à l'œil~; quatre se lisent comme une preuve forte
+proche de $100\%$, seul le p nul va dans l'autre sens, petit plutôt que
+grand, exactement la convention habituelle d'une valeur $p$.
 
 \begin{figure}[h]
 \centering
@@ -291,6 +557,7 @@ conséquence algébrique directe des équations normales des moindres carrés,
 qui ne nécessite pas de citation propre.
 
 \section{Le partitionnement optimal~: la programmation dynamique}
+\label{sec:dp}
 \label{sec:pd}
 
 \textbf{Intuition.} Chercher la meilleure façon de placer $k$ points de
@@ -339,6 +606,7 @@ construite pour cette raison, puisqu'elle reproduirait exactement ces mêmes
 chiffres.
 
 \section{La segmentation binaire gloutonne~: l'alternative plus rapide, moins bonne}
+\label{sec:greedy}
 
 \textbf{Intuition.} Plutôt que de résoudre le problème dans son ensemble,
 faire à répétition le seul meilleur choix immédiatement disponible~:
@@ -458,6 +726,7 @@ commun~; rien n'est encore retenu à ce stade, on ne fait que
 \emph{proposer}.
 
 \section{Ne le compter que s'il survit partout~: le regroupement par persistance}
+\label{sec:persistence}
 
 \textbf{Intuition.} Un coude authentique devrait apparaître à presque
 toutes les largeurs de lissage et toutes les sensibilités, en ne se
@@ -475,6 +744,7 @@ refuse explicitement de désigner un gagnant
 (\code{src/elbow\_helper/clustering.py}).
 
 \section{Confirmer la pente~: le contraste de Theil-Sen}
+\label{sec:theilsen}
 
 \textbf{Intuition.} La façon ordinaire d'estimer une pente, ajuster une
 droite à un ensemble de points, se laisse facilement perturber par un seul
@@ -523,9 +793,28 @@ supplémentaire un péage fixe, en unités d'amélioration de vraisemblance
 logarithmique nécessaire pour que cela en vaille la peine, de sorte qu'un
 modèle n'est préféré que s'il franchit cette barre.
 
-\textbf{Formule.} Pour un ajustement gaussien par moindres carrés
-ordinaires avec $n$ points, $p$ paramètres libres (y compris la variance du
-bruit elle-même) et $RSS$ la somme des carrés des résidus~:
+\textbf{D'où vient la base du logarithme.} La sous-section~\ref{sec:likelihood-intro}
+dérive, à partir de la vraisemblance gaussienne brute $L(\theta,\sigma^2)$,
+que la log-vraisemblance négative
+
+\begin{equation}
+\mathrm{NLL} = n \ln\!\left(\frac{RSS}{n}\right) + n(1 + \ln 2\pi)
+\end{equation}
+
+est en logarithme naturel par construction, héritée de l'$\exp$ propre à
+la densité gaussienne, pas choisie librement, et que ses cas extrêmes se
+lisent mieux via $\mathrm{MSE}_{\text{pire}}$, une référence finie
+délibérément pessimiste, plutôt que via $\mathrm{MSE} \to \infty$ ou la
+moyenne d'échantillon, trop facile à battre. Toute formule de la famille
+$\mathrm{BIC}$ dans cette note, y compris celle ci-dessous, s'ouvre avec
+ce même terme $n\ln(RSS/n)$.
+
+\textbf{Formule.} La correction de Schwarz au problème de surapprentissage
+du paragraphe Intuition ajoute une pénalité de complexité, $p \ln n$,
+par-dessus ce même $\mathrm{NLL}$, via une approximation de Laplace de la
+vraisemblance marginale du modèle, elle aussi menée en logarithme naturel
+de bout en bout. En laissant tomber la constante additive $n(1+\ln 2\pi)$,
+qui s'annule quand on compare deux modèles sur les mêmes données~:
 
 \begin{equation}
 \mathrm{BIC} = n \ln\!\left(\frac{RSS}{n}\right) + p \ln n
@@ -536,45 +825,14 @@ exactement cela~; le pipeline à coude unique compare le $\mathrm{BIC}$ de
 la droite simple ($p = 2 + 1$) à celui de la ligne brisée ($p = 3 + 1$) de
 la section~3, en exigeant une amélioration d'au moins
 \code{config.min\_bic\_improvement} (10 par défaut) \citep{schwarz1978}
-\citep{hastie2009esl} \citep{bishop2006prml}.
-
-\textbf{Du $\Delta\mathrm{BIC}$ à un score borné.} Un $\Delta\mathrm{BIC} =
-\mathrm{BIC}_{\text{simple}} - \mathrm{BIC}_{\text{bris\'ee}}$ brut n'a pas
-de plafond naturel~: « $10$ » et « $282$ » favorisent tous deux la ligne
-bris\'ee, mais le nombre lui-m\^eme ne dit rien du degr\'e de confiance, et
-son \'echelle d\'epend de la taille d'\'echantillon et du bruit. La figure
-de diagnostic (\code{elbow\_helper.plotting}) affiche \`a la place une
-probabilit\'e, un score qui doit tomber dans $[0, 1]$, avec $0$ et $1$
-comme cas extr\^emes~: confiance totale dans la droite simple, ou dans la
-ligne bris\'ee. C'est cette exigence qui fixe la base du logarithme, pas un
-choix libre~: \citet{kassraftery1995} (\'eq.~4) montrent que
-$\Delta\mathrm{BIC} \approx 2 \ln(\mathrm{BF})$, o\`u $\mathrm{BF}$ est le
-facteur de Bayes entre les deux mod\`eles, et le $\ln$ \`a droite est
-exactement le m\^eme logarithme naturel d\'ej\`a utilis\'e pour construire
-le $\mathrm{BIC}$ ci-dessus, h\'erit\'e de sa d\'efinition en
-$-2\ln(\hat L)$. Annuler ce $\ln$ demande donc l'inverse qui lui
-correspond, $\exp$ en base $e$, pas un simple changement d'\'echelle par
-$\ln 10$ ou $\ln 2$, qui ne ferait que renommer un nombre non born\'e sans
-le borner~:
-
-\begin{equation}
-\mathrm{BF} \approx \exp\!\left(\frac{\Delta\mathrm{BIC}}{2}\right)
-\end{equation}
-
-Sous des a priori \'egaux, les cotes a posteriori valent $\mathrm{BF}$,
-donc la probabilit\'e a posteriori de la ligne bris\'ee est
-$\mathrm{BF} / (1 + \mathrm{BF})$, exactement la sigmo\"ide logistique de
-$\Delta\mathrm{BIC} / 2$~:
-
-\begin{equation}
-P(\text{ligne bris\'ee} \mid \text{donn\'ees}) = \frac{1}{1 + \exp(-\Delta\mathrm{BIC}/2)}
-\end{equation}
-
-born\'ee dans $[0, 1]$ par construction, \`a $0.5$ quand
-$\Delta\mathrm{BIC} = 0$ (aucune preuve dans un sens ou l'autre), et
-saturant en douceur vers les extr\^emes $0$/$1$ \`a mesure que la preuve
-s'accumule, dans un sens ou l'autre, plut\^ot que de croître sans limite
-comme le $\Delta\mathrm{BIC}$ brut.
+\citep{hastie2009esl} \citep{bishop2006prml}. Toute quantité en aval
+hérite de cette même base naturelle par construction~: le $\mathrm{BIC}(k)$
+à plusieurs coudes de la section~\ref{sec:several-bic}, le $\mathrm{mBIC}$
+et l'ICL sont chacun construits en ajoutant d'autres termes de pénalité à
+ce même $\mathrm{NLL}$, jamais en redérivant la vraisemblance depuis zéro.
+Changer cette base n'importe où dans cette chaîne reviendrait à redériver
+la densité gaussienne elle-même dans cette base, pas à simplement
+redimensionner le nombre final.
 
 Le BIC vérifie seulement si le paramètre supplémentaire vaut sa pénalité
 \emph{sur les données ayant servi à l'ajuster}. La validation croisée par
@@ -591,6 +849,7 @@ contexte de données ordonnées et séquentielles
 \citeyearpar{lopezdeprado2018financial}.
 
 \section{Le bootstrap~: le coude survit-il à une reprise~?}
+\label{sec:bootstrap}
 
 \textbf{Intuition.} Si la collecte des données était refaite, le même
 coude réapparaîtrait-il, ou le coude observé n'était-il qu'un coup de
@@ -613,6 +872,7 @@ les 5e et 95e percentiles des emplacements redétectés \citep{efron1979}
 \citep{hastie2009esl}.
 
 \section{Le test nul~: une droite pourrait-elle expliquer cela par hasard~?}
+\label{sec:null-test}
 \label{sec:test-nul}
 
 \textbf{Intuition.} La dernière vérification, la plus méfiante~: simuler
@@ -645,6 +905,7 @@ Seul un candidat qui franchit chacune des vérifications des sections
 précédentes devient un \code{ClearKnee}.
 
 \section{Le BIC nu pour plusieurs coudes~: le critère naïf et pourquoi il surestime}
+\label{sec:several-bic}
 
 \textbf{Intuition.} Le BIC de la section~\ref{sec:bic-vc} pénalise le
 nombre de paramètres de \emph{régression} libres, mais choisir \emph{où}
@@ -678,6 +939,7 @@ $\frac{1}{2}\ln n$ par paramètre, l'argument d'approximation de Laplace
 derrière le BIC, suppose exactement la régularité qui s'effondre ici.
 
 \section{Le BIC modifié~: la correction de Zhang et Siegmund et une convention de signe résolue par le test}
+\label{sec:mbic}
 
 \textbf{Intuition.} Si le BIC nu sous-facture la liberté de placer des
 points de rupture, la correction consiste à facturer davantage, en
@@ -725,7 +987,8 @@ globale de 0,85 et un taux de faux positifs de 0~\% à $\text{true } k = 0$~;
 laisse un taux de faux positifs de 11~\%. \textbf{C'est la forme
 soustractive qui est livrée.}
 
-\section{L'ICL~: des modèles de mélange aux points de rupture, avec un bogue trouvé et corrigé au passage}
+\section{L'ICL~: des modèles de mélange aux points de rupture, avec un \emph{bug} trouvé et corrigé au passage}
+\label{sec:icl}
 
 \textbf{Intuition.} L'Integrated Completed Likelihood de Biernacki, Celeux
 et Govaert, conçue pour choisir le nombre de groupes dans un modèle de
@@ -768,7 +1031,7 @@ segmentations, $H(K) = \log Z_K(n) - \mathbb{E}[\ell\ell(S)]$, s'estime par
 complètes selon la distribution a posteriori puis en moyennant leurs
 log-probabilités, plutôt que par une forme close.
 
-\textbf{Un bogue que les tests ont attrapé, et non un choix de conception.}
+\textbf{Un \emph{bug} que les tests ont attrapé, non un choix de conception.}
 La première version construite ici définissait le score directement comme
 $-\log Z_K(n) + H(K)$, pure vraisemblance intégrée additionnée d'entropie,
 sans pénalité de complexité séparée, en supposant que la distribution a
@@ -796,7 +1059,8 @@ correctement $k = 0$~; \code{RESULTS.md} montre qu'une fois corrigée, elle
 se situe dans la même tranche de performance que le mBIC soustractif (0,82
 contre 0,85 de précision globale) \citep{biernacki2000}.
 
-\section{Un test séquentiel à taux d'erreur familial contrôlé}
+\section{Un test séquentiel à taux d'erreur par famille contrôlé}
+\label{sec:fwer}
 
 \textbf{Intuition.} Indépendamment de tout score de la famille du BIC, une
 question plus directe peut être posée à chaque étape~: en parcourant la
@@ -825,9 +1089,9 @@ si bien qu'elle ne peut jamais « sauter » un point de rupture rejeté pour
 en accepter un plus tard. Bonferroni est une correction conservatrice pour
 des tests indépendants~; ces tests séquentiels ne le sont pas, chacun étant
 conditionné au modèle accepté à l'étape précédente, ce qui maintient le
-taux d'erreur familial réel, la probabilité d'accepter au moins un point de
-rupture parasite n'importe où dans la séquence, au plus égal au $\alpha$
-nominal, jamais supérieur.
+taux d'erreur par famille réel (FWER, family-wise error rate), la
+probabilité d'accepter au moins un point de rupture parasite n'importe où
+dans la séquence, au plus égal au $\alpha$ nominal, jamais supérieur.
 
 \code{RESULTS.md} montre que cette approche atteint un taux de faux
 positifs de 0~\% à $\text{true } k = 0$ et une précision globale de 0,82,
@@ -843,7 +1107,7 @@ vérifie directement par simulation.
 \code{elbow\_helper.robust\_knees} livre exactement la combinaison validée
 ci-dessus~: recherche par programmation dynamique (section~\ref{sec:pd}),
 le BIC modifié à signe soustractif comme critère principal (section~18), et
-la barrière séquentielle à taux d'erreur familial contrôlé (section~20)
+la barrière séquentielle à taux d'erreur par famille contrôlé (section~20)
 superposée par défaut, en retenant $\min(k \text{ du mBIC},\ k \text{ du
 FWER})$. Ce choix suit la priorité de conception assumée par
 \code{elbow-helper}~: minimiser les coudes faussement positifs, même au
@@ -885,7 +1149,7 @@ bruit différents testés
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.8\textwidth]{figures/sigmoid_staircase.png}
+\includegraphics[width=0.8\textwidth]{figures/sigmoid_staircase_fr.png}
 \caption{Un escalier lisse construit à partir de trois sigmoïdes
 logistiques, avec les six points de rupture détectés par
 \code{elbow\_helper.robust\_knees} (lignes rouges pointillées) encadrant
@@ -894,7 +1158,7 @@ chacun le début et la fin d'une montée.}
 
 Un piège pratique que cet exemple a révélé, et qu'il vaut la peine
 d'énoncer clairement~: la correction de Bonferroni de la barrière à taux
-d'erreur familial contrôlé divise $\alpha$ par $k_{\max}$, si bien que la
+d'erreur par famille contrôlé divise $\alpha$ par $k_{\max}$, si bien que la
 plus petite valeur $p$ que le test de permutation puisse produire,
 $1/(n_{\text{permutations}}+1)$, doit rester sous $\alpha/k_{\max}$, sans
 quoi la barrière ne peut jamais passer, aussi réel soit l'effet. Avec le

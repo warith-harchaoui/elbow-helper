@@ -177,11 +177,15 @@ plot_diagnostics(
 
 The figure shows the curve with its located knee and 90% CI band (or, on
 abstention, a greyed dashed curve and the reason) next to a compact evidence
-legend: detection probability, null-model p-value, slope contrast, and a
+legend: detection probability, null-model p-value, slope contrast, a
 BIC-derived posterior model probability — a bounded `[0, 1]` reading (e.g.
 "99.9%"), not the raw, unbounded `bic_improvement` nats the API itself
 returns, since a raw log-likelihood difference has no natural scale to
-compare against.
+compare against — and a fit-quality score normalized against a
+deliberately pessimistic worst case (the hardest single observed point to
+predict everything else from) rather than the sample mean, which a real
+fit can too easily do worse than. See `doc/MATH-en.tex` /
+`doc/MATH-fr.tex` for the derivation of both normalizations.
 
 Full script: [`examples/diagnostic_plot.py`](examples/diagnostic_plot.py).
 
