@@ -1,5 +1,5 @@
 """End-to-end tests for robust_knees (plural): the DP + subtractive-mBIC +
-FWER-gated multi-knee pipeline. See MATH-en.tex sections 5-20 and
+FWER-gated multi-knee pipeline. See ELBOW-en.tex sections 5-20 and
 research/multiknee/RESULTS.md for the design this ships.
 
 Author
@@ -53,7 +53,7 @@ def sigmoid_staircase_curve(seed, n=200, n_steps=3, steepness=40.0, noise=0.02):
     rise), so a clean ``n_steps``-step staircase is expected to yield
     ``2 * n_steps`` breakpoints once the rises are steep enough to look
     locally linear against the flats on either side. Shared with
-    ``MATH-en.tex`` / ``MATH-fr.tex``'s multi-knee figure, which runs
+    ``ELBOW-en.tex`` / ``ELBOW-fr.tex``'s multi-knee figure, which runs
     ``robust_knees`` on this exact curve.
     """
     rng = np.random.default_rng(seed)
@@ -104,8 +104,8 @@ def alternating_slope_curve(seed, n=150, noise=0.02):
     Unlike :func:`robust_knee`, which needs an explicit ``curve``/
     ``direction`` naming one of four fixed shapes, :func:`robust_knees`
     fits each segment its own independent slope, so a sign change (up then
-    down) needs no special handling. Shared with ``MATH-en.tex`` /
-    ``MATH-fr.tex``'s alternating-slope figure.
+    down) needs no special handling. Shared with ``ELBOW-en.tex`` /
+    ``ELBOW-fr.tex``'s alternating-slope figure.
     """
     rng = np.random.default_rng(seed)
     x = np.linspace(0, 1, n)
@@ -127,7 +127,7 @@ def subtle_knee_curve(seed, n=150, noise=0.05):
     Used to demonstrate the conservative philosophy directly: at low noise
     the same shape is reliably detected, at high noise ``robust_knees``
     mostly abstains rather than force an answer. Shared with the
-    detection-boundary figure in ``MATH-en.tex`` / ``MATH-fr.tex``.
+    detection-boundary figure in ``ELBOW-en.tex`` / ``ELBOW-fr.tex``.
     """
     rng = np.random.default_rng(seed)
     x = np.linspace(0, 1, n)
@@ -168,7 +168,7 @@ def test_subtle_knee_detected_at_low_noise_mostly_abstains_at_high_noise():
     )
     # The conservative design means most high-noise draws should abstain
     # (k=0) rather than force a guess; this is not "always right", it is
-    # "wrong in the honest direction" (see MATH-en.tex section 16 / RESULTS.md).
+    # "wrong in the honest direction" (see ELBOW-en.tex section 16 / RESULTS.md).
     assert high_detections <= 3
 
 
@@ -176,7 +176,7 @@ def test_sigmoid_staircase_brackets_each_rise_with_a_breakpoint_pair():
     # k_max=6 with only 100 permutations would make the Bonferroni-corrected
     # threshold (alpha/6) smaller than the best achievable p-value
     # (1/(100+1)), so the FWER gate could never pass regardless of the true
-    # effect; fwer_permutations must scale with k_max. See MATH-en.tex
+    # effect; fwer_permutations must scale with k_max. See ELBOW-en.tex
     # section 20 and this test's own history for why 300 is used here.
     cfg = RobustKneesConfig(random_seed=0, k_max=6, fwer_permutations=300)
     for seed in range(5):

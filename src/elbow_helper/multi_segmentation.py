@@ -1,11 +1,11 @@
 """Phase M1: piecewise-linear segmentation for :func:`elbow_helper.robust_knees`.
 
 Ported from the validated ``research/multiknee/segmentation.py`` (see
-``research/multiknee/RESULTS.md`` and ``MATH-en.tex`` for the derivation and the
+``research/multiknee/RESULTS.md`` and ``ELBOW-en.tex`` for the derivation and the
 empirical comparison against greedy binary segmentation). Segments are
 independent OLS lines, not the continuous broken line
 :mod:`elbow_helper.segmented` uses for the single-knee pipeline; see
-``MATH-en.tex`` section 5 for why that difference is deliberate.
+``ELBOW-en.tex`` section 5 for why that difference is deliberate.
 
 Author
 ------
@@ -143,7 +143,7 @@ def dp_optimal_partition(
 ) -> List[Segmentation]:
     """Exact optimal-partitioning DP: the best segmentation for every k = 0..k_max.
 
-    See ``MATH-en.tex`` section 7 for the recursion and complexity, and
+    See ``ELBOW-en.tex`` section 7 for the recursion and complexity, and
     ``research/multiknee/RESULTS.md`` for why this is used instead of greedy
     binary segmentation.
 

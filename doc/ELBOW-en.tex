@@ -10,6 +10,9 @@
 \usepackage{hyperref}
 \usepackage{xcolor}
 \usepackage{enumitem}
+\usepackage{float}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning}
 
 \hypersetup{
   colorlinks=true,
@@ -35,11 +38,13 @@
 \begin{abstract}
 This note explains, from first principles, every piece of mathematics
 \code{elbow-helper} runs: the shipped single-knee pipeline
-(\code{robust\_knee}, \code{robust\_elbow}) and the multi-knee research
-behind \code{robust\_knees}. Citations live in \code{references.bib}; each
-claim states whether it is a verified citation, a citation reported through
-a secondary source, or this project's own construction, following the
-evidence-marking convention used throughout this project.
+(\code{robust\_knee}, \code{robust\_elbow}), the multi-knee research
+behind \code{robust\_knees}, and the shared Gaussian-likelihood
+foundation every model-selection criterion in the package builds on.
+Citations live in \code{references.bib}; each claim states whether it is
+a verified citation, a citation reported through a secondary source, or
+this project's own construction, following the evidence-marking
+convention used throughout this project.
 
 \textbf{How to read this note.} Every concept gets the same treatment: first
 a plain-language explanation with a concrete example, assuming nothing
@@ -49,8 +54,13 @@ who wants to verify the derivation rather than trust the prose. Skip the
 formula blocks on a first pass if the intuition already answers your
 question. Come back to them when it doesn't.
 
-The note is organized around a single question, asked three times with
-increasing realism: what does \emph{one} knee mean geometrically
+An Introduction derives, once, the raw-likelihood-to-bounded-score
+machinery every later criterion reuses: why $\mathrm{BIC}$, $\mathrm{mBIC}$,
+and $\mathrm{ICL}$ all sit in natural log, and how a deliberately
+pessimistic worst case, not an unbounded raw number, turns any of them
+into a justified, interpretable $[0,1]$ score. From there, the note is
+organized around a single question, asked three times with increasing
+realism: what does \emph{one} knee mean geometrically
 (Part~\ref{part:one}), what does \emph{several} knees mean geometrically
 (Part~\ref{part:several}), and how do you trust either answer once the data
 is noisy (Part~\ref{part:noise})?
@@ -89,13 +99,56 @@ own penalty term on top.
 \section{From raw likelihood to a bounded score}
 \label{sec:likelihood-intro}
 
-Start from the raw likelihood, before taking any logarithm at all, and
-take it \emph{per observation} from the outset: the geometric mean of the
-$n$ individual Gaussian densities, rather than their raw product. Under a
-generative model $y_i = f(x_i;\theta) + \varepsilon_i$ with $\varepsilon_i$
-i.i.d.\ $\mathcal N(0,\sigma^2)$ ($f$ any of the curve models this note
-fits, a single line, a broken line, or a $k$-segment piecewise line;
-$\theta$ its shape parameters):
+\textbf{The notion, briefly.} \emph{Likelihood} usually names the joint
+density of the observed data, read as a function of the parameter rather
+than the data, $L_{\text{raw}}(\theta) := \prod_{i=1}^n p(y_i \mid
+x_i, \theta)$. This note instead takes likelihood \emph{per observation}
+from the outset, an exponentiated \emph{average} log-density rather than
+a raw product,
+$$L(\theta,\sigma^2) := \exp\!\big(\mathbb E[\ln p]\big) = L_{\text{raw}}^{\,1/n},$$
+the geometric mean of the $n$ individual densities, exactly the $n$-th
+root of $L_{\text{raw}}$. That departure from the textbook definition,
+and why it is principled rather than a convenient rescaling, is the
+subject of a companion note, \code{LIKELIHOOD-en.tex}, factored out
+because that foundation is general and does not depend on curve-fitting
+at all: Jensen's inequality and a temperature-indexed refinement borrowed
+from equilibrium statistical mechanics, Cram\'er's large deviations and
+Wald's martingale, a precise account of $L$ as a statistical estimator
+with its bias and variance derived and verified by simulation, and how
+the same construction reads on a categorical classification model
+(with its own worked simulation) as well as the Gaussian regression model
+derived below. This note builds directly on top of it: every
+$\mathrm{BIC}$-family criterion below inherits $L$'s Gaussian
+instantiation. Section~\ref{sec:fwer}'s permutation-based sequential
+test is exactly the case \code{LIKELIHOOD-en.tex} identifies where
+Wald's classical martingale bound does not directly apply, a composite
+rather than a fully specified alternative at each step.
+
+Under a generative model
+$y_i = f(x_i;\theta) + \varepsilon_i$ with $\varepsilon_i$ i.i.d.\
+$\mathcal N(0,\sigma^2)$ ($f$ any of the curve models this note fits, a
+single line, a broken line, or a $k$-segment piecewise line; $\theta$ its
+shape parameters):
+
+\begin{center}
+\begin{tikzpicture}[
+  node distance=13mm and 16mm,
+  box/.style={draw, rounded corners, minimum height=8mm, minimum width=19mm,
+    align=center, font=\small, fill=blue!4},
+  sum/.style={draw, circle, minimum size=7mm, inner sep=0pt, font=\small},
+  ->, >=Stealth, thick
+]
+\node[box] (theta) {$\theta$};
+\node[box, right=of theta] (f) {$f(x_i;\theta)$};
+\node[sum, right=of f] (sum) {$+$};
+\node[box, right=of sum] (y) {$y_i$};
+\node[box, below=of sum, fill=red!4] (eps) {$\varepsilon_i \sim \mathcal N(0,\sigma^2)$};
+\draw (theta) -- (f);
+\draw (f) -- (sum);
+\draw (sum) -- (y);
+\draw (eps) -- (sum);
+\end{tikzpicture}
+\end{center}
 
 \begin{equation}
 L(\theta,\sigma^2) := \left(\prod_{i=1}^n (2\pi\sigma^2)^{-1/2}
@@ -104,7 +157,7 @@ L(\theta,\sigma^2) := \left(\prod_{i=1}^n (2\pi\sigma^2)^{-1/2}
 
 The product of $n$ identical prefactors and the product of exponentials
 both collapse cleanly under the $1/n$ root: a product of exponentials is
-an exponential of a sum, and that sum divided by $n$ is a mean.
+an exponential of a sum; that sum divided by $n$ is a mean.
 
 \begin{equation}
 L(\theta,\sigma^2) = (2\pi\sigma^2)^{-1/2}
@@ -151,7 +204,7 @@ $n$:
 the same $n\ln(RSS/n)$ term every $\mathrm{BIC}$-family formula in this
 note opens with.
 
-\textbf{Extreme cases, without a sigmoid.} $\mathrm{PPL}$ is a genuine
+\textbf{Extreme cases.} $\mathrm{PPL}$ is a genuine
 improvement over the raw $\mathrm{NLL}$ it is built from at exactly one
 end: $\mathrm{NLL}$ runs over $(-\infty, +\infty)$, but exponentiating
 automatically fixes the lower tail, $\mathrm{PPL} = 2\pi e \cdot
@@ -209,64 +262,155 @@ that base, not rescaling a finished number.
 \section{Related Work}
 \label{sec:related-work}
 
-\textbf{Knee and elbow heuristics.} Satopaa, Albrecht, Irwin and
-Raghavan's Kneedle \citep{satopaa2011} locates a knee via the same
-difference-from-chord geometry Section~\ref{sec:diff-curve} builds on, as
-a single point estimate with no confidence machinery.
-\code{elbow-helper}'s locator borrows that geometric intuition and wraps
-it in the decision procedure this note derives.
+\textbf{Knee and elbow heuristics.} Knee detection has one dominant
+reference point: Satopaa, Albrecht, Irwin and Raghavan's Kneedle
+\citep{satopaa2011}, built for exactly the setting this note opens
+with, a system operator facing a curve that needs an automatic answer
+to ``where does this bend''. Kneedle's mechanism is the same
+difference-from-chord geometry Section~\ref{sec:diff-curve} builds:
+normalize the curve into the unit square, subtract the line joining its
+two endpoints, call the knee the point of maximum vertical distance from
+that chord. It is fast, lightly parameterized, and, on a clean curve,
+usually right. What it does not do is say how right~: Kneedle returns a
+single index whether the curve holds a genuine hand-built knee or three
+points of pure noise that happen to wiggle the right way, with no notion
+of how that answer would move under resampling, under a different
+smoothing scale, or against a null model with no knee at all. That gap,
+a point estimate with no confidence attached, is precisely what this
+whole note exists to close. \code{elbow-helper}'s locator keeps
+Kneedle's geometric intuition at its core, the normalized
+difference-curve stays the origin of every candidate knee, but treats
+that candidate as a hypothesis to be tested
+(Sections~\ref{sec:multiscale}--\ref{sec:null-test}) rather than an
+answer to hand back as is.
 
-\textbf{Changepoint detection and segmentation.} Killick, Fearnhead and
-Eckley's pruned dynamic-programming algorithm, Pruned Exact Linear Time
-(PELT) \citep{killick2012}, achieves exact, optimal segmentation at linear
-cost, the same optimal-substructure principle Section~\ref{sec:dp} is
-built on too, restricted here to a small $k_{\max}$ rather than PELT's
-penalty-driven unbounded $k$. Fryzlewicz's
-Wild Binary Segmentation \citep{fryzlewicz2014} is the greedy alternative
-to exact dynamic programming behind Section~\ref{sec:greedy}'s comparison.
-Yao \citep{yao1988} first analyzed estimating the number of changepoints
-via Schwarz's criterion, the direct ancestor of the several-knee
-$\mathrm{BIC}(k)$ criterion in Section~\ref{sec:several-bic}.
+\textbf{Changepoint detection and segmentation.} Once the question moves
+from one knee to several, the relevant literature stops being knee
+detection and becomes changepoint detection. It splits along a
+cost-versus-flexibility line this note has to settle: an exact search
+that only earns its cost up to a bounded $k_{\max}$ or a greedy
+approximation that scales better but can lock in an early mistake.
+Killick, Fearnhead and Eckley's pruned dynamic-programming algorithm,
+Pruned Exact Linear Time (PELT) \citep{killick2012}, sits on the exact
+side, a penalized dynamic program pruned so that provably suboptimal
+candidate boundaries are discarded before they are even scored,
+recovering the same optimal segmentation an unpruned search would find
+at linear rather than quadratic cost, with $k$ itself set by the penalty
+rather than fixed in advance. Section~\ref{sec:dp} rests on the same
+optimal-substructure argument, restricted here to a small, explicitly
+bounded $k_{\max}$ (few real curves plausibly hold more than a handful
+of genuine bends) rather than PELT's unbounded, penalty-driven $k$,
+which is exactly what keeps the search small enough to run underneath
+this project's bootstrap and permutation layers, something PELT itself
+has no equivalent of. Fryzlewicz's Wild Binary Segmentation
+\citep{fryzlewicz2014} sits on the other side of that line: a recursive,
+greedy splitting procedure over randomly drawn subintervals, faster than
+exact search but liable to freeze in an early bad cut it can never
+reconsider, exactly the failure mode Section~\ref{sec:greedy}
+demonstrates on a constructed example and the reason this project scores
+greedy segmentation as the faster, worse alternative rather than the
+default choice. Yao \citep{yao1988} was first to tie changepoint counting
+directly to Schwarz's criterion, the paper the several-knee
+$\mathrm{BIC}(k)$ of Section~\ref{sec:several-bic} traces its ancestry
+to, even though, as that section shows, plain $\mathrm{BIC}$'s
+assumptions do not survive contact with an unknown breakpoint location
+intact.
 
-\textbf{Model selection criteria.} Schwarz \citep{schwarz1978} is
-$\mathrm{BIC}$'s origin. Zhang and Siegmund \citep{zhangsiegmund2007}
-correct $\mathrm{BIC}$'s undercharging for breakpoint-location freedom,
-the $\mathrm{mBIC}$ of Section~\ref{sec:mbic}. Biernacki, Celeux and
-Govaert \citep{biernacki2000} introduce the Integrated Completed
-Likelihood for mixture models, adapted to changepoints in
-Section~\ref{sec:icl} via Rigaill, Lebarbier and Robin's exact
-forward-backward posterior over segmentations \citep{rigaill2012},
-further accelerated by Cleynen, Luong, Rigaill and Nuel
-\citep{cleynen2013}. Kass and Raftery \citep{kassraftery1995} supply the
-Bayes-factor route from a raw likelihood difference to a posterior
-probability, the alternative normalization noted above.
+\textbf{Model selection criteria.} Every criterion this note builds
+answers the same question, is the added complexity worth it, with
+progressively less naive notions of what ``complexity'' costs. Schwarz
+\citep{schwarz1978} supplies the starting point: a Laplace approximation
+to a model's marginal likelihood that charges a fixed $\frac{1}{2}\ln n$
+per free parameter, correct for regular parametric families but silently
+assuming absent exactly the irregularity a breakpoint's location
+introduces, an assumption Section~\ref{sec:several-bic} shows failing
+concretely rather than just in principle. Zhang and Siegmund
+\citep{zhangsiegmund2007} diagnose that same irregularity and correct
+it with a segment-length-sensitive penalty, the $\mathrm{mBIC}$ of
+Section~\ref{sec:mbic}, though their own derivation leaves a genuine
+sign ambiguity this note resolves empirically rather than by assumption
+(again Section~\ref{sec:mbic}). Biernacki, Celeux and Govaert
+\citep{biernacki2000} approach complexity from an entirely different
+angle, originally built to pick the number of components in a mixture
+model, not a changepoint count at all, charging not just for parameters
+but for the resulting assignment ambiguity: two overlapping, hard-to-
+separate clusters cost more than two clean ones even at equal fit.
+Rigaill, Lebarbier and Robin \citep{rigaill2012} supply the machinery
+that makes carrying that idea over to changepoints practical, an exact
+posterior distribution via forward-backward passes over the whole
+discrete segmentation space, structurally the same recursion as a
+hidden Markov model's forward-backward algorithm run over segmentations
+rather than hidden states, later accelerated by Cleynen, Luong, Rigaill
+and Nuel \citep{cleynen2013}. Section~\ref{sec:icl}'s account of that
+adaptation includes a bug this project's own tests caught directly: an
+early version that let the integrated-likelihood term dominate the
+entropy correction and overestimate on pure noise, a failure mode the
+original mixture-model literature does not face in the same way. Kass
+and Raftery \citep{kassraftery1995} sit slightly apart from this whole
+family: not a complexity penalty but a decision-theoretic reading of a
+log-likelihood difference as an approximate Bayes factor, the
+sigmoid-based alternative normalization Section~\ref{sec:likelihood-intro}
+derives and then sets aside in favor of the worst-case-anchored score
+used throughout the rest of this note.
 
-\textbf{Sequential and multiscale testing.} Davies \citep{davies1977}
-addresses hypothesis testing when a nuisance parameter, here the
-breakpoint location, exists only under the alternative, a problem
-Section~\ref{sec:fwer}'s sequential test runs into directly. Frick, Munk
+\textbf{Sequential and multiscale testing.} A third family of methods
+answers ``is this breakpoint real'' directly, as a hypothesis test
+rather than a complexity-penalized score. Davies \citep{davies1977}
+identifies the central difficulty any such test has to solve: the
+breakpoint's location is a nuisance parameter that exists only under the
+alternative, so the usual likelihood-ratio asymptotics do not apply,
+exactly the pivot problem Section~\ref{sec:fwer}'s sequential test sidesteps
+by using a permutation null instead of an asymptotic one. Frick, Munk
 and Sieling's Simultaneous MUlti-scale Change-point Estimator (SMUCE)
-\citep{frick2014} gives the same kind of guarantee across every scale at
-once, cited alongside it.
+\citep{frick2014} solves a related but more ambitious problem, one
+confidence statement that holds across every smoothing scale at once,
+substantially more machinery than Section~\ref{sec:fwer} needs for a
+sequential, one-breakpoint-at-a-time test whose validity is checked
+directly by simulation rather than by asymptotic theory. Both were
+considered and then set aside in favor of the permutation-based
+construction actually shipped, a deliberate trade: less theoretical
+generality for a guarantee this project could verify empirically rather
+than just cite.
 
-\textbf{Robust and classical statistics.} Spearman's rank correlation
-\citep{spearman1904} screens for a monotonic trend before any knee search
-runs. Theil \citep{theil1950} and Sen \citep{sen1968} give the
-outlier-robust slope estimator behind the Theil-Sen contrast check.
-Efron's bootstrap \citep{efron1979} is the resampling method behind the
-stability check.
+\textbf{Robust and classical statistics.} The single-knee pipeline
+leans on older, narrower tools wherever an already well-understood
+robust classical method exists, rather than inventing a bespoke one.
+Spearman's rank correlation \citep{spearman1904} screens for a
+monotonic trend before any knee search runs, chosen over a Pearson
+correlation precisely because it only asks whether $y$ moves
+consistently with $x$, not whether that movement is linear, so a
+genuinely curved knee cannot fool it into concluding no trend is
+present. Theil \citep{theil1950} and Sen \citep{sen1968}, developed
+twenty years apart and combined since into a single estimator, supply
+the slope estimate behind the Theil-Sen contrast: the median of every
+pairwise slope, a single extreme outlier among many ordinary points
+cannot move a median the way it would move an ordinary-least-squares
+fit. Efron's bootstrap \citep{efron1979} is the resampling principle
+behind Section~\ref{sec:bic-cv}'s stability check, chosen over a
+closed-form asymptotic confidence interval precisely because this
+pipeline's candidate knee has already survived several nonlinear,
+nonsmooth selection steps by the time a confidence statement is needed,
+exactly the setting where asymptotic normality is hardest to justify
+and resampling easiest.
 
 \textbf{Methodology.} L\'opez de Prado \citep{lopezdeprado2018financial}
-argues at length for contiguous, not shuffled, cross-validation on
-ordered sequential data, the reasoning behind this project's blocked
-cross-validation.
+argues at length, from financial time series rather than curve fitting,
+for contiguous rather than shuffled cross-validation blocks whenever
+neighboring observations are correlated, since a shuffled split leaks a
+point's own neighbors into its out-of-sample estimate. The same argument
+carries over directly to a curve's $x$-axis: neighboring points on any
+smooth curve resemble each other for the same structural reason
+neighboring days of a price series do, which is why \code{elbow-helper}'s
+blocked cross-validation (Section~\ref{sec:bic-cv}) holds out contiguous
+blocks of $x$ rather than randomly drawn points.
 
 \textbf{Further reading.} Hastie, Tibshirani and Friedman
 \citep{hastie2009esl}, Bishop \citep{bishop2006prml}, Bouveyron, Celeux,
 Murphy and Raftery \citep{bouveyron2021mbc}, Cormen, Leiserson, Rivest and
-Stein \citep{cormen2022algorithms}, and Dasgupta, Papadimitriou and
+Stein \citep{cormen2022algorithms} and Dasgupta, Papadimitriou and
 Vazirani \citep{dasgupta2006algorithms} are cited throughout as accessible
-textbook treatments, not as the origin of any specific claim above; a few,
+textbook treatments, not as the origin of any specific claim in this
+section; a few,
 drawn from the author's own curated
 \href{https://deraison.ai/ai-books}{book list}, are pointed to only where
 directly relevant.
@@ -283,7 +427,7 @@ stock prices over years look nothing alike numerically: one might range over
 thousands, the other over single digits, yet both could share the same
 \emph{shape}. Before comparing shapes, both axes get rescaled into the same
 box, the unit square $[0,1] \times [0,1]$, so every threshold used later in
-the pipeline --- how sharp a bend counts, how much noise is too much ---
+the pipeline (how sharp a bend counts, how much noise is too much)
 means the same thing regardless of the data's original units.
 
 \textbf{Formula.} $x$ is scaled linearly:
@@ -319,8 +463,8 @@ knee. \code{elbow-helper}'s \code{locator.py} is a from-scratch NumPy port;
 see the project's \code{README.md} Acknowledgements section for the
 implementation's origin.
 
-Four shapes exist in principle --- concave-increasing, concave-decreasing,
-convex-increasing, convex-decreasing --- but only one of them,
+Four shapes exist in principle: concave-increasing, concave-decreasing,
+convex-increasing, convex-decreasing. Only one of them,
 concave-increasing, is the ``obvious'' bump-above-the-diagonal case.
 \code{elbow-helper} reorients the other three into that one case first
 (flip, mirror, or both, depending on \code{curve}/\code{direction}), runs
@@ -353,8 +497,8 @@ later, higher peak, so only the last, most persistent bump wins
 
 \section{The broken-line model: a knee as a change of slope}
 
-\textbf{Intuition.} A real knee should let a two-piece line --- straight,
-then a different straight slope after the knee --- fit the data noticeably
+\textbf{Intuition.} A real knee should let a two-piece line (straight,
+then a different straight slope after the knee) fit the data noticeably
 better than a single straight line can. \code{elbow-helper} builds that
 two-piece model as one continuous curve using a hinge function, $\max(0, x -
 k)$, which is exactly zero before the knee $k$ and grows linearly after it,
@@ -373,7 +517,7 @@ answers the question ``does a bend here actually help''.
 \section{A worked example: the k-means inertia elbow}
 
 \code{robust\_elbow}'s own docstring names this the flagship
-convex-decreasing case, and it is worth seeing end to end: run k-means for
+convex-decreasing case. It is worth seeing end to end: run k-means for
 $k = 1, 2, \dots$, plot the inertia (within-cluster sum of squared
 distances) against $k$, and look for the point past which adding another
 cluster stops paying for itself.
@@ -428,7 +572,7 @@ k=8, the true number of clusters, and a gently decaying tail past it.}
 
 \textbf{Two practical traps this example surfaced, worth stating plainly.}
 First: a k-means inertia curve has one point per candidate $k$, rarely more
-than a couple of dozen, and its genuine elbow usually sits close to the
+than a couple of dozen. Its genuine elbow usually sits close to the
 \emph{left} edge, at a small $k$, not in the middle. \code{elbow-helper}'s
 defaults (Sections~\ref{sec:multiscale}--\ref{sec:null-test}) are calibrated
 for longer, noisier, elbow-anywhere measurement curves:
@@ -440,8 +584,8 @@ bootstrap thresholds loosened to match, and states in a comment exactly why:
 short, clean applied curves are a genuinely different regime from the long,
 noisy time-series-like curves the defaults target, not a bug in either.
 Second: blocked cross-validation (Section~\ref{sec:bic-cv}) splits a curve
-this short, about 25 points, into \code{cv\_folds} contiguous pieces, and
-the default of 5 folds leaves so few points per fold that a fold boundary
+this short, about 25 points, into \code{cv\_folds} contiguous pieces. The
+default of 5 folds leaves so few points per fold that a fold boundary
 landing near the elbow can flip the sign of the held-out improvement on an
 unlucky seed. Three wider folds instead of five fixes it, a direct,
 checkable illustration of Section~\ref{sec:bic-cv}'s own point that
@@ -458,10 +602,10 @@ each cut rather than forcing the pieces to meet exactly. This is a
 deliberate departure from Part~\ref{part:one}'s continuous hinge model: once
 more than one breakpoint is free to move, a \emph{continuous}
 piecewise-linear fit no longer decomposes into a sum of independent
-per-piece costs --- moving one breakpoint changes the boundary condition
+per-piece costs: moving one breakpoint changes the boundary condition
 every neighbouring piece must satisfy. That dependency breaks the efficient
 search algorithms below. The changepoint literature this section draws on
-and tests --- Yao, Zhang and Siegmund, PELT, binary segmentation --- is
+and tests (Yao, Zhang and Siegmund, PELT, binary segmentation) is
 stated for independent segments, so matching that model is what makes the
 comparison a fair test of \emph{their} claims, not a test of a different
 model wearing their name.
@@ -471,8 +615,8 @@ model wearing their name.
 \textbf{Intuition.} Fitting a straight line through a handful of points and
 measuring how well it fits, the residual sum of squares (RSS), sounds like
 it should be done point by point, but a shortcut exists: once five running
-totals are known --- a sum of $x$'s, of $y$'s, of $x^2$'s, of $xy$'s, of
-$y^2$'s --- the best-fit line's RSS for \emph{any} stretch of points can be
+totals are known (a sum of $x$'s, of $y$'s, of $x^2$'s, of $xy$'s, of
+$y^2$'s), the best-fit line's RSS for \emph{any} stretch of points can be
 computed in one step, without touching the individual points again.
 Precomputing those totals once, then reading off any segment's cost
 instantly, is what makes searching over thousands of ways to cut the curve
@@ -560,13 +704,43 @@ it locks in early decisions before later evidence exists to correct them.
 exhibits a noiseless curve with two sharp, real breakpoints where greedy's
 \emph{first} split lands on neither of them; by the time greedy adds a
 second split, it still has strictly higher error than the dynamic program's
-exact, zero-error optimum. \code{research/multiknee/RESULTS.md} measures
-the downstream consequence directly: every DP-based method beats its greedy
-counterpart. Greedy's early-commitment errors specifically cause it to
-\emph{overselect} the number of breakpoints at low noise, since fixing
-greedy's own placement mistake later looks, to a model-selection criterion,
-like genuine extra structure worth an extra breakpoint. This is the
-textbook motivation for Wild Binary Segmentation \citep{fryzlewicz2014}.
+exact, zero-error optimum. \code{research/multiknee/compare.py} measures
+the downstream consequence directly, on synthetic piecewise-linear curves
+($n=100$, $25$ replicates per true-$k$/noise cell): every DP-based method
+beats its greedy counterpart, DP+mBIC\_sub reaching $0.85$ exact-$k$
+accuracy against Greedy+mBIC\_sub's $0.60$, DP+BIC reaching $0.65$ against
+Greedy+BIC's $0.49$. Greedy's early-commitment errors specifically cause
+it to \emph{overselect} the number of breakpoints at low noise, since
+fixing greedy's own placement mistake later looks, to a model-selection
+criterion, like genuine extra structure worth an extra breakpoint. This is
+the textbook motivation for Wild Binary Segmentation \citep{fryzlewicz2014}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figures/multiknee_comparison_en.png}
+\caption{Left: exact-$k$ accuracy, ranked, for every dynamic-program
+(blue) and greedy (red) combination with the four several-knee criteria
+this note derives, $\mathrm{BIC}$, $\mathrm{mBIC}$, $\mathrm{ICL}$, and
+the FWER sequential test, measured on the same synthetic benchmark.
+Every DP-based method outranks its greedy counterpart. Right: the same
+ten methods' false-positive rate on genuinely flat data, plain
+$\mathrm{BIC}$ the clear outlier on both sides regardless of search
+strategy.}
+\label{fig:multiknee-comparison}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figures/greedy_vs_dp_en.png}
+\caption{DP (solid blue) against greedy (dashed red) on the same curve, at
+$k=1$ and $k=2$ breakpoints, clean (top) and with $\sigma=0.15$ noise
+added (bottom). At $k=1$ the two coincide exactly, a single split has
+nothing to commit to early. At $k=2$, clean, DP recovers the true
+breakpoints with essentially zero error while greedy's first split (fixed
+at the $k=1$ location) leaves it unable to reach the same fit at any
+later step, the concrete failure the text above describes. Noise softens
+the gap without closing it.}
+\end{figure}
 
 \section{A worked example: a mountain of alternating slopes}
 
@@ -611,8 +785,8 @@ breakpoints the noise actually supports.
 
 \textbf{Intuition.} Before hunting for a knee, \code{elbow-helper} checks a
 more basic question: does $y$ move consistently with $x$ at all? Not ``is
-the relationship a straight line'' --- Pearson correlation asks that and
-would be fooled by a genuine, curved knee shape --- but ``when $x$ goes up,
+the relationship a straight line'' (Pearson correlation asks that and
+would be fooled by a genuine, curved knee shape) but ``when $x$ goes up,
 does $y$ tend to go up too, or down, however wiggly the path''. The trick is
 to replace every value by its \emph{rank}, 1st smallest, 2nd smallest, and
 so on, before correlating. Ranks discard exactly the information that would
@@ -753,7 +927,7 @@ two extreme cases: total confidence in the single line or in the broken
 one. That requirement is what fixes the log base, not a free
 choice: \citet{kassraftery1995} (eq.~4) show
 $\Delta\mathrm{BIC} \approx 2 \ln(\mathrm{BF})$, where $\mathrm{BF}$ is the
-Bayes factor between the two models, and the $\ln$ on the right is the
+Bayes factor between the two models; the $\ln$ on the right is the
 \emph{same} natural log already used to build $\mathrm{BIC}$ above,
 inherited from its $-2\ln(\hat L)$ definition. Undoing that $\ln$ therefore
 needs the matching inverse, $\exp$ base $e$, not an arbitrary rescaling by
@@ -792,7 +966,7 @@ context of ordered, sequential data \citeyearpar{lopezdeprado2018financial}.
 \label{sec:bootstrap}
 
 \textbf{Intuition.} If the data collection were repeated, would the same
-knee show up again, or was this run's knee a fluke of this run's
+knee show up again? Or was this run's knee a fluke of this run's
 particular noise? Since a real redo is not available, the bootstrap
 simulates one: take the residuals left over after fitting the accepted
 broken-line model, the part of $y$ the model did not explain, resample them
@@ -856,10 +1030,10 @@ independent segment, plus the noise variance:
 \mathrm{BIC}(k) = n \ln\!\left(\frac{RSS(k)}{n}\right) + p \ln n
 \end{equation}
 
-The consequence is not just theoretical: \code{RESULTS.md} measures a 27\%
-false-positive rate for this exact criterion on data with no real
-breakpoints and only 0.65 overall exact-$k$ accuracy, the worst of the
-four criteria tested on the dynamic program's segmentations
+The consequence is not just theoretical: Figure~\ref{fig:multiknee-comparison}
+measures a $27\%$ false-positive rate for this exact criterion (DP+BIC)
+on data with no real breakpoints and only $0.65$ overall exact-$k$
+accuracy, the worst of the four DP-based criteria tested
 \citep{yao1988} \citep{zhangsiegmund2007}.
 
 The deeper reason plain BIC undercharges is that a breakpoint's location is
@@ -976,8 +1150,9 @@ complexity penalty:
 \end{equation}
 
 Retested on the same flat-noise data, this version correctly selects $k =
-0$; \code{RESULTS.md} shows it performing in the same tier as the
-subtractive mBIC (0.82 vs.\ 0.85 overall accuracy) once corrected
+0$; Figure~\ref{fig:multiknee-comparison} shows it performing in the same
+tier as the subtractive mBIC ($0.82$ vs.\ $0.85$ overall accuracy) once
+corrected
 \citep{biernacki2000}.
 
 \textbf{One log base, top to bottom.} The Gaussian segment log-likelihood
@@ -1033,9 +1208,10 @@ true family-wise error rate (FWER), the probability of accepting at
 least one spurious breakpoint anywhere in the sequence, at most as large
 as the nominal $\alpha$, not larger.
 
-\code{RESULTS.md} shows this reaching a 0\% false-positive rate at
-$\text{true } k = 0$ and 0.82 overall accuracy, in the same tier as the
-subtractive mBIC and the corrected ICL. Two more rigorous alternatives were
+Figure~\ref{fig:multiknee-comparison} shows this reaching a $0\%$
+false-positive rate at $\text{true } k = 0$ and $0.82$ overall accuracy,
+in the same tier as the subtractive mBIC and the corrected ICL. Two
+more rigorous alternatives were
 considered and not implemented: Davies' asymptotic test
 \citeyearpar{davies1977} and the multiscale guarantee of SMUCE,
 ``Simultaneous MUlti-scale Change-point Estimator'' \citep{frick2014}, in
@@ -1093,8 +1269,8 @@ lines) each bracketing one rise's start and end.}
 One practical trap this example surfaced, worth stating plainly: the FWER
 gate's Bonferroni correction divides $\alpha$ by $k_{\max}$, so the smallest
 $p$-value the permutation test can produce, $1/(n_{\text{permutations}}+1)$,
-must stay below $\alpha/k_{\max}$, or the gate can never pass no matter how
-real the effect is. With the default $k_{\max}=4$ and
+must stay below $\alpha/k_{\max}$. Otherwise the gate can never pass no
+matter how real the effect is. With the default $k_{\max}=4$ and
 $\text{fwer\_permutations}=200$, $1/201 \approx 0.005 < 0.05/4 = 0.0125$,
 comfortably clear. Push $k_{\max}$ up, as this six-breakpoint example
 needs, without also raising \code{fwer\_permutations}, and the gate
@@ -1107,7 +1283,7 @@ mysterious reason.
 \section{A worked example: the same subtle knee, at two noise levels}
 
 Every check in Sections~\ref{sec:multiscale}--\ref{sec:null-test} exists to
-answer one question honestly: is this knee real, or is it what noise looks
+answer one question honestly: is this knee real? Or is it what noise looks
 like sometimes? The cleanest way to see the answer is to hold the true
 shape fixed and only change the noise.
 
@@ -1167,6 +1343,117 @@ component, not exactly on it. Across every seed tested, the detected elbow
 falls at 6 or 7 components for a true signal dimension of 6, never below
 it, a systematic, predictable offset rather than noise.
 
+\section{A worked example: an exponential saturation curve}
+
+\code{examples/exponential\_saturation.py} runs \code{robust\_knee} against
+a shape none of the examples above have: $y = 1 - e^{-t/\tau}$, an
+RC-circuit charging voltage, a learning curve, a dose-response saturation,
+any quantity that rises fast then flattens toward a ceiling. Unlike a
+genuine broken-line knee, this curve has no true slope discontinuity
+anywhere: it is smooth and infinitely differentiable, a deliberate stress
+test for a locator built to find breaks in piecewise-linear trends.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/exponential_saturation_en.png}
+\caption{The RC-charging curve $y = 1 - e^{-t/\tau}$ with light noise, and
+\code{elbow\_helper.robust\_knee}'s detected knee (dashed red line and
+callout) at $t/\tau \approx 1.98$.}
+\end{figure}
+
+The practical trap this example surfaces is a mismatch between two
+reasonable readings of ``where the curve flattens''. The textbook time
+constant $\tau$ marks $1 - e^{-1} \approx 63\%$ of the total rise, a clean
+closed-form landmark. Across every seed tested, \code{robust\_knee} instead
+lands consistently around $t/\tau \approx 1.9$--$2.0$, matching
+$1 - e^{-2} \approx 85\%$, the same ``practically settled'' convention used
+informally in RC-circuit and control-theory contexts. A human eye reads the
+curve the same way: at $\tau$ it is still visibly rising, not yet flat.
+This is not a bug to fix: it is what ``last point before the bend'' means
+for a curve that never truly stops bending: the located knee also depends
+on the observation window, here $t \in [0, 5\tau]$, since the decision is
+about maximum deviation from the chord spanning whatever range the data
+actually covers, not a property of $\tau$ alone.
+
+\section{A worked example: queueing latency and a capacity-planning knee}
+
+\code{examples/queueing\_latency.py} runs \code{robust\_knee} on a shape
+none of the examples above take: a single-server queue's response time
+grows like $1/(1-\rho)$ in its utilization $\rho$, a classic
+M/M/1-style blow-up. Latency stays close to the baseline service time for
+most of the range, then rises sharply as $\rho$ approaches 1. This curve is
+convex and increasing rather than the concave, saturating shapes seen so
+far: the knee marks not a ceiling but an acceleration, the point past
+which a little more load costs a lot more latency.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/queueing_latency_en.png}
+\caption{p99 latency versus utilization $\rho$, with
+\code{elbow\_helper.robust\_knee}'s detected knee (dashed red line and
+callout) at $\rho \approx 0.605$.}
+\end{figure}
+
+The knee lands at $\rho \approx 0.60$, well before the mathematical
+blow-up at $\rho = 1$, at a latency of about 2.5$\times$ the baseline
+service time. A queue is already paying a real tax at 60\% utilization;
+the curve only looks flat up to there because $1/(1-\rho)$ is still small
+on an absolute scale. Sizing capacity off ``does it still look roughly
+flat'' rather than off this located knee is a common, avoidable way
+capacity plans run out of headroom earlier than expected.
+
+\section{A worked example: cache sizing and diminishing returns}
+
+\code{examples/cache\_hit\_rate.py} answers a familiar infrastructure
+question with the same tool: how big should a cache be? For a working set
+with roughly power-law-popular items, hit rate as a function of cache size
+$C$ follows a Michaelis-Menten shape, $C/(C+K)$, with $K$ the cache size
+at which half the working set is already resident: fast early gains, then
+a long, flattening tail. This is concave and increasing, the same broad
+family as the exponential saturation curve two sections back, but built
+from a rational function rather than an exponential, and answering a cost
+question rather than a physical time-constant one.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/cache_hit_rate_en.png}
+\caption{Hit rate versus cache size, with
+\code{elbow\_helper.robust\_knee}'s detected knee (dashed red line and
+callout) at 691 items, $3.46\times K$.}
+\end{figure}
+
+The knee lands around $3.5K$, not at $K$ itself. $K$ only marks the
+50\%-hit-rate point, a property of the formula's algebra, not of where the
+\emph{marginal} return on cache size actually stops paying off. Buying
+cache up to $K$ leaves a lot of cheap hit-rate on the table; buying past
+roughly $3.5K$ spends real memory for a shrinking sliver of hits, exactly
+the number a capacity-planning conversation needs and rarely has in
+closed form.
+
+\section{A worked example: when to stop testing}
+
+\code{examples/bug\_discovery\_rate.py} turns the same convex-decreasing
+family used by the k-means and PCA examples toward a release-engineering
+question instead of a clustering or dimensionality one. Reliability-growth
+models describe defect discovery during testing as fast at first (the
+easy, high-impact bugs) then slow (the rare, deep ones): a curve that
+falls steeply, bends, and flattens into a long, low tail.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/bug_discovery_rate_en.png}
+\caption{Bugs found per day of testing, with
+\code{elbow\_helper.robust\_knee}'s detected knee (dashed red line and
+callout) at day 10.7, one day past the true break at day 10.}
+\end{figure}
+
+The located knee sits about a day past the true break, the same small,
+systematic ``one to two units past the true bend'' offset the PCA scree
+example shows above. Reading \code{knee\_x} as
+``stop testing exactly here'' rather than ``the discovery rate has now
+genuinely flattened, a day or two either side'' over-trusts the point
+estimate past what it actually claims.
+
 \section*{Further reading}
 
 For a deeper or more rigorous treatment of the ideas above than this note
@@ -1188,6 +1475,8 @@ places to go further:
 \item L\'opez de Prado on validation rigor for ordered, sequential data
   \citeyearpar{lopezdeprado2018financial}
 \end{itemize}
+
+\clearpage
 
 \bibliography{references}
 

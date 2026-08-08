@@ -10,6 +10,40 @@ Not yet tagged or published — first public commits, still under active
 development.
 
 ### Added
+- **`doc/LIKELIHOOD-en.tex` / `doc/LIKELIHOOD-fr.tex`**, a new companion note
+  factoring out the general likelihood foundation from `ELBOW-en.tex` /
+  `ELBOW-fr.tex`, since that foundation does not depend on curve-fitting:
+  why `L := exp(E[log p])` rather than the textbook raw product; Jensen's
+  inequality and Shannon entropy; a temperature-indexed refinement
+  (power-tilted families, Rényi entropy, the free-energy/entropy
+  Legendre-transform dictionary borrowed from equilibrium statistical
+  mechanics); Cramér's large deviations and the Chernoff information
+  (distinguished from the Chernoff-Stein lemma); Wald's martingale and
+  the Sequential Probability Ratio Test; a full estimator analysis of
+  $L$ (bias and variance via the delta method, verified by Monte Carlo
+  simulation) alongside a proof that the raw product is not an
+  estimator of anything fixed; and two worked instantiations, each with
+  its own generative-model diagram and a dedicated figure — categorical
+  classification (a 45-example, 3-class simulation) and regression under
+  Gaussian noise (conditional-density bells drawn on the fitted line).
+  `ELBOW-en.tex` / `ELBOW-fr.tex`'s own Section 1 now states the Gaussian
+  instantiation directly and points to the companion note for the
+  general theory; `references.bib` gains `cramer1938`, `chernoff1952`,
+  `wald1945`, `mackay2003information` and `touchette2009`. New figures
+  `temperature_sweep`, `classification_density` and `regression_density`
+  (EN+FR). `README.md` / `LISEZ-MOI.md` updated to reference both new
+  documents.
+- **`MATH-en.tex` / `MATH-fr.tex` renamed to `ELBOW-en.tex` /
+  `ELBOW-fr.tex`** (`git mv`, history preserved), a clearer name for the
+  project's own mathematics note; every reference across `doc/`, `src/`,
+  `tests/`, `README.md`, `LISEZ-MOI.md`, `CHANGELOG.md`, `EXAMPLES.md`,
+  `LANDSCAPE.md` and `PAYSAGE.md` updated accordingly. The four
+  `research/multiknee/RESULTS.md` citations in `ELBOW-en.tex` /
+  `ELBOW-fr.tex` were replaced by inline verified numbers and a new
+  two-panel comparison figure (`multiknee_comparison`, EN+FR: exact-k
+  accuracy ranked across ten DP/greedy times BIC/mBIC/ICL/FWER
+  combinations, and false-positive rate on flat data), citing
+  `research/multiknee/compare.py` instead of the static summary file.
 - **CLI, HTTP API, and MCP surfaces**, mirroring the `ai-helpers` suite's
   standard architecture (`~/ai-helpers/.private/CODING.md` §19-§23): a new
   `elbow_helper._core_cli` shared core (`do_knee`/`do_elbow`/
@@ -28,10 +62,27 @@ development.
   pre-Acknowledgements "Kneedle" mention cleaned up (missed by the earlier
   sweep — `.toml` wasn't in that pass's file-type filter).
 - **`EXAMPLES.md`**: a runnable cookbook (a clear knee, the k-means elbow, an
-  explicit abstention, a `1 - exp(-t/tau)` saturation curve, the diagnostic
-  figure, the standalone locator, configuration tuning), linked from both
-  README.md and LISEZ-MOI.md. `examples/exponential_saturation.py` added
+  explicit abstention, a `1 - exp(-t/tau)` saturation curve, a queueing-
+  latency capacity-planning knee, cache-sizing diminishing returns, a
+  release-engineering "when to stop testing" knee, the diagnostic figure,
+  the standalone locator, configuration tuning), linked from both README.md
+  and LISEZ-MOI.md, each generated figure now embedded directly in the page.
+  `examples/exponential_saturation.py`, `examples/queueing_latency.py`,
+  `examples/cache_hit_rate.py` and `examples/bug_discovery_rate.py` added
   alongside the existing example scripts.
+- **Four new worked-example sections in `ELBOW-en.tex` / `ELBOW-fr.tex`**:
+  an exponential-saturation knee (`1 - exp(-t/tau)`, matching
+  `examples/exponential_saturation.py`), a convex/increasing queueing-
+  latency knee (`examples/queueing_latency.py`), a concave/increasing
+  cache-sizing knee built from a Michaelis-Menten curve rather than an
+  exponential (`examples/cache_hit_rate.py`), and a convex/decreasing
+  release-engineering knee (`examples/bug_discovery_rate.py`), each with
+  its own generated figure. Fixed a real `elbow_helper.plotting.render_svg`
+  layout bug surfaced by the queueing-latency and exponential-saturation
+  figures: the knee callout pill could overlap the fixed evidence-legend
+  box whenever the knee sat high and left-of-center (an early-saturating or
+  fast-rising curve); the callout now falls back to sit left of the legend
+  when the two would collide.
 - **`robust_knee`**: a conservative wrapper around a from-scratch difference-curve
   implementation. Reports a knee with an uncertainty estimate, or explicitly
   abstains, rather than always returning a point estimate on a noisy or
@@ -63,13 +114,13 @@ development.
   `examples/diagnostic_plot.py` and the README/LISEZ-MOI.md Diagnostics
   sections updated to match, with a real generated figure
   (`assets/diagnostics.svg`) embedded in both.
-- **`MATH-en.md` / `MATH-fr.md` replaced by `MATH-en.tex` / `MATH-fr.tex`** —
+- **`MATH-en.md` / `MATH-fr.md` replaced by `ELBOW-en.tex` / `ELBOW-fr.tex`** —
   the mathematics writeup is now native LaTeX (`amsmath`, `natbib` against
   `references.bib`, numbered equations, a proper table of contents) rather
   than markdown, given the target audience (readers from the end of high
   school through a Ph.D. in applied mathematics). Compile with
-  `latexmk -pdf` (or `pdflatex` + `bibtex` + `pdflatex` ×2); `MATH-en.pdf` /
-  `MATH-fr.pdf` are the checked-in compiled copies. Every reference to the
+  `latexmk -pdf` (or `pdflatex` + `bibtex` + `pdflatex` ×2); `ELBOW-en.pdf` /
+  `ELBOW-fr.pdf` are the checked-in compiled copies. Every reference to the
   old `.md` filenames (README, LISEZ-MOI.md, LANDSCAPE.md, PAYSAGE.md, and
   source docstrings) updated to point at the `.tex` sources.
 
@@ -77,7 +128,7 @@ development.
 - **The locator module and its test file renamed for naming consistency**
   (`src/elbow_helper/locator.py`, `tests/test_locator.py`), and every
   prose mention of the algorithm's name across the codebase, tests, README,
-  LISEZ-MOI.md, LANDSCAPE.md, PAYSAGE.md and the MATH-en/fr.tex writeups
+  LISEZ-MOI.md, LANDSCAPE.md, PAYSAGE.md and the ELBOW-en/fr.tex writeups
   reworded to describe it generically ("the locator", "the difference-curve
   method", ...). The name now appears exactly once per language, in the
   README/LISEZ-MOI.md Acknowledgements section, where the original paper is

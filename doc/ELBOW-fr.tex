@@ -11,6 +11,9 @@
 \usepackage{hyperref}
 \usepackage{xcolor}
 \usepackage{enumitem}
+\usepackage{float}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning}
 
 \hypersetup{
   colorlinks=true,
@@ -36,12 +39,14 @@
 \begin{abstract}
 Cette note explique, à partir des principes de base, chaque brique
 mathématique sur laquelle repose \code{elbow-helper}~: le pipeline à coude
-unique livré (\code{robust\_knee}, \code{robust\_elbow}) et la recherche
-multi-coudes qui alimente \code{robust\_knees}. Les références se trouvent
-dans \code{references.bib}. Pour chaque affirmation, on précise s'il s'agit
-d'une citation vérifiée, d'une citation rapportée par une source secondaire,
-ou d'une construction propre à ce projet, selon la convention de sourçage
-adoptée dans l'ensemble du dépôt.
+unique livré (\code{robust\_knee}, \code{robust\_elbow}), la recherche
+multi-coudes qui alimente \code{robust\_knees} et le socle commun de
+vraisemblance gaussienne sur lequel repose chaque critère de sélection de
+modèle du paquet. Les références se trouvent dans \code{references.bib}.
+Pour chaque affirmation, on précise s'il s'agit d'une citation vérifiée,
+d'une citation rapportée par une source secondaire, ou d'une construction
+propre à ce projet, selon la convention de sourçage adoptée dans
+l'ensemble du dépôt.
 
 \textbf{Comment lire cette note.} Chaque notion reçoit le même traitement~:
 d'abord une explication en langage ordinaire, appuyée sur un exemple
@@ -52,11 +57,18 @@ la dérivation plutôt que faire confiance au texte. Les blocs de formules
 peuvent être sautés en première lecture si l'intuition suffit déjà à
 répondre à la question, quitte à y revenir plus tard.
 
-Toute la note tourne autour d'une seule question posée trois fois, avec un
-réalisme croissant~: que signifie géométriquement \emph{un} coude
-(partie~\ref{part:un}), que signifie géométriquement \emph{plusieurs}
-coudes (partie~\ref{part:plusieurs}), et comment faire confiance à l'une ou
-l'autre réponse une fois les données bruitées (partie~\ref{part:bruit})~?
+Une introduction dérive, une seule fois, la machinerie qui va de la
+vraisemblance brute à un score borné et que chaque critère ultérieur
+réutilise~: pourquoi $\mathrm{BIC}$, $\mathrm{mBIC}$ et $\mathrm{ICL}$
+reposent tous sur le logarithme naturel, et comment un pire cas
+délibérément pessimiste, plutôt qu'un nombre brut non borné, transforme
+n'importe lequel d'entre eux en un score $[0,1]$ justifié et
+interprétable. À partir de là, toute la note tourne autour d'une seule
+question posée trois fois, avec un réalisme croissant~: que signifie
+géométriquement \emph{un} coude (partie~\ref{part:un}), que signifie
+géométriquement \emph{plusieurs} coudes (partie~\ref{part:plusieurs}) et
+comment faire confiance à l'une ou l'autre réponse une fois les données
+bruitées (partie~\ref{part:bruit})~?
 \end{abstract}
 
 \clearpage
@@ -94,13 +106,58 @@ ces sections n'y ajoute son propre terme de pénalité.
 \section{De la vraisemblance brute à un score borné}
 \label{sec:likelihood-intro}
 
-Partons de la vraisemblance brute, avant tout logarithme, et prenons-la
-\emph{par observation} dès le départ~: la moyenne géométrique des $n$
-densités gaussiennes individuelles, plutôt que leur produit brut. Sous un
-modèle génératif $y_i = f(x_i;\theta) + \varepsilon_i$ avec $\varepsilon_i$
+\textbf{La notion, en bref.} La \emph{vraisemblance} désigne
+habituellement la densité jointe des données observées, lue comme une
+fonction du paramètre plutôt que des données, $L_{\text{brute}}(\theta)
+:= \prod_{i=1}^n p(y_i \mid x_i, \theta)$. Cette note prend au contraire
+la vraisemblance \emph{par observation} dès le départ, une moyenne
+\emph{exponentiée} de log-densités plutôt qu'un produit brut,
+$$L(\theta,\sigma^2) := \exp\!\big(\mathbb E[\ln p]\big) = L_{\text{brute}}^{\,1/n},$$
+la moyenne géométrique des $n$ densités individuelles, exactement la
+racine $n$-ième de $L_{\text{brute}}$. Cet écart par rapport à la
+définition classique, et pourquoi il est principiel plutôt qu'une
+simple remise à l'échelle de confort, fait l'objet d'une note
+compagne, \code{LIKELIHOOD-fr.tex}, séparée parce que ce socle est
+général et ne dépend en rien de l'ajustement de courbes~: l'inégalité
+de Jensen et un raffinement indexé par une température emprunté à la
+mécanique statistique à l'équilibre, les grandes déviations de
+Cram\'er et la martingale de Wald, un compte rendu précis de $L$
+comme estimateur statistique avec son biais et sa variance dérivés et
+vérifiés par simulation, et comment cette même construction se lit
+sur un modèle de classification catégorielle (avec sa propre
+simulation travaillée) aussi bien que sur le modèle de régression
+gaussienne dérivé plus bas. Cette note construit directement
+dessus~: chaque critère de la famille $\mathrm{BIC}$ ci-dessous hérite
+de l'instanciation gaussienne de $L$. Le test séquentiel fondé sur la
+permutation de la section~\ref{sec:fwer} est exactement le cas que
+\code{LIKELIHOOD-fr.tex} identifie où la borne martingale classique de
+Wald ne s'applique pas directement, une alternative composite plutôt
+qu'entièrement spécifiée à chaque étape.
+
+Sous un modèle génératif $y_i = f(x_i;\theta) + \varepsilon_i$ avec $\varepsilon_i$
 i.i.d.\ $\mathcal N(0,\sigma^2)$ ($f$ n'importe lequel des modèles de
 courbe que cette note ajuste, une droite simple, une ligne brisée, ou une
 ligne brisée à $k$ segments~; $\theta$ ses paramètres de forme)~:
+
+\begin{center}
+\begin{tikzpicture}[
+  node distance=13mm and 16mm,
+  box/.style={draw, rounded corners, minimum height=8mm, minimum width=19mm,
+    align=center, font=\small, fill=blue!4},
+  sum/.style={draw, circle, minimum size=7mm, inner sep=0pt, font=\small},
+  ->, >=Stealth, thick
+]
+\node[box] (theta) {$\theta$};
+\node[box, right=of theta] (f) {$f(x_i;\theta)$};
+\node[sum, right=of f] (sum) {$+$};
+\node[box, right=of sum] (y) {$y_i$};
+\node[box, below=of sum, fill=red!4] (eps) {$\varepsilon_i \sim \mathcal N(0,\sigma^2)$};
+\draw (theta) -- (f);
+\draw (f) -- (sum);
+\draw (sum) -- (y);
+\draw (eps) -- (sum);
+\end{tikzpicture}
+\end{center}
 
 \begin{equation}
 L(\theta,\sigma^2) := \left(\prod_{i=1}^n (2\pi\sigma^2)^{-1/2}
@@ -232,68 +289,170 @@ pas à redimensionner un nombre déjà obtenu.
 \section{Travaux connexes}
 \label{sec:related-work}
 
-\textbf{Heuristiques de coude et d'elbow.} Le Kneedle de Satopaa,
-Albrecht, Irwin et Raghavan \citep{satopaa2011} repère un coude via la
-même géométrie de distance à la corde que la section~\ref{sec:diff-curve}
-construit, comme une estimation ponctuelle sans machinerie de confiance.
-Le repéreur d'\code{elbow-helper} emprunte cette intuition géométrique et
-l'enveloppe dans la procédure de décision que cette note dérive.
+\textbf{Heuristiques de coude et d'elbow.} La littérature sur la
+détection de coude a un point de référence dominant~: le Kneedle de
+Satopaa, Albrecht, Irwin et Raghavan \citep{satopaa2011}, construit
+exactement pour le cadre par lequel cette note s'ouvre, un opérateur
+système face à une courbe qui a besoin d'une réponse automatique à
+« où cela plie-t-il ». Le mécanisme de Kneedle est la même géométrie de
+distance à la corde que la section~\ref{sec:diff-curve} construit~:
+normaliser la courbe au carré unité, soustraire la droite reliant ses
+deux extrémités et appeler coude le point de distance verticale maximale
+à cette corde. C'est rapide, peu paramétré, et, sur une courbe propre,
+généralement juste. Ce que cela ne fait pas, c'est dire à quel point
+c'est juste~: Kneedle renvoie un seul indice, que la courbe soit un coude
+manuel ou trois points de bruit pur qui se trouvent osciller dans le bon
+sens, sans aucune notion de la façon dont cette réponse changerait sous
+un rééchantillonnage, sous une autre échelle de lissage ou face à un
+modèle nul sans coude du tout. Cet écart, une estimation ponctuelle sans
+confiance attachée, est précisément ce que cette note entière existe à
+combler. Le repéreur d'\code{elbow-helper} garde l'intuition géométrique
+de Kneedle en son cœur, la courbe de différence normalisée reste
+l'origine de chaque coude candidat, mais traite ce candidat comme une
+hypothèse à mettre à l'épreuve
+(sections~\ref{sec:multiechelle}--\ref{sec:null-test}) plutôt que comme une
+réponse à renvoyer telle quelle.
 
-\textbf{Détection de points de rupture et segmentation.} L'algorithme de
+\textbf{Détection de points de rupture et segmentation.} Une fois la
+question passée d'un coude à plusieurs, la littérature pertinente n'est
+plus la détection de coude mais la détection de points de rupture. Elle
+se scinde selon une ligne coût contre flexibilité que cette note doit
+trancher~: une recherche exacte qui ne vaut son coût que jusqu'à un
+$k_{\max}$ borné ou une approximation gloutonne qui passe mieux à
+l'échelle mais peut s'enfermer dans une erreur précoce. L'algorithme de
 programmation dynamique élaguée de Killick, Fearnhead et Eckley, Pruned
-Exact Linear Time (PELT) \citep{killick2012}, atteint une segmentation
-exacte et optimale à coût linéaire, le même principe de sous-structure
-optimale sur lequel repose aussi la section~\ref{sec:dp}, restreint ici à
-un petit $k_{\max}$ plutôt qu'au $k$ non borné piloté par pénalité de
-PELT. La segmentation binaire
-sauvage de Fryzlewicz \citep{fryzlewicz2014} est l'alternative gloutonne
-à la programmation dynamique exacte derrière la comparaison de la
-section~\ref{sec:greedy}. Yao \citep{yao1988} a le premier analysé
-l'estimation du nombre de points de rupture via le critère de Schwarz,
-l'ancêtre direct du critère $\mathrm{BIC}(k)$ à plusieurs coudes de la
-section~\ref{sec:several-bic}.
+Exact Linear Time (PELT) \citep{killick2012}, se situe du côté exact~:
+un programme dynamique pénalisé, élagué de sorte que les frontières
+candidates provablement sous-optimales soient écartées avant même d'être
+évaluées, retrouvant la même segmentation optimale qu'une recherche non
+élaguée, à coût linéaire plutôt que quadratique, avec $k$ lui-même
+déterminé par la pénalité plutôt que fixé à l'avance. La
+section~\ref{sec:dp} repose sur le même argument de sous-structure
+optimale, restreint ici à un petit $k_{\max}$ explicitement borné (peu de
+courbes réelles ont plausiblement plus d'une poignée de vraies pliures)
+plutôt qu'au $k$ non borné et piloté par pénalité de PELT, ce qui est
+justement ce qui garde la recherche assez petite pour faire tourner
+par-dessus les couches de bootstrap et de permutation dont PELT lui-même
+n'a pas d'équivalent. La segmentation binaire sauvage de Fryzlewicz
+\citep{fryzlewicz2014} se situe de l'autre côté de cette ligne~: une
+procédure de division récursive et gloutonne sur des sous-intervalles
+tirés au hasard, plus rapide que la recherche exacte mais susceptible de
+figer tôt une mauvaise coupure qu'elle ne pourra plus jamais reconsidérer,
+exactement le mode d'échec que la section~\ref{sec:greedy} démontre sur
+un exemple construit et la raison pour laquelle ce projet évalue la
+segmentation gloutonne comme l'alternative plus rapide mais moins bonne,
+plutôt que comme le choix par défaut. Yao \citep{yao1988} est le premier
+à relier directement le comptage de points de rupture au critère de
+Schwarz, l'article dont le $\mathrm{BIC}(k)$ à plusieurs coudes de la
+section~\ref{sec:several-bic} retrace l'ascendance, même si, comme cette
+section le montre, les hypothèses du BIC nu ne survivent pas intactes au
+contact d'un emplacement de rupture inconnu.
 
-\textbf{Critères de sélection de modèle.} Schwarz \citep{schwarz1978} est
-à l'origine du $\mathrm{BIC}$. Zhang et Siegmund \citep{zhangsiegmund2007}
-corrigent la sous-facturation du $\mathrm{BIC}$ pour la liberté de
-placement des points de rupture, le $\mathrm{mBIC}$ de la
-section~\ref{sec:mbic}. Biernacki, Celeux et Govaert
-\citep{biernacki2000} introduisent la vraisemblance complétée intégrée
-pour les modèles de mélange, adaptée aux points de rupture dans la
-section~\ref{sec:icl} via la distribution a posteriori exacte de Rigaill,
-Lebarbier et Robin par passage avant-arrière sur les segmentations
-\citep{rigaill2012}, encore accélérée par Cleynen, Luong, Rigaill et Nuel
-\citep{cleynen2013}. Kass et Raftery \citep{kassraftery1995} fournissent
-la voie du facteur de Bayes, d'une différence de vraisemblance brute
-jusqu'à une probabilité a posteriori, la normalisation alternative notée
-ci-dessus.
+\textbf{Critères de sélection de modèle.} Chaque critère que cette note
+construit répond à la même question, la complexité supplémentaire
+en vaut-elle la peine, avec des notions de moins en moins naïves de ce
+que « complexité » coûte. Schwarz \citep{schwarz1978} fournit le point de
+départ~: une approximation de Laplace à la vraisemblance marginale d'un
+modèle, qui facture un $\frac{1}{2}\ln n$ fixe par paramètre libre,
+correct pour les familles paramétriques régulières mais qui suppose
+silencieusement absente exactement l'irrégularité qu'introduit
+l'emplacement d'un point de rupture, une hypothèse dont la
+section~\ref{sec:several-bic} montre l'échec concret, pas seulement en
+principe. Zhang et Siegmund \citep{zhangsiegmund2007} diagnostiquent
+cette même irrégularité et la corrigent par une pénalité sensible à la
+longueur des segments, le $\mathrm{mBIC}$ de la section~\ref{sec:mbic},
+même si leur propre dérivation laisse une véritable ambiguïté de signe
+que cette note résout empiriquement plutôt que par hypothèse (encore la
+section~\ref{sec:mbic}). Biernacki, Celeux et Govaert
+\citep{biernacki2000} abordent la complexité sous un angle entièrement
+différent, développé à l'origine pour choisir le nombre de composantes
+d'un modèle de mélange, pas du tout un compte de points de rupture,
+facturant non seulement les paramètres mais aussi l'ambiguïté de
+l'affectation qui en résulte~: deux amas qui se chevauchent et sont
+difficiles à séparer coûtent plus cher que deux amas propres, même à
+ajustement égal. Rigaill, Lebarbier et Robin \citep{rigaill2012}
+fournissent la machinerie qui rend praticable le transfert de cette idée
+aux points de rupture, une distribution a posteriori exacte par passage
+avant-arrière sur tout l'espace des segmentations discrètes,
+structurellement la même récurrence que l'algorithme avant-arrière d'un
+modèle de Markov caché, simplement sur des segmentations plutôt que sur
+des états cachés, accélérée plus tard par Cleynen, Luong, Rigaill et Nuel
+\citep{cleynen2013}. Le récit que fait la section~\ref{sec:icl} de cette
+adaptation inclut un \emph{bug} que les tests de ce projet ont attrapé
+directement~: une première version qui laissait le terme de vraisemblance
+intégrée dominer la correction d'entropie et surestimer sur du bruit pur,
+un mode d'échec auquel la littérature originale sur les modèles de
+mélange n'a pas à faire face de la même façon. Kass et Raftery
+\citep{kassraftery1995} se situent légèrement à l'écart de toute cette
+famille~: non pas une pénalité de complexité, mais une lecture
+décisionnelle d'une différence de log-vraisemblance comme un facteur de
+Bayes approché, la normalisation alternative fondée sur une sigmoïde que
+la section~\ref{sec:likelihood-intro} dérive puis met de côté au profit
+du score ancré sur le pire cas utilisé dans le reste de cette note.
 
-\textbf{Tests séquentiels et multi-échelles.} Davies \citep{davies1977}
-traite le test d'hypothèse quand un paramètre de nuisance, ici
-l'emplacement du point de rupture, n'existe que sous l'hypothèse
-alternative, un problème auquel le test séquentiel de la
-section~\ref{sec:fwer} se heurte directement. Le Simultaneous MUlti-scale
+\textbf{Tests séquentiels et multi-échelles.} Une troisième famille de
+méthodes répond directement à la question « ce point de rupture est-il
+réel », comme un test d'hypothèse plutôt que comme un score pénalisé par
+la complexité. Davies \citep{davies1977} identifie la difficulté centrale
+que tout test de ce genre doit résoudre~: l'emplacement du point de
+rupture est un paramètre de nuisance qui n'existe que sous l'hypothèse
+alternative, si bien que l'asymptotique usuelle du rapport de
+vraisemblance ne s'applique pas, exactement le problème de pivot que le
+test séquentiel de la section~\ref{sec:fwer} contourne en utilisant un
+nul de permutation plutôt qu'asymptotique. Le Simultaneous MUlti-scale
 Change-point Estimator de Frick, Munk et Sieling (SMUCE)
-\citep{frick2014} donne cette même garantie à chaque échelle à la fois,
-cité aux côtés de celui-ci.
+\citep{frick2014} résout un problème apparenté mais plus ambitieux, une
+seule affirmation de confiance qui tient simultanément à chaque échelle
+de lissage à la fois, sensiblement plus de machinerie que ce dont la
+section~\ref{sec:fwer} a besoin pour un test séquentiel, un point de
+rupture à la fois, dont la validité se vérifie directement par simulation
+plutôt que par la théorie asymptotique. Les deux ont été considérés puis
+écartés au profit de la construction fondée sur la permutation
+effectivement livrée, un compromis délibéré~: moins de généralité
+théorique contre une garantie que ce projet a pu vérifier
+empiriquement plutôt que simplement citer.
 
-\textbf{Statistique robuste et classique.} La corrélation de rang de
-Spearman \citep{spearman1904} filtre la présence d'une tendance monotone
-avant toute recherche de coude. Theil \citep{theil1950} et Sen
-\citep{sen1968} fournissent l'estimateur de pente robuste aux valeurs
-aberrantes derrière le contraste de Theil-Sen. Le bootstrap d'Efron
-\citep{efron1979} est la méthode de rééchantillonnage derrière le test de
-stabilité.
+\textbf{Statistique robuste et classique.} Le pipeline à coude unique
+s'appuie sur des outils plus anciens et plus étroits partout où une
+méthode classique, robuste et bien comprise existe déjà, plutôt que d'en
+inventer une sur mesure. La corrélation de rang de Spearman
+\citep{spearman1904} filtre la présence d'une tendance monotone avant
+toute recherche de coude, choisie plutôt qu'une corrélation de Pearson
+précisément parce qu'elle demande seulement si $y$ évolue de façon
+cohérente avec $x$, pas si ce mouvement est linéaire, si bien qu'un
+véritable coude courbe ne peut pas la tromper en lui faisant conclure à
+l'absence de tendance. Theil \citep{theil1950} et Sen \citep{sen1968},
+développés à vingt ans d'écart et combinés depuis en un seul estimateur,
+fournissent l'estimation de pente derrière le contraste de Theil-Sen~: la
+médiane de toutes les pentes par paire, une seule valeur aberrante
+extrême parmi de nombreux points ordinaires ne peut pas déplacer une
+médiane comme elle déplacerait un ajustement par moindres carrés
+ordinaires. Le bootstrap d'Efron \citep{efron1979} est le principe de
+rééchantillonnage derrière le test de stabilité de la
+section~\ref{sec:bic-vc}, choisi plutôt qu'un intervalle de confiance
+asymptotique en forme close précisément parce que le coude candidat de ce
+pipeline a déjà survécu à plusieurs étapes de sélection non linéaires et
+non lisses au moment où une affirmation de confiance est nécessaire,
+exactement le cadre où la normalité asymptotique est la plus difficile à
+justifier et le rééchantillonnage le plus facile.
 
 \textbf{Méthodologie.} L\'opez de Prado \citep{lopezdeprado2018financial}
-défend longuement la validation croisée contiguë, non mélangée, sur des
-données ordonnées et séquentielles, le raisonnement derrière la
-validation croisée par blocs de ce projet.
+défend longuement, à partir de séries temporelles financières plutôt que
+d'ajustement de courbes, des blocs de validation croisée contigus plutôt
+que mélangés dès lors que des observations voisines sont corrélées,
+puisqu'une répartition mélangée laisse fuir dans l'estimation hors
+échantillon d'un point l'information de ses propres voisins. Le même
+argument se transpose directement à l'axe des $x$ d'une courbe~: des
+points voisins sur une courbe lisse quelconque se ressemblent pour la
+même raison structurelle que des jours voisins d'une série de prix, ce
+pourquoi la validation croisée par blocs d'\code{elbow-helper}
+(section~\ref{sec:bic-vc}) met de côté des blocs contigus de $x$ plutôt
+que des points tirés au hasard.
 
 \textbf{Pour aller plus loin.} Hastie, Tibshirani et Friedman
 \citep{hastie2009esl}, Bishop \citep{bishop2006prml}, Bouveyron, Celeux,
 Murphy et Raftery \citep{bouveyron2021mbc}, Cormen, Leiserson, Rivest et
-Stein \citep{cormen2022algorithms}, et Dasgupta, Papadimitriou et
+Stein \citep{cormen2022algorithms} et Dasgupta, Papadimitriou et
 Vazirani \citep{dasgupta2006algorithms} sont cités tout au long de cette
 note comme traitements pédagogiques accessibles, non comme l'origine
 d'une affirmation particulière ci-dessus~; quelques-uns, tirés de la
@@ -409,7 +568,7 @@ droite simple répond à la question « la pliure aide-t-elle réellement ».
 \section{Un exemple travaillé~: le coude d'inertie du k-means}
 
 La docstring de \code{robust\_elbow} désigne elle-même ce cas comme le cas
-convexe décroissant emblématique, et il vaut la peine de le voir tourner de
+convexe décroissant emblématique. Il vaut la peine de le voir tourner de
 bout en bout~: faire tourner le k-means pour $k = 1, 2, \dots$, tracer
 l'inertie (la somme des carrés des distances intra-groupe) en fonction de
 $k$, et chercher le point au-delà duquel ajouter un groupe de plus cesse
@@ -472,8 +631,8 @@ décroître doucement au-delà.}
 
 \textbf{Deux pièges pratiques que cet exemple a révélés, et qu'il vaut la
 peine d'énoncer clairement.} D'abord~: une courbe d'inertie du k-means n'a
-qu'un point par valeur de $k$ candidate, rarement plus d'une vingtaine, et
-son coude authentique se situe en général près du bord \emph{gauche}, à un
+qu'un point par valeur de $k$ candidate, rarement plus d'une vingtaine.
+Son coude authentique se situe en général près du bord \emph{gauche}, à un
 $k$ petit, pas au milieu. Les valeurs par défaut d'\code{elbow-helper}
 (sections~\ref{sec:multiechelle}--\ref{sec:test-nul}) sont calibrées pour
 des courbes de mesure plus longues, plus bruitées, dont le coude peut se
@@ -488,7 +647,7 @@ longues courbes bruitées de type série temporelle que ciblent les valeurs
 par défaut, ce n'est un défaut ni de l'un ni de l'autre. Ensuite~: la
 validation croisée par blocs (section~\ref{sec:bic-vc}) découpe une courbe
 aussi courte, une vingtaine de points, en \code{cv\_folds} morceaux
-contigus, et les 5 blocs par défaut laissent si peu de points par bloc
+contigus. Les 5 blocs par défaut laissent si peu de points par bloc
 qu'une frontière de bloc tombant près du coude peut faire basculer le signe
 de l'amélioration mesurée hors échantillon sur un tirage malchanceux. Trois
 blocs plus larges au lieu de cinq règlent le problème, une illustration
@@ -509,7 +668,7 @@ continue de la partie~\ref{part:un}~: dès qu'on laisse libre plus d'un
 point de rupture, un ajustement linéaire par morceaux \emph{continu} cesse
 de se décomposer en une somme de coûts indépendants par morceau, déplacer
 un point de rupture modifie la condition aux limites que chaque morceau
-voisin doit respecter, et cette dépendance casse les algorithmes de
+voisin doit respecter. Cette dépendance casse les algorithmes de
 recherche efficaces présentés plus loin. La littérature sur les points de
 rupture mobilisée et testée dans cette section, Yao, Zhang et Siegmund,
 PELT, segmentation binaire, est énoncée pour des segments indépendants~:
@@ -617,20 +776,54 @@ plus rapide que la programmation dynamique, mais le résultat ne peut jamais
 figent avant que des preuves ultérieures existent pour les corriger.
 
 \textbf{Un échec concret, pas hypothétique.}
-\code{research/multiknee/tests/test\_segmentation.py::test\_greedy\_can\_strictly\_underperform\_dp\_even\_when\_noiseless}
+\code{research/multiknee/tests/test\_segmentation.py::\allowbreak test\_greedy\_can\_strictly[...]noiseless}
 présente une courbe sans bruit avec deux points de rupture nets et réels,
 où la première coupure gloutonne ne tombe sur aucun des deux~; au moment où
 l'approche gloutonne ajoute une deuxième coupure, son erreur demeure
 strictement supérieure à l'optimum exact, à erreur nulle, de la
-programmation dynamique. \code{research/multiknee/RESULTS.md} mesure
-directement la conséquence en aval~: toute méthode fondée sur la
-programmation dynamique bat son équivalent glouton. Les erreurs
-d'engagement précoce de l'approche gloutonne la poussent en particulier à
-\emph{surestimer} le nombre de points de rupture à faible bruit, puisque
-corriger plus tard sa propre erreur de placement ressemble, aux yeux d'un
-critère de sélection de modèle, à une véritable structure supplémentaire
-méritant un point de rupture de plus. C'est la motivation classique de la
+programmation dynamique. \code{research/multiknee/compare.py} mesure
+directement la conséquence en aval, sur des courbes linéaires par
+morceaux synthétiques ($n=100$, $25$ répliques par cellule vrai-$k$/bruit)~:
+toute méthode fondée sur la programmation dynamique bat son équivalent
+glouton, DP+mBIC\_sub atteignant $0{,}85$ d'exactitude sur $k$ contre
+$0{,}60$ pour Greedy+mBIC\_sub, DP+BIC atteignant $0{,}65$ contre $0{,}49$
+pour Greedy+BIC. Les erreurs d'engagement précoce de l'approche gloutonne
+la poussent en particulier à \emph{surestimer} le nombre de points de
+rupture à faible bruit, puisque corriger plus tard sa propre erreur de
+placement ressemble, aux yeux d'un critère de sélection de modèle, à une
+véritable structure supplémentaire méritant un point de rupture de plus.
+C'est la motivation classique de la
 Wild Binary Segmentation \citep{fryzlewicz2014}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figures/greedy_vs_dp_fr.png}
+\caption{La programmation dynamique (bleu plein) contre l'approche
+gloutonne (rouge pointillé) sur la même courbe, à $k=1$ et $k=2$ points
+de rupture, propre (en haut) et avec un bruit $\sigma=0{,}15$ ajouté (en
+bas). À $k=1$, les deux coïncident exactement~: une seule coupure n'a
+rien à engager trop tôt. À $k=2$, sans bruit, la programmation dynamique
+retrouve les vrais points de rupture avec une erreur quasi nulle, tandis
+que la première coupure gloutonne, fixée à l'emplacement de $k=1$, l'empêche
+d'atteindre le même ajustement à n'importe quelle étape ultérieure~:
+l'échec concret que le texte ci-dessus décrit. Le bruit adoucit l'écart
+sans le refermer.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figures/multiknee_comparison_fr.png}
+\caption{À gauche~: exactitude sur $k$, classée, pour chaque combinaison
+programmation dynamique (bleu) et gloutonne (rouge) avec les quatre
+critères à plusieurs coudes que cette note dérive, $\mathrm{BIC}$,
+$\mathrm{mBIC}$, $\mathrm{ICL}$ et le test séquentiel FWER, mesurée sur
+le même banc d'essai synthétique. Toute méthode fondée sur la
+programmation dynamique dépasse son équivalent glouton. À droite~: le
+taux de faux positifs de ces mêmes dix méthodes sur des données
+réellement plates, le $\mathrm{BIC}$ nu étant l'exception nette des
+deux côtés, quelle que soit la stratégie de recherche.}
+\label{fig:multiknee-comparison}
+\end{figure}
 
 \section{Un exemple travaillé~: une montagne aux pentes alternées}
 
@@ -852,7 +1045,7 @@ contexte de données ordonnées et séquentielles
 \label{sec:bootstrap}
 
 \textbf{Intuition.} Si la collecte des données était refaite, le même
-coude réapparaîtrait-il, ou le coude observé n'était-il qu'un coup de
+coude réapparaîtrait-il~? Ou le coude observé n'était-il qu'un coup de
 chance lié au bruit particulier de cette exécution~? Comme une véritable
 reprise n'est pas disponible, le bootstrap en simule une~: prendre les
 résidus laissés par l'ajustement du modèle en ligne brisée accepté, la part
@@ -922,11 +1115,12 @@ segment indépendant, plus la variance du bruit~:
 \mathrm{BIC}(k) = n \ln\!\left(\frac{RSS(k)}{n}\right) + p \ln n
 \end{equation}
 
-La conséquence n'est pas que théorique~: \code{RESULTS.md} mesure un taux
-de faux positifs de 27~\% pour ce critère exact sur des données sans point
-de rupture réel, et seulement 0,65 de précision globale exacte en $k$, le
-pire des quatre critères testés sur les segmentations issues de la
-programmation dynamique \citep{yao1988} \citep{zhangsiegmund2007}.
+La conséquence n'est pas que théorique~: la figure~\ref{fig:multiknee-comparison}
+mesure un taux de faux positifs de $27\,\%$ pour ce critère exact
+(DP+BIC) sur des données sans point de rupture réel, et seulement
+$0{,}65$ de précision globale exacte en $k$, le pire des quatre critères
+fondés sur la programmation dynamique testés
+\citep{yao1988} \citep{zhangsiegmund2007}.
 
 La raison plus profonde de cette sous-facturation~: l'emplacement d'un
 point de rupture n'est pas un paramètre « régulier » au sens technique que
@@ -1055,9 +1249,10 @@ et non un remplacement de la propre pénalité de complexité du BIC~:
 \end{equation}
 
 Retestée sur les mêmes données de bruit pur, cette version sélectionne
-correctement $k = 0$~; \code{RESULTS.md} montre qu'une fois corrigée, elle
-se situe dans la même tranche de performance que le mBIC soustractif (0,82
-contre 0,85 de précision globale) \citep{biernacki2000}.
+correctement $k = 0$~; la figure~\ref{fig:multiknee-comparison} montre
+qu'une fois corrigée, elle se situe dans la même tranche de performance
+que le mBIC soustractif ($0{,}82$ contre $0{,}85$ de précision globale)
+\citep{biernacki2000}.
 
 \section{Un test séquentiel à taux d'erreur par famille contrôlé}
 \label{sec:fwer}
@@ -1093,9 +1288,10 @@ taux d'erreur par famille réel (FWER, family-wise error rate), la
 probabilité d'accepter au moins un point de rupture parasite n'importe où
 dans la séquence, au plus égal au $\alpha$ nominal, jamais supérieur.
 
-\code{RESULTS.md} montre que cette approche atteint un taux de faux
-positifs de 0~\% à $\text{true } k = 0$ et une précision globale de 0,82,
-dans la même tranche que le mBIC soustractif et l'ICL corrigé. Deux
+La figure~\ref{fig:multiknee-comparison} montre que cette approche
+atteint un taux de faux positifs de $0\,\%$ à $\text{true } k = 0$ et
+une précision globale de $0{,}82$, dans la même tranche que le mBIC
+soustractif et l'ICL corrigé. Deux
 alternatives plus rigoureuses ont été envisagées puis écartées~: le test
 asymptotique de Davies \citeyearpar{davies1977} et la garantie multiéchelle
 de SMUCE, « Simultaneous MUlti-scale Change-point Estimator »
@@ -1175,7 +1371,7 @@ supposant que l'algorithme avait échoué pour une raison plus mystérieuse.
 
 Chaque vérification des sections~\ref{sec:multiechelle}--\ref{sec:test-nul}
 existe pour répondre honnêtement à une seule question~: ce coude est-il
-réel, ou est-ce simplement à quoi ressemble le bruit, parfois~? La façon la
+réel~? Ou est-ce simplement à quoi ressemble le bruit, parfois~? La façon la
 plus nette de voir la réponse est de garder la forme réelle fixe et de ne
 faire varier que le bruit.
 
@@ -1241,6 +1437,130 @@ dessus. Sur chaque tirage testé, le coude détecté tombe à 6 ou 7
 composantes pour une dimension de signal réelle de 6, jamais en dessous,
 un décalage systématique et prévisible plutôt qu'un effet du bruit.
 
+\section{Un exemple travaillé~: une courbe de saturation exponentielle}
+
+\code{examples/exponential\_saturation.py} fait tourner \code{robust\_knee}
+sur une forme qu'aucun exemple ci-dessus n'a encore couverte~: $y = 1 -
+e^{-t/\tau}$, une tension de charge de circuit RC, une courbe
+d'apprentissage, une saturation dose-réponse, toute grandeur qui monte vite
+puis s'aplatit vers un plafond. Contrairement à un vrai coude en ligne
+brisée, cette courbe n'a de véritable rupture de pente nulle part~: elle
+est lisse et indéfiniment dérivable, un test de résistance délibéré pour un
+localisateur construit pour trouver des ruptures dans des tendances
+linéaires par morceaux.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/exponential_saturation_fr.png}
+\caption{La courbe de charge RC $y = 1 - e^{-t/\tau}$ avec un bruit léger,
+et le coude détecté par \code{elbow\_helper.robust\_knee} (ligne rouge
+pointillée et bulle) à $t/\tau \approx 1.98$.}
+\end{figure}
+
+Le piège pratique que révèle cet exemple est un décalage entre deux
+lectures raisonnables de « où la courbe s'aplatit ». La constante de temps
+$\tau$ des manuels marque $1 - e^{-1} \approx 63\%$ de la montée totale, un
+repère propre et de forme close. Sur chaque tirage testé,
+\code{robust\_knee} se place au contraire systématiquement autour de
+$t/\tau \approx 1{,}9$--$2{,}0$, ce qui correspond à $1 - e^{-2} \approx
+85\%$, la même convention « pratiquement stabilisée » utilisée
+informellement en électronique RC et en automatique. Un œil humain lit la
+courbe de la même façon~: à $\tau$, elle monte encore visiblement, pas
+encore plate. Ce n'est pas un défaut à corriger~: c'est ce que signifie
+« le dernier point avant la pliure » pour une courbe qui ne cesse jamais
+vraiment de plier. Le coude localisé dépend aussi de la fenêtre
+d'observation, ici $t \in [0, 5\tau]$, puisque la décision porte sur
+l'écart maximal à la corde qui couvre la plage réellement fournie, pas sur
+une propriété de $\tau$ seul.
+
+\section{Un exemple travaillé~: latence de file d'attente et coude de dimensionnement}
+
+\code{examples/queueing\_latency.py} fait tourner \code{robust\_knee} sur
+une forme qu'aucun exemple ci-dessus ne prend~: le temps de réponse d'une
+file d'attente à un seul serveur croît comme $1/(1-\rho)$ en fonction de
+son utilisation $\rho$, un emballement classique de type M/M/1. La latence
+reste proche du temps de service de base sur la majeure partie de la
+plage, puis grimpe brutalement à mesure que $\rho$ approche 1. Cette
+courbe est convexe et croissante plutôt que les formes concaves et
+saturantes vues jusqu'ici~: le coude ne marque pas un plafond mais une
+accélération, le point au-delà duquel un peu plus de charge coûte
+beaucoup plus de latence.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/queueing_latency_fr.png}
+\caption{Latence p99 en fonction de l'utilisation $\rho$, avec le coude
+détecté par \code{elbow\_helper.robust\_knee} (ligne rouge pointillée et
+bulle) à $\rho \approx 0{,}605$.}
+\end{figure}
+
+Le coude se situe à $\rho \approx 0{,}60$, bien avant l'emballement
+mathématique à $\rho = 1$, pour une latence d'environ 2,5 fois le temps de
+service de base. Une file d'attente paie déjà un coût réel à 60\%
+d'utilisation~: la courbe ne paraît plate jusque-là que parce que
+$1/(1-\rho)$ reste petit en échelle absolue. Dimensionner la capacité sur
+« est-ce que ça a encore l'air à peu près plat » plutôt que sur ce coude
+localisé est une façon courante et évitable de voir un plan de capacité
+manquer de marge plus tôt que prévu.
+
+\section{Un exemple travaillé~: dimensionnement de cache et rendements décroissants}
+
+\code{examples/cache\_hit\_rate.py} répond avec le même outil à une
+question familière d'infrastructure~: quelle taille donner à un cache~?
+Pour un jeu de données dont la popularité suit à peu près une loi de
+puissance, le taux de succès en fonction de la taille du cache $C$ suit
+une forme de Michaelis-Menten, $C/(C+K)$, où $K$ est la taille de cache à
+laquelle la moitié du jeu de données actif est déjà en mémoire~: des gains
+rapides au début, puis une longue traîne qui s'aplatit. C'est concave et
+croissant, la même famille large que la courbe de saturation
+exponentielle deux sections plus haut, mais construite à partir d'une
+fonction rationnelle plutôt que d'une exponentielle, et répondant à une
+question de coût plutôt qu'à une question de constante de temps physique.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/cache_hit_rate_fr.png}
+\caption{Taux de succès en fonction de la taille du cache, avec le coude
+détecté par \code{elbow\_helper.robust\_knee} (ligne rouge pointillée et
+bulle) à 691 éléments, soit $3{,}46\times K$.}
+\end{figure}
+
+Le coude se situe autour de $3{,}5K$, pas à $K$ lui-même. $K$ ne marque
+que le point de 50\% de taux de succès, une propriété de l'algèbre de la
+formule, pas de l'endroit où le rendement \emph{marginal} de la taille du
+cache cesse réellement d'être rentable. Acheter du cache jusqu'à $K$
+laisse beaucoup de taux de succès bon marché sur la table~; acheter
+au-delà de $3{,}5K$ environ dépense de la mémoire réelle pour une part
+de plus en plus mince de succès, exactement le chiffre dont une
+discussion de dimensionnement de capacité a besoin et dispose rarement
+sous forme close.
+
+\section{Un exemple travaillé~: quand arrêter les tests}
+
+\code{examples/bug\_discovery\_rate.py} tourne la même famille
+convexe-décroissante que les exemples du k-means et de l'ACP vers une
+question d'ingénierie de release plutôt que de clustering ou de
+dimensionnalité. Les modèles de croissance de fiabilité décrivent la
+découverte de défauts pendant les tests comme rapide au début (les bogues
+faciles, à fort impact) puis lente (les bogues rares et profonds)~: une
+courbe qui chute fortement, plie, puis s'aplatit en une longue traîne
+basse.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/bug_discovery_rate_fr.png}
+\caption{Bogues trouvés par jour de test, avec le coude détecté par
+\code{elbow\_helper.robust\_knee} (ligne rouge pointillée et bulle) au
+jour 10,7, un jour après la vraie rupture au jour 10.}
+\end{figure}
+
+Le coude localisé se situe environ un jour après la vraie rupture, le même
+petit décalage systématique « un à deux points après la vraie pliure » que
+montre l'exemple du diagramme des éboulis de l'ACP plus haut. Lire \code{knee\_x} comme « arrêter les tests
+exactement ici » plutôt que comme « le taux de découverte s'est maintenant
+vraiment aplati, à un jour ou deux près » accorde à l'estimation
+ponctuelle plus de confiance qu'elle n'en revendique réellement.
+
 \section*{Pour aller plus loin}
 
 Pour un traitement plus approfondi ou plus rigoureux des idées ci-dessus
@@ -1261,6 +1581,8 @@ précise déjà citée, mais comme pistes pour aller plus loin~:
 \item L\'opez de Prado sur la rigueur de validation pour des données
   ordonnées et séquentielles \citeyearpar{lopezdeprado2018financial}
 \end{itemize}
+
+\clearpage
 
 \bibliography{references}
 

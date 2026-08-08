@@ -1,14 +1,14 @@
 """Phase M4: the public ``robust_knees`` (plural) orchestration.
 
 Ships the exact combination validated in ``research/multiknee/RESULTS.md``
-and derived in ``MATH-en.tex`` (sections 5-20): dynamic-program search, the
+and derived in ``ELBOW-en.tex`` (sections 5-20): dynamic-program search, the
 subtractive-sign modified BIC as the selection criterion, and a
 Bonferroni-gated sequential permutation test layered on top by default,
 matching this package's design priority of minimising false-positive knees
 even at the cost of more abstentions.
 
 Segments are independent (discontinuous) OLS lines, not the continuous
-broken-line model :func:`elbow_helper.robust_knee` uses; see ``MATH-en.tex``
+broken-line model :func:`elbow_helper.robust_knee` uses; see ``ELBOW-en.tex``
 section 5 for why that difference is deliberate.
 
 Author

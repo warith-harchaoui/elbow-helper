@@ -49,10 +49,13 @@ from .types import Knees
 # external palette file: this is a small diagnostic figure, not a
 # publication dataviz product — see sprezzature-figures for that).
 # ------------------------------------------------------------------
-_WIDTH = 1000
+_WIDTH = 1320
 _HEIGHT = 620
-_PL, _PR, _PT, _PB = 96.0, 948.0, 188.0, 524.0
+_PL, _PR, _PT, _PB = 96.0, 860.0, 188.0, 524.0
 _PLOT_W = _PR - _PL
+# A dedicated right-hand gutter for the evidence legend, outside the plot
+# area entirely: a real legend rather than a card floating over the data.
+_LX, _LW = 940.0, _WIDTH - 940.0 - 40.0
 _PLOT_H = _PB - _PT
 
 _INK = "#1D1D1F"
@@ -76,7 +79,6 @@ _STRINGS = {
         "hint_abstain": "The evidence was too weak to report a point estimate.",
         "reason": "reason",
         "knee_pill": "Knee",
-        "inset_title": "Evidence",
         "detection_rate": "detection probability",
         "null_p": "null p",
         "slope_contrast": "slope contrast",
@@ -98,7 +100,6 @@ _STRINGS = {
         "hint_abstain": "L'évidence était trop faible pour une estimation ponctuelle.",
         "reason": "raison",
         "knee_pill": "Coude",
-        "inset_title": "Preuves",
         "detection_rate": "probabilité de détection",
         "null_p": "p (nul)",
         "slope_contrast": "contraste de pente",
@@ -234,10 +235,10 @@ def _bic_posterior_probability(bic_improvement: float) -> float:
     What does have a natural ceiling is the quantity ΔBIC approximates: twice
     the log Bayes factor between the broken-line and single-line models
     (Kass & Raftery, 1995, eq. 4 — the same approximation this project's
-    ``min_bic_improvement`` gate is calibrated against, see ``MATH-en.tex``
-    / ``MATH-fr.tex``, "Related Work"). That gives an approximate Bayes
+    ``min_bic_improvement`` gate is calibrated against, see ``ELBOW-en.tex``
+    / ``ELBOW-fr.tex``, "Related Work"). That gives an approximate Bayes
     factor ``BF ≈ exp(bic_improvement / 2)`` — literally a likelihood ratio,
-    since BIC is built from ``-2 ln(L)`` (see ``MATH-en.tex``'s "From raw
+    since BIC is built from ``-2 ln(L)`` (see ``ELBOW-en.tex``'s "From raw
     likelihood to a bounded score" for the full derivation, natural log
     throughout, back to the Gaussian density itself) — and, under equal
     priors, a posterior model probability ``BF / (1 + BF)``, which is
@@ -288,8 +289,8 @@ def _fit_quality_score(y_eval: np.ndarray, fit_eval: np.ndarray) -> float:
     *unique* MSE-minimizing constant and so is the easiest baseline to
     beat, letting ``R²`` swing negative for an otherwise reasonable fit.
     Instead the baseline is the single *observed* ``y_eval`` value that is
-    hardest to predict everything else from (see ``MATH-en.tex`` /
-    ``MATH-fr.tex``, "From raw likelihood to a bounded score"), a strictly
+    hardest to predict everything else from (see ``ELBOW-en.tex`` /
+    ``ELBOW-fr.tex``, "From raw likelihood to a bounded score"), a strictly
     higher and harder-to-beat MSE than the mean's, ``MSE_worst >
     Var(y_eval)`` always.
 
@@ -536,6 +537,8 @@ def render_svg(
         )
         call_txt = f'{strings["knee_pill"]} · x = {result.knee_x:.3g}'
         pill_w = 168.0
+        # The evidence legend now lives in its own gutter past _PR, so the
+        # callout (clamped to the plot area) can never reach it.
         callout_x = min(kx + 90.0, _PR - pill_w / 2 - 8)
         callout_y = max(ky - 70.0, _PT + 24)
         p.append(
@@ -599,7 +602,6 @@ def _emit_legend(p: List[str], result: "ClearKnee", strings: dict, fit_score: fl
         :func:`_fit_quality_score`, already evaluated by the caller in
         this figure's own display space.
     """
-    lx, ly, lw = 566.0, 196.0, 372.0
     rows = [
         (_CURVE, f'{strings["detection_rate"]}: {result.detection_rate:.0%}'),
         (_CURVE_DEEP, f'{strings["null_p"]}: {result.null_p_value:.3g}'),
@@ -607,54 +609,43 @@ def _emit_legend(p: List[str], result: "ClearKnee", strings: dict, fit_score: fl
         (_MUTED, f'{strings["bic"]}: {_bic_posterior_probability(result.bic_improvement):.1%}'),
         (_GOOD, f'{strings["fit_quality"]}: {fit_score:.0%}'),
     ]
-    row_h = 32.0
-    lh = 24.0 + row_h * len(rows)
-    p.append(
-        f'<rect x="{lx:.0f}" y="{ly:.0f}" width="{lw:.0f}" height="{lh:.0f}" '
-        f'rx="16" fill="#F5F5F7" stroke="{_HAIR}" stroke-width="1"/>'
-    )
-    p.append(
-        f'<text x="{lx + 20:.0f}" y="{ly + 30:.0f}" font-size="14" '
-        f'font-weight="700" fill="{_INK}">{escape(strings["inset_title"])}</text>'
-    )
+    row_h = 40.0
+    block_h = row_h * len(rows)
+    ly0 = (_PT + _PB) / 2.0 - block_h / 2.0
     for i, (colour, line) in enumerate(rows):
-        row_y = ly + 52 + i * row_h
-        p.append(f'<circle cx="{lx + 26:.1f}" cy="{row_y - 5:.1f}" r="5" fill="{colour}"/>')
+        row_y = ly0 + row_h * i + row_h / 2.0
+        p.append(f'<circle cx="{_LX + 6:.1f}" cy="{row_y - 5:.1f}" r="5" fill="{colour}"/>')
         p.append(
-            f'<text x="{lx + 42:.1f}" y="{row_y:.1f}" font-family="{_FONT_MONO}" '
+            f'<text x="{_LX + 22:.1f}" y="{row_y:.1f}" font-family="{_FONT_MONO}" '
             f'font-size="13" fill="{_INK}">{escape(line)}</text>'
         )
 
 
 def _emit_abstain_card(p: List[str], strings: dict, reason: Optional[str]) -> None:
-    """Append the "no clear knee" explanation card, wrapping the reason by hand."""
-    ix, iy, iw = 566.0, 196.0, 372.0
+    """Append the "no clear knee" reason as plain wrapped text in the legend
+    gutter (no card, no background): the main title above the plot already
+    says "No clear knee", so this only needs to add the why."""
     body = reason or strings["hint_abstain"]
     words = str(body).split()
     lines: List[str] = []
     cur = ""
     for w in words:
         trial = f"{cur} {w}".strip()
-        if len(trial) > 40 and cur:
+        if len(trial) > 34 and cur:
             lines.append(cur)
             cur = w
         else:
             cur = trial
     if cur:
         lines.append(cur)
-    ih = 90.0 + 22.0 * min(len(lines), 5)
-    p.append(
-        f'<rect x="{ix:.0f}" y="{iy:.0f}" width="{iw:.0f}" height="{ih:.0f}" '
-        f'rx="16" fill="#F5F5F7" stroke="{_HAIR}" stroke-width="1"/>'
-    )
-    p.append(
-        f'<text x="{ix + 20:.0f}" y="{iy + 34:.0f}" font-size="15" '
-        f'font-weight="700" fill="{_INK}">{escape(strings["title_abstain"])}</text>'
-    )
-    for i, line in enumerate(lines[:5]):
+    lines = lines[:6]
+    row_h = 24.0
+    block_h = row_h * len(lines)
+    iy0 = (_PT + _PB) / 2.0 - block_h / 2.0
+    for i, line in enumerate(lines):
         p.append(
-            f'<text x="{ix + 20:.0f}" y="{iy + 62 + i * 22:.0f}" font-size="13.5" '
-            f'fill="{_SUBINK}">{escape(line)}</text>'
+            f'<text x="{_LX:.1f}" y="{iy0 + row_h * i + row_h / 2.0:.1f}" '
+            f'font-size="13.5" fill="{_SUBINK}">{escape(line)}</text>'
         )
 
 
