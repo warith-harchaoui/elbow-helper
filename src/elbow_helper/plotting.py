@@ -1,12 +1,23 @@
-"""Optional diagnostic plotting.
+"""Diagnostic figure for a :func:`~elbow_helper.pipeline.robust_knee` run.
 
-Matplotlib is **not** a core dependency; it is imported lazily here so the base
-install stays ``numpy + os-helper``. Install the extra with
-``pip install elbow-helper[plot]``.
+Renders a self-contained SVG — no matplotlib, no Vega, no runtime image
+library — so this stays a **core** feature (no ``[plot]`` extra to install)
+rather than a lazy opt-in. The SVG-writing code below (the Catmull-Rom
+spline helper, the responsive ``<svg>`` header, the additive dark-mode
+block) is adapted from this project's sibling ``sprezzature-figures``
+package (``scripts/make_elbow.py`` / ``_svg.py`` / ``_style.py``) and
+copy-pasted in rather than taken as a dependency, then cut down and
+re-specialised for this module's own data shapes (normalized ``x``/``y``
+arrays and the :class:`~elbow_helper.pipeline.ClearKnee` /
+:class:`~elbow_helper.pipeline.NoClearKnee` result types) — elbow-helper's
+only runtime dependencies stay ``numpy`` and ``os-helper``.
 
-The plot never shows a bare point estimate: it pairs the located knee with its
-bootstrap interval, the Kneedle difference curve that found it, and the decision
-evidence.
+The figure never shows a bare point estimate: the knee is paired with its
+90% bootstrap interval, the Kneedle difference curve that found it, and the
+supporting evidence (detection rate, null-model p-value, slope contrast,
+BIC improvement). When the evidence is too weak, the figure says so plainly
+— a greyed, dashed curve and a reason — instead of drawing a marker that
+implies more confidence than the data supports.
 
 Author
 ------
@@ -15,75 +26,171 @@ Warith Harchaoui, <warith.harchaoui@deraison.ai>
 
 from __future__ import annotations
 
-from typing import Optional
+from pathlib import Path
+from typing import List, Optional, Sequence, Tuple
+from xml.sax.saxutils import escape
 
 import numpy as np
 import os_helper as oh
 
-from .bootstrap import bootstrap_knee
-from .candidates import generate_candidates
 from .config import RobustKneeConfig
 from .kneedle import KneeLocator
-from .metrics import passes_basic_filters
-from .pipeline import robust_knee
+from .pipeline import ClearKnee, robust_knee
 from .preprocessing import Abstain, prepare_curve
 from .smoothing import smooth_curve
 
+# ------------------------------------------------------------------
+# Canvas + house-style tokens (fixed, no CVD-accessibility variants or
+# external palette file: this is a small diagnostic figure, not a
+# publication dataviz product — see sprezzature-figures for that).
+# ------------------------------------------------------------------
+_WIDTH = 1000
+_HEIGHT = 620
+_PL, _PR, _PT, _PB = 96.0, 948.0, 188.0, 524.0
+_PLOT_W = _PR - _PL
+_PLOT_H = _PB - _PT
 
-def _require_matplotlib():
-    """Import matplotlib or raise a clear, actionable error.
+_INK = "#1D1D1F"
+_SUBINK = "#6E6E73"
+_HAIR = "#E5E5EA"
+_BG = "#FFFFFF"
+_CURVE = "#007AFF"
+_CURVE_DEEP = "#0051A8"
+_ACCENT = "#FF3B30"
+_MUTED = "#8E8E93"
 
-    Returns
-    -------
-    module
-        The ``matplotlib.pyplot`` module.
+_FONT = "Roboto, -apple-system, system-ui, sans-serif"
+_FONT_MONO = "Roboto Mono, ui-monospace, SFMono-Regular, monospace"
+
+_STRINGS = {
+    "en": {
+        "title_clear": "Knee detection: where the curve bends",
+        "subtitle_clear": "The Kneedle method flags the knee at x = {x}",
+        "title_abstain": "No clear knee",
+        "hint_abstain": "The evidence was too weak to report a point estimate.",
+        "reason": "reason",
+        "knee_pill": "Knee",
+        "inset_title": "Kneedle signal",
+        "inset_subtitle": "normalised difference · peak = knee",
+        "detection_rate": "detection rate",
+        "null_p": "null p",
+        "slope_contrast": "slope contrast",
+        "bic": "ΔBIC",
+        "x_axis": "x (normalized)",
+        "y_axis": "y (scaled)",
+        "data_label": "data",
+        "smoothed_label": "smoothed",
+    },
+    "fr": {
+        "title_clear": "Détection de coude : où la courbe plie",
+        "subtitle_clear": "La méthode Kneedle situe le coude à x = {x}",
+        "title_abstain": "Aucun coude net",
+        "hint_abstain": "L'évidence était trop faible pour une estimation ponctuelle.",
+        "reason": "raison",
+        "knee_pill": "Coude",
+        "inset_title": "Signal Kneedle",
+        "inset_subtitle": "différence normalisée · pic = coude",
+        "detection_rate": "taux de détection",
+        "null_p": "p (nul)",
+        "slope_contrast": "contraste de pente",
+        "bic": "ΔBIC",
+        "x_axis": "x (normalisé)",
+        "y_axis": "y (mis à l'échelle)",
+        "data_label": "données",
+        "smoothed_label": "lissé",
+    },
+}
+
+
+def _strings(language: str) -> dict:
+    return _STRINGS.get(language, _STRINGS["en"])
+
+
+def _fmt(v: float) -> str:
+    """Compact float formatting for SVG path data (one decimal, no trailing zero)."""
+    return f"{v:.1f}".rstrip("0").rstrip(".")
+
+
+def _catmull_rom(pts: Sequence[Tuple[float, float]], tension: float = 6.0) -> str:
+    """SVG ``C`` commands for a smooth Catmull-Rom spline through ``pts``.
+
+    Assumes the caller already emitted the initial ``M`` to ``pts[0]``.
+    Falls back to straight line-tos below three points.
     """
-    try:
-        import matplotlib.pyplot as plt  # noqa: F401
-        return plt
-    except ImportError as exc:  # pragma: no cover - environment dependent
-        raise ModuleNotFoundError(
-            "Diagnostic plotting needs matplotlib. Install it with "
-            "`pip install elbow-helper[plot]`."
-        ) from exc
+    n = len(pts)
+    if n < 3:
+        return "".join(f" L{_fmt(x)},{_fmt(y)}" for x, y in pts[1:])
+    seg = []
+    for i in range(n - 1):
+        p0 = pts[i - 1] if i > 0 else pts[i]
+        p1, p2 = pts[i], pts[i + 1]
+        p3 = pts[i + 2] if i + 2 < n else pts[i + 1]
+        c1x, c1y = p1[0] + (p2[0] - p0[0]) / tension, p1[1] + (p2[1] - p0[1]) / tension
+        c2x, c2y = p2[0] - (p3[0] - p1[0]) / tension, p2[1] - (p3[1] - p1[1]) / tension
+        seg.append(f" C{_fmt(c1x)},{_fmt(c1y)} {_fmt(c2x)},{_fmt(c2y)} {_fmt(p2[0])},{_fmt(p2[1])}")
+    return "".join(seg)
 
 
-def plot_diagnostics(
+def _svg_open(title_id: str, desc_id: str) -> str:
+    """The responsive, accessible ``<svg>`` opening tag (no font embedding —
+    a lightweight CSS font stack is used instead, unlike the full
+    sprezzature-figures generators, which embed WOFF2 Roboto for
+    publication use)."""
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{_WIDTH}" '
+        f'height="{_HEIGHT}" viewBox="0 0 {_WIDTH} {_HEIGHT}" '
+        f'font-family="{_FONT}" role="img" aria-labelledby="{title_id} {desc_id}">'
+    )
+
+
+def _dark_mode_block() -> str:
+    """Additive ``prefers-color-scheme: dark`` block flipping paper + ink."""
+    rows = [
+        f'[fill="{_BG}"]{{fill:#000;}}',
+        f'[fill="{_INK}"]{{fill:#F5F5F7;}}',
+        f'[fill="{_SUBINK}"]{{fill:#98989D;}}',
+        f'[stroke="{_HAIR}"]{{stroke:#2C2C2E;}}',
+    ]
+    return "<style>@media (prefers-color-scheme: dark){" + "".join(rows) + "}</style>"
+
+
+def _sx(x: float) -> float:
+    return _PL + x * _PLOT_W
+
+
+def _sy(y: float) -> float:
+    return _PB - y * _PLOT_H
+
+
+def render_svg(
     x,
     y=None,
+    *,
     curve: Optional[str] = None,
     direction: Optional[str] = None,
     config: Optional[RobustKneeConfig] = None,
-    out: Optional[str] = None,
-    show: bool = False,
-):
-    """Draw the four-panel diagnostic for a robust-knee run.
-
-    Panels: (1) raw + smoothed curve with the knee and its 90% interval;
-    (2) candidate knees across smoothing window and sensitivity; (3) the Kneedle
-    difference curve with the located peak; (4) the bootstrap distribution and
-    the decision summary.
+    language: str = "en",
+) -> str:
+    """Build the robust-knee diagnostic as a complete, standalone SVG string.
 
     Parameters
     ----------
     x, y : array-like
-        The curve. ``y`` may be omitted, as in :func:`robust_knee`.
+        The curve. ``y`` may be omitted, as in :func:`elbow_helper.robust_knee`.
     curve, direction : str, optional
-        Kneedle orientation (see :func:`robust_knee`). If omitted, inferred
-        from the data.
+        Kneedle orientation; inferred from the data when omitted.
     config : RobustKneeConfig, optional
-        Thresholds and replicate counts.
-    out : str, optional
-        If given, save the figure to this path (parent dirs are created).
-    show : bool, optional
-        If ``True``, call ``plt.show()``.
+        Thresholds and replicate counts forwarded to the pipeline.
+    language : str, optional
+        Chrome-text language, ``"en"`` (default) or ``"fr"``.
 
     Returns
     -------
-    matplotlib.figure.Figure
-        The assembled figure.
+    str
+        A complete SVG document: the curve with its knee (or an honest
+        abstention state) and the Kneedle evidence that produced it.
     """
-    plt = _require_matplotlib()
+    strings = _strings(language)
     config = config or RobustKneeConfig()
 
     if y is None:
@@ -95,112 +202,285 @@ def plot_diagnostics(
     except Abstain:
         prepared = None
 
-    curve = prepared.curve if prepared is not None else curve
-    direction = prepared.direction if prepared is not None else direction
+    inferred_curve = prepared.curve if prepared is not None else curve
+    inferred_direction = prepared.direction if prepared is not None else direction
+    result = robust_knee(x, y, curve=inferred_curve, direction=inferred_direction, config=config)
 
-    result = robust_knee(x, y, curve=curve, direction=direction, config=config)
+    p: List[str] = []
+    if isinstance(result, ClearKnee) and prepared is not None:
+        title_txt = strings["title_clear"]
+        subtitle_txt = strings["subtitle_clear"].format(x=f"{result.knee_x:.4g}")
+    else:
+        title_txt = strings["title_abstain"]
+        reason = getattr(result, "reason", "unknown")
+        subtitle_txt = f'{strings["reason"]}: {reason}'
+    desc_txt = f"{title_txt}. {subtitle_txt}"
 
-    fig, axes = plt.subplots(2, 2, figsize=(12, 8))
-    ax1, ax2, ax3, ax4 = axes.ravel()
+    p.append(_svg_open("kn-title", "kn-desc"))
+    p.append(f'<title id="kn-title">{escape(title_txt)}</title>')
+    p.append(f'<desc id="kn-desc">{escape(desc_txt)}</desc>')
+    p.append(_dark_mode_block())
+    p.append(f'<rect width="{_WIDTH}" height="{_HEIGHT}" fill="{_BG}"/>')
+    p.append(
+        f'<text x="{_PL:.0f}" y="72" font-size="29" font-weight="700" '
+        f'fill="{_INK}">{escape(title_txt)}</text>'
+    )
+    p.append(
+        f'<text x="{_PL:.0f}" y="106" font-size="17" fill="{_SUBINK}">'
+        f'{escape(subtitle_txt)}</text>'
+    )
 
-    if prepared is not None:
-        xn, yn = prepared.x_norm, prepared.y_scaled
+    # --- gridlines (fixed 0..1 domain — both axes are already normalized) ---
+    for frac in (0.0, 0.25, 0.5, 0.75, 1.0):
+        gy = _sy(frac)
+        p.append(
+            f'<line x1="{_PL:.1f}" y1="{gy:.1f}" x2="{_PR:.1f}" y2="{gy:.1f}" '
+            f'stroke="{_HAIR}" stroke-width="1"/>'
+        )
+        p.append(
+            f'<text x="{_PL - 14:.1f}" y="{gy + 5:.1f}" text-anchor="end" '
+            f'font-family="{_FONT_MONO}" font-size="13" fill="{_SUBINK}">'
+            f'{frac:.2f}</text>'
+        )
+    p.append(
+        f'<line x1="{_PL:.1f}" y1="{_PB:.1f}" x2="{_PR:.1f}" y2="{_PB:.1f}" '
+        f'stroke="{_INK}" stroke-width="1.5"/>'
+    )
+    for frac in (0.0, 0.25, 0.5, 0.75, 1.0):
+        p.append(
+            f'<text x="{_sx(frac):.1f}" y="{_PB + 26:.1f}" text-anchor="middle" '
+            f'font-family="{_FONT_MONO}" font-size="13" fill="{_INK}">{frac:.2f}</text>'
+        )
+    p.append(
+        f'<text x="{(_PL + _PR) / 2:.1f}" y="{_PB + 56:.1f}" text-anchor="middle" '
+        f'font-size="15" fill="{_INK}">{escape(strings["x_axis"])}</text>'
+    )
+    p.append(
+        f'<text x="30" y="{(_PT + _PB) / 2:.1f}" text-anchor="middle" font-size="15" '
+        f'fill="{_INK}" transform="rotate(-90 30 {(_PT + _PB) / 2:.1f})">'
+        f'{escape(strings["y_axis"])}</text>'
+    )
 
-        # Panel 1: raw + smoothed, knee marker, CI band.
-        ax1.plot(xn, yn, ".", color="#8E8E93", ms=4, label="data (scaled)")
-        ax1.plot(xn, smooth_curve(yn, max(3, prepared.n // 12)), "-",
-                 color="#007AFF", lw=2, label="smoothed")
-        if result.is_clear:
-            ax1.axvline(result.knee_x_norm, color="#FF3B30", lw=1.6, label="knee")
-            lo = (result.ci90[0] - prepared.x_lo) / (prepared.x_hi - prepared.x_lo)
-            hi = (result.ci90[1] - prepared.x_lo) / (prepared.x_hi - prepared.x_lo)
-            ax1.axvspan(lo, hi, color="#FF3B30", alpha=0.12, label="90% CI")
-        ax1.set_title("Curve + located knee")
-        ax1.set_xlabel("x (normalized)")
-        ax1.set_ylabel("y (scaled)")
-        ax1.legend(loc="best", fontsize=8)
+    if prepared is None:
+        # Data failed even the pre-normalisation shape/range check (e.g. zero
+        # range, or a global shape Kneedle cannot fit) — no curve to draw,
+        # but still show the abstention card for visual parity with the
+        # normal abstain case rather than leaving a bare axes frame.
+        _emit_abstain_card(p, strings, getattr(result, "reason", None))
+        p.append("</svg>")
+        return "".join(p)
 
-        # Panel 2: candidate scatter across window x sensitivity.
-        cands = generate_candidates(prepared, config)
-        for c in cands:
-            ok = passes_basic_filters(c, prepared.n, config)
-            ax2.scatter(c.knee_x_norm, c.window,
-                        c=("#34C759" if ok else "#D1D1D6"),
-                        s=25 + 8 * c.sensitivity, edgecolors="none", alpha=0.8)
-        if result.is_clear:
-            ax2.axvline(result.knee_x_norm, color="#FF3B30", lw=1.2)
-        ax2.set_title("Candidates across scale-space")
-        ax2.set_xlabel("knee x (normalized)")
-        ax2.set_ylabel("smoothing window")
-        ax2.set_xlim(0, 1)
+    xn, yn = prepared.x_norm, prepared.y_scaled
+    is_clear = isinstance(result, ClearKnee)
+    pts = [(_sx(float(px)), _sy(float(py))) for px, py in zip(xn, yn)]
 
-        # Panel 3: difference curve at a mid smoothing scale.
-        w = result.smoothing_window if result.is_clear else max(3, prepared.n // 12)
-        kl = KneeLocator(xn, smooth_curve(yn, w), S=1.0, curve=curve,
-                         direction=direction, online=True)
-        ax3.plot(kl.x_difference, kl.y_difference, "-", color="#5856D6", lw=2)
-        if kl.maxima_indices.size:
-            ax3.plot(kl.x_difference[kl.maxima_indices],
-                     kl.y_difference[kl.maxima_indices], "o",
-                     color="#FF9500", ms=5, label="maxima")
-        ax3.set_title("Kneedle difference curve")
-        ax3.set_xlabel("x (normalized)")
-        ax3.set_ylabel("difference")
-        ax3.legend(loc="best", fontsize=8)
+    # --- raw points + smoothed curve ---
+    for px, py in pts:
+        p.append(f'<circle cx="{px:.1f}" cy="{py:.1f}" r="2.6" fill="{_MUTED}" opacity="0.55"/>')
+    smoothed = smooth_curve(yn, max(3, prepared.n // 12))
+    spts = [(_sx(float(px)), _sy(float(py))) for px, py in zip(xn, smoothed)]
+    line = [f'M{_fmt(spts[0][0])},{_fmt(spts[0][1])}']
+    line.append(_catmull_rom(spts))
+    stroke = _CURVE if is_clear else _MUTED
+    dash = '' if is_clear else ' stroke-dasharray="6 5"'
+    p.append(
+        f'<path d="{"".join(line)}" fill="none" stroke="{stroke}" '
+        f'stroke-width="3" stroke-linecap="round" stroke-linejoin="round"{dash}/>'
+    )
 
-        # Panel 4: bootstrap distribution + decision text.
-        if result.is_clear:
-            boot = bootstrap_knee(prepared, result.knee_x_norm, config)
-            if boot.knees:
-                ax4.hist(boot.knees, bins=20, color="#007AFF", alpha=0.7)
-                ax4.axvline(result.knee_x_norm, color="#FF3B30", lw=1.6)
-            ax4.set_title("Bootstrap knee distribution")
-            ax4.set_xlabel("knee x (normalized)")
+    if is_clear:
+        kx = _sx(float(result.knee_x_norm))
+        ky = _sy(float(np.interp(result.knee_x_norm, xn, smoothed)))
+
+        # CI band (bootstrap 90% interval, denormalised to knee_x then
+        # re-normalised for pixel placement — ci90 is already in original x
+        # units, so map it back through the same [x_lo, x_hi] span).
+        lo_norm = (result.ci90[0] - prepared.x_lo) / (prepared.x_hi - prepared.x_lo)
+        hi_norm = (result.ci90[1] - prepared.x_lo) / (prepared.x_hi - prepared.x_lo)
+        lo_px, hi_px = _sx(lo_norm), _sx(hi_norm)
+        p.append(
+            f'<rect x="{lo_px:.1f}" y="{_PT - 6:.1f}" width="{(hi_px - lo_px):.1f}" '
+            f'height="{(_PB - _PT + 6):.1f}" fill="{_ACCENT}" fill-opacity="0.10"/>'
+        )
+        p.append(f'<circle cx="{kx:.1f}" cy="{ky:.1f}" r="15" fill="{_ACCENT}" opacity="0.16"/>')
+        p.append(
+            f'<circle cx="{kx:.1f}" cy="{ky:.1f}" r="8" fill="{_BG}" '
+            f'stroke="{_ACCENT}" stroke-width="3"/>'
+        )
+        call_txt = f'{strings["knee_pill"]} · x = {result.knee_x:.3g}'
+        pill_w = 168.0
+        callout_x = min(kx + 90.0, _PR - pill_w / 2 - 8)
+        callout_y = max(ky - 70.0, _PT + 24)
+        p.append(
+            f'<line x1="{kx + 10:.1f}" y1="{ky - 10:.1f}" '
+            f'x2="{callout_x - pill_w / 2 + 8:.1f}" y2="{callout_y:.1f}" '
+            f'stroke="{_ACCENT}" stroke-width="1.6"/>'
+        )
+        p.append(
+            f'<rect x="{callout_x - pill_w / 2:.1f}" y="{callout_y - 17:.1f}" '
+            f'width="{pill_w:.0f}" height="34" rx="17" fill="{_ACCENT}"/>'
+        )
+        p.append(
+            f'<text x="{callout_x:.1f}" y="{callout_y + 5:.1f}" text-anchor="middle" '
+            f'font-family="{_FONT_MONO}" font-size="15" font-weight="700" '
+            f'fill="{_BG}">{escape(call_txt)}</text>'
+        )
+        _emit_inset(p, prepared, result, inferred_curve, inferred_direction, strings)
+    else:
+        _emit_abstain_card(p, strings, getattr(result, "reason", None))
+
+    p.append("</svg>")
+    return "".join(p)
+
+
+def _emit_inset(
+    p: List[str],
+    prepared,
+    result: "ClearKnee",
+    curve: Optional[str],
+    direction: Optional[str],
+    strings: dict,
+) -> None:
+    """Append the Kneedle-signal inset card: difference curve + evidence lines."""
+    ix, iy, iw, ih = 566.0, 196.0, 372.0, 232.0
+    p.append(
+        f'<rect x="{ix:.0f}" y="{iy:.0f}" width="{iw:.0f}" height="{ih:.0f}" '
+        f'rx="16" fill="#F5F5F7" stroke="{_HAIR}" stroke-width="1"/>'
+    )
+    p.append(
+        f'<text x="{ix + 20:.0f}" y="{iy + 30:.0f}" font-size="15" '
+        f'font-weight="700" fill="{_INK}">{escape(strings["inset_title"])}</text>'
+    )
+    p.append(
+        f'<text x="{ix + 20:.0f}" y="{iy + 51:.0f}" font-size="12.5" '
+        f'fill="{_SUBINK}">{escape(strings["inset_subtitle"])}</text>'
+    )
+
+    w = result.smoothing_window
+    smoothed = smooth_curve(prepared.y_scaled, w)
+    kl = KneeLocator(
+        prepared.x_norm, smoothed, S=1.0, curve=curve, direction=direction, online=True,
+    )
+    diff = kl.y_difference
+    mx0, mx1 = ix + 20.0, ix + iw - 20.0
+    my0, my1 = iy + 66.0, iy + 150.0
+    dmin, dmax = float(np.min(diff)), float(np.max(diff))
+    dspan = (dmax - dmin) or 1.0
+
+    def msx(i: int) -> float:
+        return mx0 + i / (len(diff) - 1) * (mx1 - mx0)
+
+    def msy(v: float) -> float:
+        return my1 - (v - dmin) / dspan * (my1 - my0)
+
+    mpts = [(msx(i), msy(float(v))) for i, v in enumerate(diff)]
+    ln = [f'M{_fmt(mpts[0][0])},{_fmt(mpts[0][1])}']
+    ln.append(_catmull_rom(mpts))
+    p.append(
+        f'<path d="{"".join(ln)}" fill="none" stroke="{_CURVE}" '
+        f'stroke-width="2.2" stroke-linecap="round"/>'
+    )
+    p.append(
+        f'<line x1="{mx0:.1f}" y1="{my1:.1f}" x2="{mx1:.1f}" y2="{my1:.1f}" '
+        f'stroke="{_HAIR}" stroke-width="1"/>'
+    )
+    if kl.maxima_indices.size:
+        peak_i = int(kl.maxima_indices[np.argmax(kl.y_difference[kl.maxima_indices])])
+        peak_x, peak_y = mpts[peak_i]
+        p.append(
+            f'<circle cx="{peak_x:.1f}" cy="{peak_y:.1f}" r="4.6" fill="{_BG}" '
+            f'stroke="{_ACCENT}" stroke-width="2.4"/>'
+        )
+
+    # Evidence lines: detection rate, null p-value, slope contrast, BIC.
+    lines = [
+        f'{strings["detection_rate"]}: {result.detection_rate:.0%}',
+        f'{strings["null_p"]}: {result.null_p_value:.3g}',
+        f'{strings["slope_contrast"]}: {result.slope_contrast:.2f}',
+        f'{strings["bic"]}: {result.bic_improvement:.1f}',
+    ]
+    for i, line in enumerate(lines):
+        p.append(
+            f'<text x="{mx0:.1f}" y="{my1 + 24 + i * 20:.1f}" '
+            f'font-family="{_FONT_MONO}" font-size="12" fill="{_SUBINK}">'
+            f'{escape(line)}</text>'
+        )
+
+
+def _emit_abstain_card(p: List[str], strings: dict, reason: Optional[str]) -> None:
+    """Append the "no clear knee" explanation card, wrapping the reason by hand."""
+    ix, iy, iw = 566.0, 196.0, 372.0
+    body = reason or strings["hint_abstain"]
+    words = str(body).split()
+    lines: List[str] = []
+    cur = ""
+    for w in words:
+        trial = f"{cur} {w}".strip()
+        if len(trial) > 40 and cur:
+            lines.append(cur)
+            cur = w
         else:
-            ax4.axis("off")
+            cur = trial
+    if cur:
+        lines.append(cur)
+    ih = 90.0 + 22.0 * min(len(lines), 5)
+    p.append(
+        f'<rect x="{ix:.0f}" y="{iy:.0f}" width="{iw:.0f}" height="{ih:.0f}" '
+        f'rx="16" fill="#F5F5F7" stroke="{_HAIR}" stroke-width="1"/>'
+    )
+    p.append(
+        f'<text x="{ix + 20:.0f}" y="{iy + 34:.0f}" font-size="15" '
+        f'font-weight="700" fill="{_INK}">{escape(strings["title_abstain"])}</text>'
+    )
+    for i, line in enumerate(lines[:5]):
+        p.append(
+            f'<text x="{ix + 20:.0f}" y="{iy + 62 + i * 22:.0f}" font-size="13.5" '
+            f'fill="{_SUBINK}">{escape(line)}</text>'
+        )
 
-    summary = _decision_text(result)
-    if not result.is_clear:
-        ax4.axis("off")
-    fig.text(0.52, 0.02, summary, fontsize=9, va="bottom", family="monospace")
-    fig.suptitle("elbow-helper diagnostics", fontsize=13, weight="bold")
-    fig.tight_layout(rect=(0, 0.06, 1, 0.97))
 
-    if out:
-        oh.make_directory(oh.folder_name_ext(out)[0])
-        fig.savefig(out, dpi=130)
-        oh.info(f"[elbow-helper] saved diagnostics to {out}")
-    if show:  # pragma: no cover
-        plt.show()
-    return fig
-
-
-def _decision_text(result) -> str:
-    """A short textual diagnostic summary, always with the evidence.
+def plot_diagnostics(
+    x,
+    y=None,
+    *,
+    curve: Optional[str] = None,
+    direction: Optional[str] = None,
+    config: Optional[RobustKneeConfig] = None,
+    out: Optional[str] = None,
+    language: str = "en",
+) -> str:
+    """Render the robust-knee diagnostic SVG and optionally save it.
 
     Parameters
     ----------
-    result : ClearKnee or NoClearKnee
-        The pipeline's result, as returned by :func:`robust_knee`.
+    x, y : array-like
+        The curve. ``y`` may be omitted, as in :func:`elbow_helper.robust_knee`.
+    curve, direction : str, optional
+        Kneedle orientation; inferred from the data when omitted.
+    config : RobustKneeConfig, optional
+        Thresholds and replicate counts forwarded to the pipeline.
+    out : str, optional
+        If given, save the SVG to this path (parent directories are created).
+    language : str, optional
+        Chrome-text language, ``"en"`` (default) or ``"fr"``.
 
     Returns
     -------
     str
-        A multi-line summary: the decision, the point estimate and its
-        supporting evidence when clear, or the abstention reason otherwise.
+        The complete SVG document (also written to ``out`` when given).
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> x = np.linspace(0, 1, 50)
+    >>> y = np.where(x <= 0.3, 3 * x, 0.9 + 0.1 * (x - 0.3))
+    >>> svg = plot_diagnostics(x, y)
+    >>> svg.startswith("<svg")
+    True
     """
-    if result.is_clear:
-        return (
-            f"Decision: CLEAR_KNEE\n"
-            f"knee x            = {result.knee_x:.4g}\n"
-            f"90% CI            = ({result.ci90[0]:.4g}, {result.ci90[1]:.4g})\n"
-            f"detection rate    = {result.detection_rate:.2f}\n"
-            f"slope contrast    = {result.slope_contrast:.2f}\n"
-            f"BIC improvement   = {result.bic_improvement:.1f}\n"
-            f"null-test p-value = {result.null_p_value:.3g}"
-        )
-    return (
-        f"Decision: NO_CLEAR_KNEE\n"
-        f"primary reason    = {result.reason}\n"
-        f"(no point estimate reported without sufficient evidence)"
-    )
+    svg = render_svg(x, y, curve=curve, direction=direction, config=config, language=language)
+    if out:
+        oh.make_directory(oh.folder_name_ext(out)[0])
+        Path(out).write_text(svg, encoding="utf-8")
+        oh.info(f"[elbow-helper] saved diagnostics to {out}")
+    return svg

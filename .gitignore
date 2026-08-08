@@ -7,9 +7,22 @@ dist/
 .pytest_cache/
 .DS_Store
 diagnostics.png
+diagnostics.svg
 *.png
 !figures/*.png
 !assets/*.png
+!assets/*.svg
 *.docx
 .venv/
 .private/
+
+# LaTeX build artifacts (MATH-en.tex / MATH-fr.tex compile via latexmk).
+*.aux
+*.log
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.out
+*.toc
+*.synctex.gz

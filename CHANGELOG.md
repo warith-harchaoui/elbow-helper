@@ -13,14 +13,36 @@ development.
 - **`robust_knee`**: a conservative wrapper around a from-scratch Kneedle
   implementation. Reports a knee with an uncertainty estimate, or explicitly
   abstains, rather than always returning a point estimate on a noisy or
-  knee-less curve. Core depends on `numpy` + `os-helper` only; plotting is a
-  lazy `[plot]` extra.
+  knee-less curve. The whole package depends on `numpy` + `os-helper` only.
 - **`robust_knees`** (multi-knee API): segmentation-based detection of
   multiple knees along a curve, with a full bilingual (FR/EN) mathematical
   writeup and real-world worked examples (k-means, PCA).
 - Bilingual competitive-landscape page (`LANDSCAPE.md` / `PAYSAGE.md`), with
   the positioning map generated via `standpoint` (replacing an earlier
   Vega-Lite quadrant chart).
+
+### Changed
+- **`elbow_helper.plotting` no longer uses matplotlib.** `plot_diagnostics`
+  now renders a hand-authored, self-contained SVG (Catmull-Rom spline, house
+  palette, additive dark-mode block — no runtime image library) instead of a
+  four-panel matplotlib figure. The `[plot]` extra is gone: diagnostics are a
+  **core** feature, nothing extra to install. The new figure shows the curve
+  with the located knee and its 90% CI band (or an honest greyed/dashed
+  abstention state with the reason, when the evidence is too weak) next to a
+  Kneedle-signal inset with the difference curve and its supporting evidence
+  (detection rate, null-model p-value, slope contrast, ΔBIC). Supports
+  `language="fr"`. `examples/diagnostic_plot.py` and the README/LISEZ-MOI.md
+  Diagnostics sections updated to match, with a real generated figure
+  (`assets/diagnostics.svg`) embedded in both.
+- **`MATH-en.md` / `MATH-fr.md` replaced by `MATH-en.tex` / `MATH-fr.tex`** —
+  the mathematics writeup is now native LaTeX (`amsmath`, `natbib` against
+  `references.bib`, numbered equations, a proper table of contents) rather
+  than markdown, given the target audience (readers from the end of high
+  school through a Ph.D. in applied mathematics). Compile with
+  `latexmk -pdf` (or `pdflatex` + `bibtex` + `pdflatex` ×2); `MATH-en.pdf` /
+  `MATH-fr.pdf` are the checked-in compiled copies. Every reference to the
+  old `.md` filenames (README, LISEZ-MOI.md, LANDSCAPE.md, PAYSAGE.md, and
+  source docstrings) updated to point at the `.tex` sources.
 
 ### Fixed
 - CI push trigger was scoped to `branches: [main]` while the repo's actual

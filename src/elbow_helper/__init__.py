@@ -19,7 +19,7 @@ from-scratch Kneedle, usable standalone.
 ``robust_knees(x, y=None, config=None)`` (plural) -> :class:`Knees` |
 :class:`InvalidKnees`: how many knees, if any, a curve genuinely has, via
 dynamic-program search and a Bonferroni-gated modified-BIC criterion (see
-``MATH-en.md`` and ``research/multiknee/RESULTS.md``). :class:`RobustKneesConfig`
+``MATH-en.tex`` and ``research/multiknee/RESULTS.md``). :class:`RobustKneesConfig`
 holds its settings.
 
 Author

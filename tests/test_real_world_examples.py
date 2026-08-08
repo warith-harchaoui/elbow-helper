@@ -1,5 +1,5 @@
 """Two applied worked examples for :func:`robust_elbow`, shared with the
-figures and prose in MATH-en.md / MATH-fr.md: the k-means inertia elbow and
+figures and prose in MATH-en.tex / MATH-fr.tex: the k-means inertia elbow and
 the PCA scree plot. Both are the "convex-decreasing" case the docstring of
 :func:`robust_elbow` names directly.
 
@@ -21,7 +21,7 @@ from elbow_helper import ClearKnee, RobustKneeConfig, robust_elbow
 # anywhere measurement curves (min_samples=20, min_side_points=5, and
 # persistence/bootstrap/null thresholds tuned for that regime), and reject
 # this shape outright, so a profile tuned for short applied curves is
-# needed instead; see MATH-en.md / MATH-fr.md for this trade-off.
+# needed instead; see MATH-en.tex / MATH-fr.tex for this trade-off.
 _SHORT_CURVE_CONFIG = RobustKneeConfig(
     min_samples=6,
     min_side_points=2,
@@ -82,7 +82,7 @@ def kmeans_inertia_curve(seed, true_k=8, k_max=24, n_per_cluster=50):
     too: real clusters are not identical circles, and this leftover
     substructure is exactly what keeps inertia decaying gently for
     k > true_k instead of flattening into a hard plateau. Shared with
-    MATH-en.md / MATH-fr.md's k-means figure.
+    MATH-en.tex / MATH-fr.tex's k-means figure.
     """
     rng = np.random.default_rng(seed)
     grid = np.array(
@@ -112,7 +112,7 @@ def pca_scree_curve(seed, n_samples=300, true_d=6, n_noise_dims=19, signal_scale
     the way the Marchenko-Pastur distribution predicts, so the noise block
     here decays geometrically (``noise_decay`` per step) rather than sitting
     on one flat value; a flat noise tail is the one shape sample covariance
-    eigenvalues never actually take. Shared with MATH-en.md / MATH-fr.md's
+    eigenvalues never actually take. Shared with MATH-en.tex / MATH-fr.tex's
     PCA figure.
     """
     rng = np.random.default_rng(seed)
@@ -149,5 +149,5 @@ def test_pca_scree_elbow_detects_true_signal_dimension():
         assert isinstance(r, ClearKnee), (seed, r)
         # Kneedle's "last point before the bend" convention consistently
         # lands about 1-2 components past the last true signal component,
-        # not exactly on it; see MATH-en.md / MATH-fr.md for this reading.
+        # not exactly on it; see MATH-en.tex / MATH-fr.tex for this reading.
         assert true_d <= r.knee_x <= true_d + 2

@@ -1,8 +1,5 @@
-"""Example: render the four-panel diagnostic (needs the ``[plot]`` extra).
+"""Example: render the robust-knee diagnostic SVG (no extra install needed).
 
-Install the extra first::
-
-    pip install -e ".[plot]"
     python examples/diagnostic_plot.py
 
 Author
@@ -26,6 +23,6 @@ y = y / y.max() + rng.normal(0, 0.02, x.size)
 plot_diagnostics(
     x, y, curve="concave", direction="increasing",
     config=RobustKneeConfig(random_seed=0),
-    out="diagnostics.png",
+    out="diagnostics.svg",
 )
-print("wrote diagnostics.png")
+print("wrote diagnostics.svg")

@@ -18,13 +18,12 @@ A knee, on a curve of diminishing returns, marks the point past which extra inpu
 
 ## Dependencies
 
-The core depends on `numpy` and [`os-helper`](https://github.com/warith-harchaoui/os-helper) only. The knee-locating algorithm is implemented from scratch, in NumPy only, so there is no `scipy`, `scikit-learn`, `statsmodels`, or `joblib` runtime dependency. Plotting is an optional extra (`matplotlib`, loaded lazily, only when you call it). See Acknowledgements below for the implementation this algorithm follows.
+The whole package depends on `numpy` and [`os-helper`](https://github.com/warith-harchaoui/os-helper) only — nothing else, not even for the diagnostic figure. The knee-locating algorithm is implemented from scratch, in NumPy only, so there is no `scipy`, `scikit-learn`, `statsmodels`, or `joblib` runtime dependency. `elbow_helper.plotting` writes hand-authored SVG (see Diagnostics below) rather than reaching for matplotlib, so it needs no extra install. See Acknowledgements below for the implementation this algorithm follows.
 
 ## Install
 
 ```bash
-pip install -e .            # core: numpy + os-helper
-pip install -e ".[plot]"    # + matplotlib for the diagnostic figure
+pip install -e .            # everything: numpy + os-helper, diagnostics included
 pip install -e ".[dev]"     # + pytest
 ```
 
@@ -104,10 +103,12 @@ A note on these thresholds: they are calibrated, conservative defaults, not univ
 
 ```python
 from elbow_helper.plotting import plot_diagnostics
-plot_diagnostics(x, y, curve="concave", direction="increasing", out="diag.png")
+plot_diagnostics(x, y, curve="concave", direction="increasing", out="diag.svg")
 ```
 
-Four panels: the curve with the located knee and its interval, the candidate knees across the scale-space, the difference curve used to locate them, and the bootstrap distribution. The point estimate is never shown without its uncertainty.
+![Diagnostic figure: a curve rising then flattening, with the located knee marked and its 90% confidence band shaded, alongside an inset panel showing the Kneedle difference curve that found it, with detection rate, null-model p-value, slope contrast and ΔBIC as supporting evidence.](assets/diagnostics.svg)
+
+Hand-authored SVG, no matplotlib, no extra to install: the diagnostic is a core feature. The curve and its located knee sit next to the Kneedle difference curve that found it, so the reader sees the method as well as the result, next to the detection rate, the null-model p-value, the slope contrast and the BIC improvement that back the point estimate. When the evidence is too weak, the figure switches to an honest abstention state instead: a greyed, dashed curve and the reason, never a marker implying more confidence than the data supports. Pass `language="fr"` for the French chrome text.
 
 ## Limitations
 
@@ -129,7 +130,7 @@ kl.knee, kl.all_knees
 
 ## Mathematics
 
-`MATH-en.md` ([🇫🇷 MATH-fr.md](MATH-fr.md)) derives every formula this package runs, from the single-knee pipeline's normalisation, Spearman screen, Kneedle difference curve, persistence clustering, Theil-Sen slope, BIC, blocked cross-validation, bootstrap and null test, through to the multi-knee research behind `robust_knees` (see also `research/multiknee/RESULTS.md`). Written intuition-first, with a worked example before every formula, for readers from the end of high school through a Ph.D. in applied mathematics. Citations are in `references.bib`, including a few pointers into my own [Favourite AI books](https://deraison.ai/ai-books) where a technique used here deserves a book-length treatment. Compiled copies: `MATH-en.pdf`, `MATH-fr.pdf`.
+`MATH-en.tex` ([🇫🇷 MATH-fr.tex](MATH-fr.tex)) derives every formula this package runs, from the single-knee pipeline's normalisation, Spearman screen, Kneedle difference curve, persistence clustering, Theil-Sen slope, BIC, blocked cross-validation, bootstrap and null test, through to the multi-knee research behind `robust_knees` (see also `research/multiknee/RESULTS.md`). Written intuition-first, with a worked example before every formula, for readers from the end of high school through a Ph.D. in applied mathematics. Citations are in `references.bib`, including a few pointers into my own [Favourite AI books](https://deraison.ai/ai-books) where a technique used here deserves a book-length treatment. Native LaTeX (not Markdown), given the audience: compile with `latexmk -pdf MATH-en.tex` (or `MATH-fr.tex`), or read the compiled copies directly, `MATH-en.pdf` / `MATH-fr.pdf`.
 
 ## Landscape
 

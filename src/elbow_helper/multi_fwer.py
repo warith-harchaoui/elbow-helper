@@ -1,6 +1,6 @@
 """Phase M3: the Bonferroni-gated sequential test for :func:`elbow_helper.robust_knees`.
 
-Ported from the validated ``research/multiknee/fwer.py``; see ``MATH-en.md``
+Ported from the validated ``research/multiknee/fwer.py``; see ``MATH-en.tex``
 section 20 for the derivation. Independent of :mod:`multi_criteria`: walks
 the nested DP segmentation sequence and, at each step, tests whether adding
 one more breakpoint reduces error by more than an IID-residual permutation

@@ -1,6 +1,6 @@
 """Phase M2: the subtractive-sign modified BIC for :func:`elbow_helper.robust_knees`.
 
-Ported from the validated ``research/multiknee/criteria.py`` (see ``MATH-en.md``
+Ported from the validated ``research/multiknee/criteria.py`` (see ``MATH-en.tex``
 section 14 and ``research/multiknee/RESULTS.md`` for the derivation, the
 sign-convention ambiguity, and why the subtractive form is the one shipped:
 0.85 overall exact-k accuracy and a 0% false-positive rate on flat data,
@@ -25,7 +25,7 @@ def modified_bic(seg: Segmentation) -> float:
 
     ``mBIC = n*ln(sse/n) + 3*m*ln(n) - sum(ln(l_j / n))``, ``m = k`` the
     number of breakpoints and ``l_j`` the segment lengths. Lower is better.
-    See ``MATH-en.md`` section 18 for the derivation and why the segment-length
+    See ``MATH-en.tex`` section 18 for the derivation and why the segment-length
     term is subtracted rather than added.
 
     Parameters
