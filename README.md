@@ -106,9 +106,9 @@ from elbow_helper.plotting import plot_diagnostics
 plot_diagnostics(x, y, curve="concave", direction="increasing", out="diag.svg")
 ```
 
-![Diagnostic figure: a curve rising then flattening, with the located knee marked and its 90% confidence band shaded, alongside an inset panel showing the Kneedle difference curve that found it, with detection rate, null-model p-value, slope contrast and ΔBIC as supporting evidence.](assets/diagnostics.svg)
+![Diagnostic figure: a curve rising then flattening, with the located knee marked and its 90% confidence band shaded, next to a compact evidence legend with detection probability, null-model p-value, slope contrast and a BIC-derived posterior model probability.](assets/diagnostics.svg)
 
-Hand-authored SVG, no matplotlib, no extra to install: the diagnostic is a core feature. The curve and its located knee sit next to the Kneedle difference curve that found it, so the reader sees the method as well as the result, next to the detection rate, the null-model p-value, the slope contrast and the BIC improvement that back the point estimate. When the evidence is too weak, the figure switches to an honest abstention state instead: a greyed, dashed curve and the reason, never a marker implying more confidence than the data supports. Pass `language="fr"` for the French chrome text.
+Hand-authored SVG, no matplotlib, no extra to install: the diagnostic is a core feature. The curve and its located knee sit next to a compact evidence legend: the detection probability, the null-model p-value, the slope contrast and a BIC-derived posterior probability (the odds, under Kass & Raftery's Bayes-factor approximation, that the knee model is correct) that back the point estimate. When the evidence is too weak, the figure switches to an honest abstention state instead: a greyed, dashed curve and the reason, never a marker implying more confidence than the data supports. Pass `language="fr"` for the French chrome text.
 
 ## Limitations
 

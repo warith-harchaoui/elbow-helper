@@ -29,10 +29,17 @@ development.
   **core** feature, nothing extra to install. The new figure shows the curve
   with the located knee and its 90% CI band (or an honest greyed/dashed
   abstention state with the reason, when the evidence is too weak) next to a
-  Kneedle-signal inset with the difference curve and its supporting evidence
-  (detection rate, null-model p-value, slope contrast, ΔBIC). Supports
-  `language="fr"`. `examples/diagnostic_plot.py` and the README/LISEZ-MOI.md
-  Diagnostics sections updated to match, with a real generated figure
+  compact evidence legend: detection probability, null-model p-value, slope
+  contrast, and a BIC-derived posterior model probability. That last number
+  is not the raw `bic_improvement` nats — a raw ΔBIC has no natural
+  ceiling, so it is converted through Kass and Raftery's (1995) Bayes-factor
+  approximation (`BF ~= exp(bic_improvement / 2)`, posterior probability
+  `BF / (1 + BF)`) into a bounded [0, 1] reading, e.g. "99.9%", that means
+  the same thing regardless of curve length or noise scale
+  (`ClearKnee.bic_improvement` itself is untouched, still raw nats, still
+  the same public API field). Supports `language="fr"`.
+  `examples/diagnostic_plot.py` and the README/LISEZ-MOI.md Diagnostics
+  sections updated to match, with a real generated figure
   (`assets/diagnostics.svg`) embedded in both.
 - **`MATH-en.md` / `MATH-fr.md` replaced by `MATH-en.tex` / `MATH-fr.tex`** —
   the mathematics writeup is now native LaTeX (`amsmath`, `natbib` against

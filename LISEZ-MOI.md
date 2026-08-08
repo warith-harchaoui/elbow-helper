@@ -106,9 +106,9 @@ from elbow_helper.plotting import plot_diagnostics
 plot_diagnostics(x, y, curve="concave", direction="increasing", out="diag.svg", language="fr")
 ```
 
-![Figure de diagnostic : une courbe qui monte puis s'aplatit, avec le coude repéré et sa bande de confiance à 90 % en surbrillance, à côté d'un encart montrant la courbe de différence Kneedle qui l'a trouvé, avec le taux de détection, la p-value du modèle nul, le contraste de pente et le ΔBIC en pièces à l'appui.](assets/diagnostics.svg)
+![Figure de diagnostic : une courbe qui monte puis s'aplatit, avec le coude repéré et sa bande de confiance à 90 % en surbrillance, à côté d'une légende compacte avec la probabilité de détection, la p-value du modèle nul, le contraste de pente et une probabilité a posteriori dérivée du BIC.](assets/diagnostics.svg)
 
-Le SVG est écrit à la main, sans matplotlib et sans rien à installer en plus : le diagnostic fait partie du cœur du paquet. La courbe et son coude repéré voisinent avec la courbe de différence Kneedle qui l'a localisé, si bien qu'on voit la méthode autant que le résultat, à côté du taux de détection, de la p-value du modèle nul, du contraste de pente et de l'amélioration du BIC qui étayent l'estimation. Quand les preuves sont trop faibles, la figure bascule dans un état d'abstention honnête plutôt que d'afficher un résultat trompeur : une courbe grisée en pointillés et la raison, jamais un marqueur qui laisserait croire à plus de confiance que les données n'en autorisent.
+Le SVG est écrit à la main, sans matplotlib et sans rien à installer en plus : le diagnostic fait partie du cœur du paquet. La courbe et son coude repéré voisinent avec une légende compacte : la probabilité de détection, la p-value du modèle nul, le contraste de pente et une probabilité a posteriori dérivée du BIC (les chances, sous l'approximation du facteur de Bayes de Kass et Raftery, que le modèle à coude soit le bon) qui étayent l'estimation. Quand les preuves sont trop faibles, la figure bascule dans un état d'abstention honnête plutôt que d'afficher un résultat trompeur : une courbe grisée en pointillés et la raison, jamais un marqueur qui laisserait croire à plus de confiance que les données n'en autorisent.
 
 ## Limites
 

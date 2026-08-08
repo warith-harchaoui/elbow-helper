@@ -13,9 +13,9 @@ arrays and the :class:`~elbow_helper.pipeline.ClearKnee` /
 only runtime dependencies stay ``numpy`` and ``os-helper``.
 
 The figure never shows a bare point estimate: the knee is paired with its
-90% bootstrap interval, the Kneedle difference curve that found it, and the
-supporting evidence (detection rate, null-model p-value, slope contrast,
-BIC improvement). When the evidence is too weak, the figure says so plainly
+90% bootstrap interval and the supporting evidence (detection probability,
+null-model p-value, slope contrast, and a BIC-derived posterior model
+probability) in a compact legend. When the evidence is too weak, the figure says so plainly
 — a greyed, dashed curve and a reason — instead of drawing a marker that
 implies more confidence than the data supports.
 
@@ -26,6 +26,7 @@ Warith Harchaoui, <warith.harchaoui@deraison.ai>
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 from typing import List, Optional, Sequence, Tuple
 from xml.sax.saxutils import escape
@@ -34,7 +35,6 @@ import numpy as np
 import os_helper as oh
 
 from .config import RobustKneeConfig
-from .kneedle import KneeLocator
 from .pipeline import ClearKnee, robust_knee
 from .preprocessing import Abstain, prepare_curve
 from .smoothing import smooth_curve
@@ -65,17 +65,16 @@ _FONT_MONO = "Roboto Mono, ui-monospace, SFMono-Regular, monospace"
 _STRINGS = {
     "en": {
         "title_clear": "Knee detection: where the curve bends",
-        "subtitle_clear": "The Kneedle method flags the knee at x = {x}",
+        "subtitle_clear": "The method flags the knee at x = {x}",
         "title_abstain": "No clear knee",
         "hint_abstain": "The evidence was too weak to report a point estimate.",
         "reason": "reason",
         "knee_pill": "Knee",
-        "inset_title": "Kneedle signal",
-        "inset_subtitle": "normalised difference · peak = knee",
-        "detection_rate": "detection rate",
+        "inset_title": "Evidence",
+        "detection_rate": "detection probability",
         "null_p": "null p",
         "slope_contrast": "slope contrast",
-        "bic": "ΔBIC",
+        "bic": "model evidence",
         "x_axis": "x (normalized)",
         "y_axis": "y (scaled)",
         "data_label": "data",
@@ -83,17 +82,16 @@ _STRINGS = {
     },
     "fr": {
         "title_clear": "Détection de coude : où la courbe plie",
-        "subtitle_clear": "La méthode Kneedle situe le coude à x = {x}",
+        "subtitle_clear": "La méthode situe le coude à x = {x}",
         "title_abstain": "Aucun coude net",
         "hint_abstain": "L'évidence était trop faible pour une estimation ponctuelle.",
         "reason": "raison",
         "knee_pill": "Coude",
-        "inset_title": "Signal Kneedle",
-        "inset_subtitle": "différence normalisée · pic = coude",
-        "detection_rate": "taux de détection",
+        "inset_title": "Preuves",
+        "detection_rate": "probabilité de détection",
         "null_p": "p (nul)",
         "slope_contrast": "contraste de pente",
-        "bic": "ΔBIC",
+        "bic": "évidence du modèle",
         "x_axis": "x (normalisé)",
         "y_axis": "y (mis à l'échelle)",
         "data_label": "données",
@@ -162,6 +160,57 @@ def _sy(y: float) -> float:
     return _PB - y * _PLOT_H
 
 
+def _bic_posterior_probability(bic_improvement: float) -> float:
+    """Convert a raw ΔBIC (nats) into a bounded, interpretable posterior probability.
+
+    ``bic_improvement`` is already ``n * ln(RSS_single/n) - n * ln(RSS_broken/n)
+    + k_diff * ln(n)`` (see :func:`elbow_helper.numerics.bic`) — the sample size
+    ``n`` and the extra-parameter penalty are already inside it, so dividing by
+    an arbitrary log base (10, 2, ...) would just rescale an already-composite,
+    unbounded number without fixing the real problem: a raw ΔBIC has no natural
+    ceiling, so "282.4" on its own says nothing about how much evidence that
+    actually is.
+
+    What does have a natural ceiling is the quantity ΔBIC approximates: twice
+    the log Bayes factor between the broken-line and single-line models
+    (Kass & Raftery, 1995, eq. 4 — the same approximation this project's
+    ``min_bic_improvement`` gate is calibrated against, see ``MATH-en.tex``
+    section 14). That gives an approximate Bayes factor
+    ``BF ≈ exp(bic_improvement / 2)`` — literally a likelihood ratio, since BIC
+    is built from ``-2 ln(L)`` — and, under equal priors, a posterior model
+    probability ``BF / (1 + BF)``, which is exactly the logistic/sigmoid of
+    ``bic_improvement / 2``. A probability is bounded in ``[0, 1]`` (maximum
+    entropy ``ln(2)`` nats at ``p = 0.5``, the point of total uncertainty
+    between the two models), so it reads the same way regardless of curve
+    length or noise scale: "99.9%" is unambiguous where "282.4" is not.
+
+    Parameters
+    ----------
+    bic_improvement : float
+        ``ClearKnee.bic_improvement``, in natural-log nats (``bic_single -
+        bic_broken``; positive favours the knee model).
+
+    Returns
+    -------
+    float
+        The approximate posterior probability, under equal priors, that the
+        broken-line (knee) model is correct, in ``[0, 1]``.
+
+    Examples
+    --------
+    >>> round(_bic_posterior_probability(0.0), 3)
+    0.5
+    >>> _bic_posterior_probability(20.0) > 0.999
+    True
+    """
+    # exp() overflows for very large bic_improvement; clip the odds' log
+    # rather than the probability so the result still saturates smoothly
+    # at 1.0 instead of raising OverflowError.
+    log_odds = min(bic_improvement / 2.0, 700.0)
+    odds = math.exp(log_odds)
+    return odds / (1.0 + odds)
+
+
 def render_svg(
     x,
     y=None,
@@ -188,7 +237,7 @@ def render_svg(
     -------
     str
         A complete SVG document: the curve with its knee (or an honest
-        abstention state) and the Kneedle evidence that produced it.
+        abstention state) and the evidence that backs it.
     """
     strings = _strings(language)
     config = config or RobustKneeConfig()
@@ -209,7 +258,7 @@ def render_svg(
     p: List[str] = []
     if isinstance(result, ClearKnee) and prepared is not None:
         title_txt = strings["title_clear"]
-        subtitle_txt = strings["subtitle_clear"].format(x=f"{result.knee_x:.4g}")
+        subtitle_txt = strings["subtitle_clear"].format(x=f"{result.knee_x:.3g}")
     else:
         title_txt = strings["title_abstain"]
         reason = getattr(result, "reason", "unknown")
@@ -325,7 +374,7 @@ def render_svg(
             f'font-family="{_FONT_MONO}" font-size="15" font-weight="700" '
             f'fill="{_BG}">{escape(call_txt)}</text>'
         )
-        _emit_inset(p, prepared, result, inferred_curve, inferred_direction, strings)
+        _emit_legend(p, result, strings)
     else:
         _emit_abstain_card(p, strings, getattr(result, "reason", None))
 
@@ -333,77 +382,46 @@ def render_svg(
     return "".join(p)
 
 
-def _emit_inset(
-    p: List[str],
-    prepared,
-    result: "ClearKnee",
-    curve: Optional[str],
-    direction: Optional[str],
-    strings: dict,
-) -> None:
-    """Append the Kneedle-signal inset card: difference curve + evidence lines."""
-    ix, iy, iw, ih = 566.0, 196.0, 372.0, 232.0
+def _emit_legend(p: List[str], result: "ClearKnee", strings: dict) -> None:
+    """Append a compact evidence legend: detection probability, null p, slope contrast, BIC gain.
+
+    A plain labelled-swatch legend rather than a chart-bearing card: each
+    row pairs a small dot (colour-keyed to the main curve/knee hues) with a
+    ``label: value`` line, so the four numbers that back the point estimate
+    read at a glance without a second, chart-within-a-chart panel to parse.
+
+    Parameters
+    ----------
+    p : list of str
+        The SVG fragment list being assembled; extended in place.
+    result : ClearKnee
+        The pipeline result carrying the four evidence values.
+    strings : dict
+        Chrome-text strings for the active language.
+    """
+    lx, ly, lw = 566.0, 196.0, 372.0
+    rows = [
+        (_CURVE, f'{strings["detection_rate"]}: {result.detection_rate:.0%}'),
+        (_CURVE_DEEP, f'{strings["null_p"]}: {result.null_p_value:.3g}'),
+        (_ACCENT, f'{strings["slope_contrast"]}: {result.slope_contrast:.2f}'),
+        (_MUTED, f'{strings["bic"]}: {_bic_posterior_probability(result.bic_improvement):.1%}'),
+    ]
+    row_h = 32.0
+    lh = 24.0 + row_h * len(rows)
     p.append(
-        f'<rect x="{ix:.0f}" y="{iy:.0f}" width="{iw:.0f}" height="{ih:.0f}" '
+        f'<rect x="{lx:.0f}" y="{ly:.0f}" width="{lw:.0f}" height="{lh:.0f}" '
         f'rx="16" fill="#F5F5F7" stroke="{_HAIR}" stroke-width="1"/>'
     )
     p.append(
-        f'<text x="{ix + 20:.0f}" y="{iy + 30:.0f}" font-size="15" '
+        f'<text x="{lx + 20:.0f}" y="{ly + 30:.0f}" font-size="14" '
         f'font-weight="700" fill="{_INK}">{escape(strings["inset_title"])}</text>'
     )
-    p.append(
-        f'<text x="{ix + 20:.0f}" y="{iy + 51:.0f}" font-size="12.5" '
-        f'fill="{_SUBINK}">{escape(strings["inset_subtitle"])}</text>'
-    )
-
-    w = result.smoothing_window
-    smoothed = smooth_curve(prepared.y_scaled, w)
-    kl = KneeLocator(
-        prepared.x_norm, smoothed, S=1.0, curve=curve, direction=direction, online=True,
-    )
-    diff = kl.y_difference
-    mx0, mx1 = ix + 20.0, ix + iw - 20.0
-    my0, my1 = iy + 66.0, iy + 150.0
-    dmin, dmax = float(np.min(diff)), float(np.max(diff))
-    dspan = (dmax - dmin) or 1.0
-
-    def msx(i: int) -> float:
-        return mx0 + i / (len(diff) - 1) * (mx1 - mx0)
-
-    def msy(v: float) -> float:
-        return my1 - (v - dmin) / dspan * (my1 - my0)
-
-    mpts = [(msx(i), msy(float(v))) for i, v in enumerate(diff)]
-    ln = [f'M{_fmt(mpts[0][0])},{_fmt(mpts[0][1])}']
-    ln.append(_catmull_rom(mpts))
-    p.append(
-        f'<path d="{"".join(ln)}" fill="none" stroke="{_CURVE}" '
-        f'stroke-width="2.2" stroke-linecap="round"/>'
-    )
-    p.append(
-        f'<line x1="{mx0:.1f}" y1="{my1:.1f}" x2="{mx1:.1f}" y2="{my1:.1f}" '
-        f'stroke="{_HAIR}" stroke-width="1"/>'
-    )
-    if kl.maxima_indices.size:
-        peak_i = int(kl.maxima_indices[np.argmax(kl.y_difference[kl.maxima_indices])])
-        peak_x, peak_y = mpts[peak_i]
+    for i, (colour, line) in enumerate(rows):
+        row_y = ly + 52 + i * row_h
+        p.append(f'<circle cx="{lx + 26:.1f}" cy="{row_y - 5:.1f}" r="5" fill="{colour}"/>')
         p.append(
-            f'<circle cx="{peak_x:.1f}" cy="{peak_y:.1f}" r="4.6" fill="{_BG}" '
-            f'stroke="{_ACCENT}" stroke-width="2.4"/>'
-        )
-
-    # Evidence lines: detection rate, null p-value, slope contrast, BIC.
-    lines = [
-        f'{strings["detection_rate"]}: {result.detection_rate:.0%}',
-        f'{strings["null_p"]}: {result.null_p_value:.3g}',
-        f'{strings["slope_contrast"]}: {result.slope_contrast:.2f}',
-        f'{strings["bic"]}: {result.bic_improvement:.1f}',
-    ]
-    for i, line in enumerate(lines):
-        p.append(
-            f'<text x="{mx0:.1f}" y="{my1 + 24 + i * 20:.1f}" '
-            f'font-family="{_FONT_MONO}" font-size="12" fill="{_SUBINK}">'
-            f'{escape(line)}</text>'
+            f'<text x="{lx + 42:.1f}" y="{row_y:.1f}" font-family="{_FONT_MONO}" '
+            f'font-size="13" fill="{_INK}">{escape(line)}</text>'
         )
 
 
