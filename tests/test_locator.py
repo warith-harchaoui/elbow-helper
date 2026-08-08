@@ -1,4 +1,4 @@
-"""Tests for the from-scratch, numpy-only Kneedle port.
+"""Tests for the from-scratch, numpy-only difference-curve locator.
 
 Author
 ------
@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from elbow_helper.kneedle import KneeLocator, _argrelextrema
+from elbow_helper.locator import KneeLocator, _argrelextrema
 
 
 def test_argrelextrema_matches_clip_semantics():

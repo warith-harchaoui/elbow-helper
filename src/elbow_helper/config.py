@@ -47,7 +47,7 @@ class RobustKneeConfig:
 
     # --- persistence clustering ---
     # cluster_tolerance and max_neighbor_shift are calibrated (§19) slightly
-    # above the plan's 0.05 to absorb the one-to-two-sample Kneedle
+    # above the plan's 0.05 to absorb the one-to-two-sample locator
     # discretization jitter seen at modest sample sizes (n ~ 60-100).
     cluster_tolerance: float = 0.06
     min_consecutive_scales: int = 3

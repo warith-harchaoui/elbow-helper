@@ -1,7 +1,7 @@
-"""Phase 3 — candidate generation with the from-scratch Kneedle.
+"""Phase 3 — candidate generation with the from-scratch locator.
 
 Sweeps every (smoothing window, sensitivity) setting, runs
-:class:`~elbow_helper.kneedle.KneeLocator` in online mode, and collects every
+:class:`~elbow_helper.locator.KneeLocator` in online mode, and collects every
 returned knee as a :class:`~elbow_helper.types.KneeCandidate` — annotated with
 metrics but *not* yet accepted.
 
@@ -17,14 +17,14 @@ from typing import List
 import numpy as np
 
 from .config import RobustKneeConfig
-from .kneedle import KneeLocator
+from .locator import KneeLocator
 from .metrics import evaluate_candidate
 from .smoothing import smooth_curve, smoothing_grid
 from .types import KneeCandidate, PreparedCurve
 
 
 def sensitivity_grid(n: int, config: RobustKneeConfig) -> List[float]:
-    """Distinct Kneedle sensitivities ``S`` from ``sensitivity_fractions``."""
+    """Distinct sensitivities ``S`` from ``sensitivity_fractions``."""
     values = set()
     for frac in config.sensitivity_fractions:
         values.add(float(max(1, round(frac * n))))
@@ -34,7 +34,7 @@ def sensitivity_grid(n: int, config: RobustKneeConfig) -> List[float]:
 def generate_candidates(
     prepared: PreparedCurve, config: RobustKneeConfig
 ) -> List[KneeCandidate]:
-    """Run the full scale-space × sensitivity Kneedle sweep.
+    """Run the full scale-space × sensitivity locator sweep.
 
     Parameters
     ----------

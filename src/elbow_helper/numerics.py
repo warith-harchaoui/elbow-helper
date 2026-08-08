@@ -108,7 +108,7 @@ def peak_prominence(signal: np.ndarray, index: int) -> float:
     Parameters
     ----------
     signal : numpy.ndarray
-        The curve the peak lives on (here, the Kneedle difference curve).
+        The curve the peak lives on (here, the difference curve).
     index : int
         Index of the peak.
 

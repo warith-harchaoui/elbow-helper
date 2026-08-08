@@ -57,7 +57,7 @@ class PreparedCurve:
     y_lo, y_hi : float
         Robust y-limits used for scaling (inverse transform for y).
     curve, direction : str
-        The caller-supplied Kneedle orientation.
+        The caller-supplied curve orientation.
     spearman : float
         Spearman rank correlation between x and y.
     violation_rate : float
@@ -95,7 +95,7 @@ class PreparedCurve:
 
 @dataclass
 class KneeCandidate:
-    """A single Kneedle hit at one (smoothing window, sensitivity) setting.
+    """A single knee-candidate hit at one (smoothing window, sensitivity) setting.
 
     Attributes
     ----------
@@ -106,7 +106,7 @@ class KneeCandidate:
     window : int
         Smoothing window that produced this candidate.
     sensitivity : float
-        Kneedle sensitivity ``S`` that produced this candidate.
+        Sensitivity ``S`` that produced this candidate.
     prominence : float
         Topographic prominence of the peak (see
         :func:`~elbow_helper.numerics.peak_prominence`).

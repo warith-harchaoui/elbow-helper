@@ -1,9 +1,8 @@
-"""A from-scratch, NumPy-only implementation of the Kneedle algorithm.
+"""A from-scratch, NumPy-only implementation of the difference-curve knee locator.
 
-This module implements the Kneedle algorithm (Satopää, Albrecht, Irwin and
-Raghavan, ICDCSW 2011) so that ``elbow_helper`` depends on **numpy only**: no
-``scipy`` at runtime. See the project's Acknowledgements section (README.md)
-for the implementation this module follows.
+This module implements the method credited in the project's Acknowledgements
+section (README.md) so that ``elbow_helper`` depends on **numpy only**: no
+``scipy`` at runtime.
 
 Two scipy calls in a typical implementation are replaced here:
 
@@ -72,8 +71,8 @@ def _argrelextrema(data: np.ndarray, comparator, order: int = 1) -> np.ndarray:
 class KneeLocator:
     """Locate the point of maximum curvature (knee/elbow) of a curve.
 
-    A NumPy-only implementation of the Kneedle algorithm, exposing the public
-    surface used by this package: ``knee``, ``norm_knee``, ``all_knees``,
+    A NumPy-only implementation of the difference-curve locator, exposing the
+    public surface used by this package: ``knee``, ``norm_knee``, ``all_knees``,
     ``all_norm_knees``, ``x_difference`` / ``y_difference`` and the extrema
     indices.
 

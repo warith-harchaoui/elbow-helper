@@ -95,19 +95,19 @@ pour l'accueillir et écraserait le vrai signal dans une mince bande proche
 de zéro. Les percentiles absorbent quelques points extrêmes sans déformer
 la forme qui compte (\code{src/elbow\_helper/preprocessing.py}).
 
-\section{La bosse de Kneedle~: ce que « coude » veut dire, précisément}
+\section{La bosse de la courbe de différence~: ce que « coude » veut dire, précisément}
 
 \textbf{Intuition.} Un coude d'école, en forme de $\sqrt{x}$, monte vite
 puis se stabilise. Si l'on soustrait de la courbe elle-même la droite
 diagonale qui relie ses deux extrémités, le résultat est une bosse~: elle
 part de zéro, culmine quelque part au milieu, puis revient à zéro. Le
 sommet de cette bosse se trouve exactement là où la courbe s'écarte le plus
-d'une droite, ce qui correspond à l'idée intuitive de « coude ». Kneedle,
-dû à Satop\"a\"a, Albrecht, Irwin et Raghavan, transforme cette image en
-algorithme~: soustraire la diagonale, repérer le sommet de la bosse,
-l'appeler le coude. \code{kneedle.py}, dans \code{elbow-helper}, en est un
-portage NumPy réécrit de zéro~; voir la section Remerciements du
-\code{README.md} du projet pour l'origine de cette implémentation.
+d'une droite, ce qui correspond à l'idée intuitive de « coude ». Cette image
+se transforme en algorithme \citep{satopaa2011}~: soustraire la diagonale,
+repérer le sommet de la bosse, l'appeler le coude. \code{locator.py}, dans
+\code{elbow-helper}, en est un portage NumPy réécrit de zéro~; voir la
+section Remerciements du \code{README.md} du projet pour l'origine de cette
+implémentation.
 
 Quatre formes existent en principe, concave croissante, concave
 décroissante, convexe croissante, convexe décroissante, mais une seule
@@ -141,7 +141,7 @@ parcourant la courbe de différence de gauche à droite, un coude est déclaré
 au dernier indice avant que $d(x)$ ne passe sous le seuil $T_j$ en vigueur~;
 en mode « en ligne », le parcours se réarme à chaque nouveau sommet plus
 élevé, si bien que seule la dernière bosse, la plus persistante, l'emporte
-(\code{src/elbow\_helper/kneedle.py}, \code{find\_knee}) \citep{satopaa2011}.
+(\code{src/elbow\_helper/locator.py}, \code{find\_knee}).
 
 \section{Le modèle en ligne brisée~: un coude comme changement de pente}
 
@@ -445,7 +445,7 @@ d'abstention du README \citep{spearman1904}.
 ressembler chaque petite oscillation à un coude candidat. Lissée fortement,
 elle peut au contraire faire disparaître un véritable coude dans le flou.
 Aucun des deux extrêmes n'est fiable pris isolément, si bien
-qu'\code{elbow-helper} fait tourner Kneedle sur toute une grille~:
+qu'\code{elbow-helper} fait tourner le localisateur sur toute une grille~:
 plusieurs largeurs de lissage gaussien, de $1$, aucun lissage, jusqu'à
 environ un quart des données, croisées avec plusieurs sensibilités $S$.
 Chaque exécution qui trouve un coude verse un candidat dans un réservoir
@@ -927,7 +927,7 @@ diagramme des éboulis est court et déséquilibré vers la gauche de la même
 façon qu'une courbe d'inertie, et a donc besoin du même profil assoupli de
 \code{RobustKneeConfig}. Il révèle aussi une convention qu'il vaut la peine
 de connaître avant de lire \code{knee\_x} sur n'importe quelle courbe
-appliquée courte~: la règle de Kneedle, « le dernier point avant la
+appliquée courte~: la règle du localisateur, « le dernier point avant la
 pliure », place systématiquement le coude une à deux composantes
 \emph{après} la dernière véritable composante de signal, pas exactement
 dessus. Sur chaque tirage testé, le coude détecté tombe à 6 ou 7

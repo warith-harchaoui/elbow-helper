@@ -29,6 +29,8 @@ pip install -e ".[dev]"     # + pytest
 
 ## Quickstart
 
+See [`EXAMPLES.md`](EXAMPLES.md) for more recipes: the k-means elbow, an explicit abstention, an exponential-saturation curve, the diagnostic figure, the standalone locator, and configuration tuning.
+
 ```python
 import numpy as np
 from elbow_helper import robust_knee, RobustKneeConfig
@@ -130,7 +132,7 @@ kl.knee, kl.all_knees
 
 ## Mathematics
 
-`MATH-en.tex` ([🇫🇷 MATH-fr.tex](MATH-fr.tex)) derives every formula this package runs, from the single-knee pipeline's normalisation, Spearman screen, Kneedle difference curve, persistence clustering, Theil-Sen slope, BIC, blocked cross-validation, bootstrap and null test, through to the multi-knee research behind `robust_knees` (see also `research/multiknee/RESULTS.md`). Written intuition-first, with a worked example before every formula, for readers from the end of high school through a Ph.D. in applied mathematics. Citations are in `references.bib`, including a few pointers into my own [Favourite AI books](https://deraison.ai/ai-books) where a technique used here deserves a book-length treatment. Native LaTeX (not Markdown), given the audience: compile with `latexmk -pdf MATH-en.tex` (or `MATH-fr.tex`), or read the compiled copies directly, `MATH-en.pdf` / `MATH-fr.pdf`.
+`MATH-en.tex` ([🇫🇷 MATH-fr.tex](MATH-fr.tex)) derives every formula this package runs, from the single-knee pipeline's normalisation, Spearman screen, difference-curve knee search, persistence clustering, Theil-Sen slope, BIC, blocked cross-validation, bootstrap and null test, through to the multi-knee research behind `robust_knees` (see also `research/multiknee/RESULTS.md`). Written intuition-first, with a worked example before every formula, for readers from the end of high school through a Ph.D. in applied mathematics. Citations are in `references.bib`, including a few pointers into my own [Favourite AI books](https://deraison.ai/ai-books) where a technique used here deserves a book-length treatment. Native LaTeX (not Markdown), given the audience: compile with `latexmk -pdf MATH-en.tex` (or `MATH-fr.tex`), or read the compiled copies directly, `MATH-en.pdf` / `MATH-fr.pdf`.
 
 ## Landscape
 
@@ -138,14 +140,14 @@ kl.knee, kl.all_knees
 
 ## Acknowledgements
 
-The from-scratch Kneedle implementation in `elbow_helper/kneedle.py` follows the algorithm described by Satopää, Albrecht, Irwin and Raghavan (ICDCSW 2011). Its traversal logic, orientation table and sensitivity threshold closely follow the implementation choices of [`kneed`](https://github.com/arvkevi/kneed) by Kevin Arvai, released under the BSD-3-Clause license:
+The from-scratch Kneedle implementation in `elbow_helper/locator.py` follows the algorithm described by Satopää, Albrecht, Irwin and Raghavan (ICDCSW 2011). Its traversal logic, orientation table and sensitivity threshold closely follow the implementation choices of [`kneed`](https://github.com/arvkevi/kneed) by Kevin Arvai, released under the BSD-3-Clause license:
 
 > Copyright (c) 2017, Kevin Arvai
 > All rights reserved.
 >
 > Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met: (1) redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer; (2) redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
 
-`elbow-helper` has no runtime dependency on `kneed`: the algorithm is reimplemented in NumPy only, with the scipy calls replaced as documented in `kneedle.py`.
+`elbow-helper` has no runtime dependency on `kneed`: the algorithm is reimplemented in NumPy only, with the scipy calls replaced as documented in `locator.py`.
 
 ## License
 

@@ -27,13 +27,13 @@ How `elbow-helper` compares to *every other way of finding a knee*. Each approac
 ## Per-tool write-up
 
 ### kneed
-The reference implementation of the Kneedle algorithm `elbow-helper`'s own locator is ported from, credited in the Acknowledgements section of the README. Excellent at the one thing it does: given a curve and an explicit `curve`/`direction`, it returns a single point, deterministically, in one line of code. It carries no notion of confidence and no path to "there is no knee here" beyond an unhelpful `None`. `elbow-helper` wraps this exact geometric idea in the confirmation machinery kneed leaves to the caller.
+The reference implementation `elbow-helper`'s own locator is ported from, credited in the Acknowledgements section of the README. Excellent at the one thing it does: given a curve and an explicit `curve`/`direction`, it returns a single point, deterministically, in one line of code. It carries no notion of confidence and no path to "there is no knee here" beyond an unhelpful `None`. `elbow-helper` wraps this exact geometric idea in the confirmation machinery kneed leaves to the caller.
 
 ### ruptures
 The right tool when the question is genuinely "how many breakpoints and where" over a signal, with PELT, binary segmentation, and window-based search all built in. It is agnostic to what a "knee" even means, so a diminishing-returns curve and a mean-shift in noise are the same kind of object to it. `elbow-helper`'s own multi-knee research (`research/multiknee/`) tests the same PELT-adjacent dynamic program `ruptures` uses, adding the model-selection layer (mBIC, FWER) `ruptures` leaves to the user to configure.
 
 ### kneebow
-A small, dependency-light package built around the same rotation idea Kneedle uses, geometric and fast. Like kneed, it commits to an answer on every call, with no smoothing-scale search, no bootstrap, and no null-hypothesis check behind the number it returns.
+A small, dependency-light package built around the same rotation idea `elbow-helper`'s locator uses, geometric and fast. Like kneed, it commits to an answer on every call, with no smoothing-scale search, no bootstrap, and no null-hypothesis check behind the number it returns.
 
 ### Yellowbrick KElbowVisualizer
 The most popular way practitioners actually find k-means's elbow: fit for several k, plot the inertia curve, eyeball or auto-locate the bend. It is a visualization tool wearing a locator's hat, built for one specific curve shape (convex, decreasing) rather than the general knee/elbow problem. It also inherits scikit-learn and matplotlib as hard dependencies. `elbow-helper`'s own k-means worked example (`MATH-en.tex`, Part I) targets exactly this curve, with the confirmation chain Yellowbrick's visual read never runs.

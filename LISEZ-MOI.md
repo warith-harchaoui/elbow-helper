@@ -29,6 +29,8 @@ pip install -e ".[dev]"     # + pytest
 
 ## Prise en main
 
+Voir [`EXAMPLES.md`](EXAMPLES.md) pour d'autres recettes (en anglais) : le coude de k-means, une abstention explicite, une courbe de saturation exponentielle, la figure de diagnostic, le repéreur autonome et le réglage de la configuration.
+
 ```python
 import numpy as np
 from elbow_helper import robust_knee, RobustKneeConfig
@@ -130,7 +132,7 @@ kl.knee, kl.all_knees
 
 ## Mathématiques
 
-`MATH-fr.tex` ([🇬🇧 MATH-en.tex](MATH-en.tex)) démontre, depuis les premiers principes, chaque formule que ce paquet met en œuvre : la normalisation du pipeline à coude unique, le filtre de Spearman, la courbe de différence Kneedle, le regroupement par persistance, la pente de Theil-Sen, le BIC, la validation croisée par blocs, le bootstrap et le test nul, jusqu'à la recherche multi-coudes derrière `robust_knees` (voir aussi `research/multiknee/RESULTS.md`). Le texte privilégie l'intuition, avec un exemple travaillé avant chaque formule, pour des lecteurs allant de la fin du lycée jusqu'à un doctorat en mathématiques appliquées. Les références se trouvent dans `references.bib`, avec quelques renvois vers mes [livres IA préférés](https://deraison.ai/ai-books) là où une technique méritait un traitement plus long. Le document est en LaTeX natif, pas en Markdown, vu le public visé : compilez-le avec `latexmk -pdf MATH-fr.tex` (ou `MATH-en.tex`) ou lisez directement les copies déjà compilées, `MATH-fr.pdf` / `MATH-en.pdf`.
+`MATH-fr.tex` ([🇬🇧 MATH-en.tex](MATH-en.tex)) démontre, depuis les premiers principes, chaque formule que ce paquet met en œuvre : la normalisation du pipeline à coude unique, le filtre de Spearman, la recherche de coude par courbe de différence, le regroupement par persistance, la pente de Theil-Sen, le BIC, la validation croisée par blocs, le bootstrap et le test nul, jusqu'à la recherche multi-coudes derrière `robust_knees` (voir aussi `research/multiknee/RESULTS.md`). Le texte privilégie l'intuition, avec un exemple travaillé avant chaque formule, pour des lecteurs allant de la fin du lycée jusqu'à un doctorat en mathématiques appliquées. Les références se trouvent dans `references.bib`, avec quelques renvois vers mes [livres IA préférés](https://deraison.ai/ai-books) là où une technique méritait un traitement plus long. Le document est en LaTeX natif, pas en Markdown, vu le public visé : compilez-le avec `latexmk -pdf MATH-fr.tex` (ou `MATH-en.tex`) ou lisez directement les copies déjà compilées, `MATH-fr.pdf` / `MATH-en.pdf`.
 
 ## Paysage
 
@@ -138,14 +140,14 @@ kl.knee, kl.all_knees
 
 ## Remerciements
 
-L'implémentation Kneedle réécrite de zéro dans `elbow_helper/kneedle.py` suit l'algorithme décrit par Satopää, Albrecht, Irwin et Raghavan (ICDCSW 2011). Sa logique de parcours, sa table d'orientation et son seuil de sensibilité reprennent de près les choix de [`kneed`](https://github.com/arvkevi/kneed), l'implémentation de Kevin Arvai, publiée sous licence BSD à 3 clauses :
+L'implémentation Kneedle réécrite de zéro dans `elbow_helper/locator.py` suit l'algorithme décrit par Satopää, Albrecht, Irwin et Raghavan (ICDCSW 2011). Sa logique de parcours, sa table d'orientation et son seuil de sensibilité reprennent de près les choix de [`kneed`](https://github.com/arvkevi/kneed), l'implémentation de Kevin Arvai, publiée sous licence BSD à 3 clauses :
 
 > Copyright (c) 2017, Kevin Arvai
 > Tous droits réservés.
 >
 > La redistribution et l'utilisation sous forme source ou binaire, avec ou sans modification, sont autorisées sous réserve des conditions suivantes : (1) les redistributions du code source doivent conserver l'avis de droit d'auteur ci-dessus, cette liste de conditions et la clause de non-responsabilité qui suit ; (2) les redistributions sous forme binaire doivent reproduire l'avis de droit d'auteur ci-dessus, cette liste de conditions et la clause de non-responsabilité qui suit, dans la documentation ou les autres éléments fournis avec la distribution.
 
-`elbow-helper` n'a aucune dépendance d'exécution à `kneed` : l'algorithme est réécrit en NumPy pur, les appels à scipy étant remplacés comme documenté dans `kneedle.py`.
+`elbow-helper` n'a aucune dépendance d'exécution à `kneed` : l'algorithme est réécrit en NumPy pur, les appels à scipy étant remplacés comme documenté dans `locator.py`.
 
 ## Licence
 

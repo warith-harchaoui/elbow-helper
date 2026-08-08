@@ -147,7 +147,7 @@ def test_pca_scree_elbow_detects_true_signal_dimension():
         x, y = pca_scree_curve(seed, true_d=true_d, n_noise_dims=19)
         r = robust_elbow(x, y, config=_SHORT_CURVE_CONFIG)
         assert isinstance(r, ClearKnee), (seed, r)
-        # Kneedle's "last point before the bend" convention consistently
+        # The locator's "last point before the bend" convention consistently
         # lands about 1-2 components past the last true signal component,
         # not exactly on it; see MATH-en.tex / MATH-fr.tex for this reading.
         assert true_d <= r.knee_x <= true_d + 2

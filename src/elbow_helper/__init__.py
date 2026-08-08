@@ -1,7 +1,7 @@
 """elbow-helper — noise-robust knee/elbow detection.
 
-A conservative wrapper around a from-scratch, NumPy-only implementation of the
-Kneedle algorithm. Point-estimate knee detectors propose *where* plausible
+A conservative wrapper around a from-scratch, NumPy-only difference-curve
+locator. Point-estimate knee detectors propose *where* plausible
 knees are; this package decides whether any candidate is strong, unique,
 persistent, reproducible and unlikely under a no-knee model and otherwise
 abstains explicitly.
@@ -14,7 +14,7 @@ the y-values alone, against an implicit ``0, 1, ..., n-1``); ``curve`` and
 ``direction`` are inferred from the data when omitted. ``robust_elbow(x,
 y=None, config=None)`` is the convex-decreasing convenience.
 :class:`RobustKneeConfig` holds every threshold. :class:`KneeLocator` is the
-from-scratch Kneedle, usable standalone.
+from-scratch locator, usable standalone.
 
 ``robust_knees(x, y=None, config=None)`` (plural) -> :class:`Knees` |
 :class:`InvalidKnees`: how many knees, if any, a curve genuinely has, via
@@ -30,7 +30,7 @@ Warith Harchaoui, <warith.harchaoui@deraison.ai>
 from __future__ import annotations
 
 from .config import RobustKneeConfig, RobustKneesConfig
-from .kneedle import KneeLocator
+from .locator import KneeLocator
 from .multi_pipeline import robust_knees
 from .pipeline import robust_elbow, robust_knee
 from .types import (

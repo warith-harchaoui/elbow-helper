@@ -89,18 +89,18 @@ accommodate it, crushing the real signal into a sliver near zero.
 Percentiles absorb a handful of extreme points without distorting the shape
 that matters (\code{src/elbow\_helper/preprocessing.py}).
 
-\section{The Kneedle bump: what ``knee'' means, exactly}
+\section{The difference-curve bump: what ``knee'' means, exactly}
 
 \textbf{Intuition.} A textbook knee, shaped like $\sqrt{x}$, rises fast then
 levels off. Subtracting the straight diagonal line joining the curve's two
 endpoints from the curve itself produces a bump: it starts at zero, peaks
 somewhere in the middle, and returns to zero. The peak of that bump sits
 exactly where the curve bends hardest away from a straight line, which is
-the intuitive definition of a ``knee''. Kneedle, due to Satop\"a\"a,
-Albrecht, Irwin and Raghavan, turns this picture into an algorithm: subtract
-the diagonal, find the bump's peak, call it the knee. \code{elbow-helper}'s
-\code{kneedle.py} is a from-scratch NumPy port; see the project's
-\code{README.md} Acknowledgements section for the implementation's origin.
+the intuitive definition of a ``knee''. This picture turns into an algorithm
+\citep{satopaa2011}: subtract the diagonal, find the bump's peak, call it the
+knee. \code{elbow-helper}'s \code{locator.py} is a from-scratch NumPy port;
+see the project's \code{README.md} Acknowledgements section for the
+implementation's origin.
 
 Four shapes exist in principle --- concave-increasing, concave-decreasing,
 convex-increasing, convex-decreasing --- but only one of them,
@@ -132,7 +132,7 @@ $x$ values. Traversing the difference curve left to right, a knee is
 declared at the last index before $d(x)$ drops below the currently active
 threshold $T_j$; in ``online'' mode the traversal keeps re-arming at every
 later, higher peak, so only the last, most persistent bump wins
-(\code{src/elbow\_helper/kneedle.py}, \code{find\_knee}) \citep{satopaa2011}.
+(\code{src/elbow\_helper/locator.py}, \code{find\_knee}).
 
 \section{The broken-line model: a knee as a change of slope}
 
@@ -402,7 +402,7 @@ the README's abstention-reason list \citep{spearman1904}.
 \textbf{Intuition.} Look at a noisy curve at native resolution and every
 little wiggle looks like a candidate knee. Smooth it heavily and a real
 knee can get blurred away entirely. Neither extreme is trustworthy alone,
-so \code{elbow-helper} runs Kneedle across a whole grid: several Gaussian
+so \code{elbow-helper} runs the locator across a whole grid: several Gaussian
 smoothing widths, from $1$, no smoothing, up to roughly a quarter of the
 data, crossed with several sensitivities $S$. Every run that finds a knee
 contributes one candidate to a pool; nothing is trusted yet, this stage
@@ -835,7 +835,7 @@ This example shares Section~4's practical trap exactly: a scree plot is
 short and left-heavy in precisely the same way an inertia curve is, so it
 needs the same relaxed \code{RobustKneeConfig} profile. It also surfaces
 the convention worth knowing about before reading \code{knee\_x} off any
-short applied curve: Kneedle's ``last point before the bend'' rule
+short applied curve: the locator's ``last point before the bend'' rule
 consistently lands one to two components \emph{past} the last true signal
 component, not exactly on it. Across every seed tested, the detected elbow
 falls at 6 or 7 components for a true signal dimension of 6, never below

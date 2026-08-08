@@ -93,7 +93,7 @@ def _clean_and_normalize(x, y, min_samples: int, robust_y_scaling: bool = True):
     robust_y_scaling : bool, optional
         If ``True`` (default, used by :func:`prepare_curve`), scale ``y`` on
         its 5th/95th percentiles, clipped to ``[0, 1]``, for outlier
-        robustness ahead of the single-knee Kneedle search. If ``False``
+        robustness ahead of the single-knee difference-curve search. If ``False``
         (used by :func:`prepare_curve_unconstrained`), scale on the plain
         min/max instead: percentile clipping flattens roughly the bottom
         and top 5% of points to exactly 0 or 1, which the single-knee
@@ -164,7 +164,7 @@ def prepare_curve(
     x, y : array-like
         Raw input coordinates of equal length.
     curve : str or None
-        ``"concave"`` or ``"convex"`` (passed through to Kneedle). If
+        ``"concave"`` or ``"convex"`` (passed through to the locator). If
         ``None``, inferred from the data via :func:`infer_curve_direction`.
     direction : str or None
         ``"increasing"`` or ``"decreasing"``. If ``None``, inferred from the

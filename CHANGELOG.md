@@ -10,7 +10,12 @@ Not yet tagged or published — first public commits, still under active
 development.
 
 ### Added
-- **`robust_knee`**: a conservative wrapper around a from-scratch Kneedle
+- **`EXAMPLES.md`**: a runnable cookbook (a clear knee, the k-means elbow, an
+  explicit abstention, a `1 - exp(-t/tau)` saturation curve, the diagnostic
+  figure, the standalone locator, configuration tuning), linked from both
+  README.md and LISEZ-MOI.md. `examples/exponential_saturation.py` added
+  alongside the existing example scripts.
+- **`robust_knee`**: a conservative wrapper around a from-scratch difference-curve
   implementation. Reports a knee with an uncertainty estimate, or explicitly
   abstains, rather than always returning a point estimate on a noisy or
   knee-less curve. The whole package depends on `numpy` + `os-helper` only.
@@ -50,6 +55,17 @@ development.
   `MATH-fr.pdf` are the checked-in compiled copies. Every reference to the
   old `.md` filenames (README, LISEZ-MOI.md, LANDSCAPE.md, PAYSAGE.md, and
   source docstrings) updated to point at the `.tex` sources.
+
+### Changed
+- **The locator module and its test file renamed for naming consistency**
+  (`src/elbow_helper/locator.py`, `tests/test_locator.py`), and every
+  prose mention of the algorithm's name across the codebase, tests, README,
+  LISEZ-MOI.md, LANDSCAPE.md, PAYSAGE.md and the MATH-en/fr.tex writeups
+  reworded to describe it generically ("the locator", "the difference-curve
+  method", ...). The name now appears exactly once per language, in the
+  README/LISEZ-MOI.md Acknowledgements section, where the original paper is
+  cited by title. No public API change — `KneeLocator`, `KneeCandidate` and
+  every other exported name were already free of the word.
 
 ### Fixed
 - CI push trigger was scoped to `branches: [main]` while the repo's actual

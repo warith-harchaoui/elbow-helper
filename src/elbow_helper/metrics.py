@@ -1,6 +1,6 @@
 """Phase 4 — per-candidate metrics and basic rejection filters.
 
-Given a raw :class:`~elbow_helper.types.KneeCandidate` (location + the Kneedle
+Given a raw :class:`~elbow_helper.types.KneeCandidate` (location + the
 difference curve it came from), attach its prominence, local-noise estimate,
 prominence-to-noise ratio and boundary distance, then decide whether it clears
 the cheap structural filters before any expensive stability analysis.
@@ -32,7 +32,7 @@ def evaluate_candidate(
     candidate : KneeCandidate
         The candidate to annotate (mutated in place and returned).
     y_difference : numpy.ndarray
-        The Kneedle difference curve the candidate was found on.
+        The difference curve the candidate was found on.
     threshold_index : int
         Index of the generating peak on ``y_difference``.
     y_scaled : numpy.ndarray

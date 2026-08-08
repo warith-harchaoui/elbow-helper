@@ -227,7 +227,7 @@ def render_svg(
     x, y : array-like
         The curve. ``y`` may be omitted, as in :func:`elbow_helper.robust_knee`.
     curve, direction : str, optional
-        Kneedle orientation; inferred from the data when omitted.
+        Orientation; inferred from the data when omitted.
     config : RobustKneeConfig, optional
         Thresholds and replicate counts forwarded to the pipeline.
     language : str, optional
@@ -312,7 +312,7 @@ def render_svg(
 
     if prepared is None:
         # Data failed even the pre-normalisation shape/range check (e.g. zero
-        # range, or a global shape Kneedle cannot fit) — no curve to draw,
+        # range, or a global shape the locator cannot fit) — no curve to draw,
         # but still show the abstention card for visual parity with the
         # normal abstain case rather than leaving a bare axes frame.
         _emit_abstain_card(p, strings, getattr(result, "reason", None))
@@ -474,7 +474,7 @@ def plot_diagnostics(
     x, y : array-like
         The curve. ``y`` may be omitted, as in :func:`elbow_helper.robust_knee`.
     curve, direction : str, optional
-        Kneedle orientation; inferred from the data when omitted.
+        Orientation; inferred from the data when omitted.
     config : RobustKneeConfig, optional
         Thresholds and replicate counts forwarded to the pipeline.
     out : str, optional
