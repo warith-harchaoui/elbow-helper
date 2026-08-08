@@ -7,6 +7,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{graphicx}
+\graphicspath{{../}}
 \usepackage{hyperref}
 \usepackage{xcolor}
 \usepackage{enumitem}
@@ -27,7 +28,7 @@
 
 \title{Quelques mathématiques derrière \code{elbow-helper}}
 \author{Warith Harchaoui}
-\date{}
+\date{Été 2026}
 
 \begin{document}
 \maketitle
@@ -58,7 +59,11 @@ coudes (partie~\ref{part:plusieurs}), et comment faire confiance à l'une ou
 l'autre réponse une fois les données bruitées (partie~\ref{part:bruit})~?
 \end{abstract}
 
+\clearpage
+
 \tableofcontents
+
+\clearpage
 
 \part{Un coude, la géométrie d'une pliure}
 \label{part:un}
@@ -532,6 +537,44 @@ la droite simple ($p = 2 + 1$) à celui de la ligne brisée ($p = 3 + 1$) de
 la section~3, en exigeant une amélioration d'au moins
 \code{config.min\_bic\_improvement} (10 par défaut) \citep{schwarz1978}
 \citep{hastie2009esl} \citep{bishop2006prml}.
+
+\textbf{Du $\Delta\mathrm{BIC}$ à un score borné.} Un $\Delta\mathrm{BIC} =
+\mathrm{BIC}_{\text{simple}} - \mathrm{BIC}_{\text{bris\'ee}}$ brut n'a pas
+de plafond naturel~: « $10$ » et « $282$ » favorisent tous deux la ligne
+bris\'ee, mais le nombre lui-m\^eme ne dit rien du degr\'e de confiance, et
+son \'echelle d\'epend de la taille d'\'echantillon et du bruit. La figure
+de diagnostic (\code{elbow\_helper.plotting}) affiche \`a la place une
+probabilit\'e, un score qui doit tomber dans $[0, 1]$, avec $0$ et $1$
+comme cas extr\^emes~: confiance totale dans la droite simple, ou dans la
+ligne bris\'ee. C'est cette exigence qui fixe la base du logarithme, pas un
+choix libre~: \citet{kassraftery1995} (\'eq.~4) montrent que
+$\Delta\mathrm{BIC} \approx 2 \ln(\mathrm{BF})$, o\`u $\mathrm{BF}$ est le
+facteur de Bayes entre les deux mod\`eles, et le $\ln$ \`a droite est
+exactement le m\^eme logarithme naturel d\'ej\`a utilis\'e pour construire
+le $\mathrm{BIC}$ ci-dessus, h\'erit\'e de sa d\'efinition en
+$-2\ln(\hat L)$. Annuler ce $\ln$ demande donc l'inverse qui lui
+correspond, $\exp$ en base $e$, pas un simple changement d'\'echelle par
+$\ln 10$ ou $\ln 2$, qui ne ferait que renommer un nombre non born\'e sans
+le borner~:
+
+\begin{equation}
+\mathrm{BF} \approx \exp\!\left(\frac{\Delta\mathrm{BIC}}{2}\right)
+\end{equation}
+
+Sous des a priori \'egaux, les cotes a posteriori valent $\mathrm{BF}$,
+donc la probabilit\'e a posteriori de la ligne bris\'ee est
+$\mathrm{BF} / (1 + \mathrm{BF})$, exactement la sigmo\"ide logistique de
+$\Delta\mathrm{BIC} / 2$~:
+
+\begin{equation}
+P(\text{ligne bris\'ee} \mid \text{donn\'ees}) = \frac{1}{1 + \exp(-\Delta\mathrm{BIC}/2)}
+\end{equation}
+
+born\'ee dans $[0, 1]$ par construction, \`a $0.5$ quand
+$\Delta\mathrm{BIC} = 0$ (aucune preuve dans un sens ou l'autre), et
+saturant en douceur vers les extr\^emes $0$/$1$ \`a mesure que la preuve
+s'accumule, dans un sens ou l'autre, plut\^ot que de croître sans limite
+comme le $\Delta\mathrm{BIC}$ brut.
 
 Le BIC vérifie seulement si le paramètre supplémentaire vaut sa pénalité
 \emph{sur les données ayant servi à l'ajuster}. La validation croisée par

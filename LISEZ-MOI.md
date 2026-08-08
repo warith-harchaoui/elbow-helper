@@ -132,11 +132,39 @@ kl.knee, kl.all_knees
 
 ## Mathématiques
 
-`MATH-fr.tex` ([🇬🇧 MATH-en.tex](MATH-en.tex)) démontre, depuis les premiers principes, chaque formule que ce paquet met en œuvre : la normalisation du pipeline à coude unique, le filtre de Spearman, la recherche de coude par courbe de différence, le regroupement par persistance, la pente de Theil-Sen, le BIC, la validation croisée par blocs, le bootstrap et le test nul, jusqu'à la recherche multi-coudes derrière `robust_knees` (voir aussi `research/multiknee/RESULTS.md`). Le texte privilégie l'intuition, avec un exemple travaillé avant chaque formule, pour des lecteurs allant de la fin du lycée jusqu'à un doctorat en mathématiques appliquées. Les références se trouvent dans `references.bib`, avec quelques renvois vers mes [livres IA préférés](https://deraison.ai/ai-books) là où une technique méritait un traitement plus long. Le document est en LaTeX natif, pas en Markdown, vu le public visé : compilez-le avec `latexmk -pdf MATH-fr.tex` (ou `MATH-en.tex`) ou lisez directement les copies déjà compilées, `MATH-fr.pdf` / `MATH-en.pdf`.
+`doc/MATH-fr.tex` ([🇬🇧 doc/MATH-en.tex](doc/MATH-en.tex)) démontre, depuis les premiers principes, chaque formule que ce paquet met en œuvre : la normalisation du pipeline à coude unique, le filtre de Spearman, la recherche de coude par courbe de différence, le regroupement par persistance, la pente de Theil-Sen, le BIC, la validation croisée par blocs, le bootstrap et le test nul, jusqu'à la recherche multi-coudes derrière `robust_knees` (voir aussi `research/multiknee/RESULTS.md`). Le texte privilégie l'intuition, avec un exemple travaillé avant chaque formule, pour des lecteurs allant de la fin du lycée jusqu'à un doctorat en mathématiques appliquées. Les références se trouvent dans `doc/references.bib`, avec quelques renvois vers mes [livres IA préférés](https://deraison.ai/ai-books) là où une technique méritait un traitement plus long. Le document est en LaTeX natif, pas en Markdown, vu le public visé : compilez-le avec `latexmk -pdf MATH-fr.tex` (ou `MATH-en.tex`) depuis `doc/` ou lisez directement les copies déjà compilées, `doc/MATH-fr.pdf` / `doc/MATH-en.pdf`.
 
 ## Paysage
 
 [🗺️ Paysage](PAYSAGE.md) ([🇬🇧 LANDSCAPE.md](LANDSCAPE.md)) : comment `elbow-helper` se positionne face à `kneed`, `ruptures`, `kneebow`, au `KElbowVisualizer` de Yellowbrick, au paquet R `segmented`, à l'estimation à l'œil et au réflexe de demander à un LLM, noté sur 11 critères et placé sur une carte ACP.
+
+## CLI / API / MCP
+
+Au-delà de la bibliothèque Python, `elbow-helper` ouvre trois autres portes sur le même pipeline : une CLI argparse (toujours installée), une CLI click jumelle et une API HTTP avec un serveur MCP monté dessus. Les quatre restent de simples adaptateurs autour du même cœur partagé (`elbow_helper._core_cli`), donc aucune ne peut dériver de ce que renvoie la bibliothèque elle-même.
+
+```bash
+pip install -e .                 # bibliothèque + CLI argparse
+pip install -e ".[cli]"          # + la CLI click
+pip install -e ".[api]"          # + la surface HTTP FastAPI
+pip install -e ".[mcp]"          # + le serveur MCP (inclut [api])
+```
+
+```bash
+# argparse (toujours disponible)
+elbow-helper knee --y-values 0,0.1,0.3,0.6,0.85,0.9,0.92,0.93,0.94,0.95
+
+# CLI click
+elbow-helper-click knee --y-values 0,0.1,0.3,0.6,0.85,0.9,0.92,0.93,0.94,0.95
+
+# API HTTP
+uvicorn elbow_helper.api:app --reload
+curl -X POST localhost:8000/knee -d '{"x": [0,0.1,0.3,0.6,0.85,0.9]}'
+
+# MCP (fastapi-mcp monté sur la même app, sur /mcp)
+uvicorn elbow_helper.mcp_server:app --port 8021
+```
+
+Chaque surface expose les quatre mêmes opérations, `knee`, `elbow`, `diagnostics` et `locator`, qui correspondent une à une à `robust_knee`, `robust_elbow`, `plot_diagnostics` et au `KneeLocator` autonome. Les données entrent en valeurs inline séparées par des virgules, en fichier `.npy` ou en colonne CSV (CLI) ou en corps JSON (`x`/`y` en listes, HTTP). Les surcharges de `RobustKneeConfig` passent en `--config-json '{"bootstrap_replicates": 500}'` (CLI) ou en objet `config_overrides` (HTTP). L'opération `diagnostics` renvoie le SVG lui-même, pas un objet JSON qui l'enveloppe.
 
 ## Remerciements
 

@@ -132,11 +132,39 @@ kl.knee, kl.all_knees
 
 ## Mathematics
 
-`MATH-en.tex` ([🇫🇷 MATH-fr.tex](MATH-fr.tex)) derives every formula this package runs, from the single-knee pipeline's normalisation, Spearman screen, difference-curve knee search, persistence clustering, Theil-Sen slope, BIC, blocked cross-validation, bootstrap and null test, through to the multi-knee research behind `robust_knees` (see also `research/multiknee/RESULTS.md`). Written intuition-first, with a worked example before every formula, for readers from the end of high school through a Ph.D. in applied mathematics. Citations are in `references.bib`, including a few pointers into my own [Favourite AI books](https://deraison.ai/ai-books) where a technique used here deserves a book-length treatment. Native LaTeX (not Markdown), given the audience: compile with `latexmk -pdf MATH-en.tex` (or `MATH-fr.tex`), or read the compiled copies directly, `MATH-en.pdf` / `MATH-fr.pdf`.
+`doc/MATH-en.tex` ([🇫🇷 doc/MATH-fr.tex](doc/MATH-fr.tex)) derives every formula this package runs, from the single-knee pipeline's normalisation, Spearman screen, difference-curve knee search, persistence clustering, Theil-Sen slope, BIC, blocked cross-validation, bootstrap and null test, through to the multi-knee research behind `robust_knees` (see also `research/multiknee/RESULTS.md`). Written intuition-first, with a worked example before every formula, for readers from the end of high school through a Ph.D. in applied mathematics. Citations are in `doc/references.bib`, including a few pointers into my own [Favourite AI books](https://deraison.ai/ai-books) where a technique used here deserves a book-length treatment. Native LaTeX (not Markdown), given the audience: compile with `latexmk -pdf MATH-en.tex` (or `MATH-fr.tex`) from inside `doc/`, or read the compiled copies directly, `doc/MATH-en.pdf` / `doc/MATH-fr.pdf`.
 
 ## Landscape
 
 [🗺️ Landscape](LANDSCAPE.md) ([🇫🇷 PAYSAGE.md](PAYSAGE.md)): how `elbow-helper` compares to `kneed`, `ruptures`, `kneebow`, Yellowbrick's `KElbowVisualizer`, R's `segmented` package, manual eyeballing and asking an LLM, rated on 11 criteria and positioned on a PCA map.
+
+## CLI / API / MCP
+
+Beyond the Python library, `elbow-helper` exposes three more doors onto the same pipeline — an argparse CLI (always installed), a click CLI twin, and an HTTP API with an MCP server mounted on it — all four thin adapters over the same shared core (`elbow_helper._core_cli`), so none of them can drift from what the library itself returns.
+
+```bash
+pip install -e .                 # library + argparse CLI
+pip install -e ".[cli]"          # + the click twin
+pip install -e ".[api]"          # + the FastAPI HTTP surface
+pip install -e ".[mcp]"          # + the MCP server (pulls in [api] too)
+```
+
+```bash
+# argparse (always available)
+elbow-helper knee --y-values 0,0.1,0.3,0.6,0.85,0.9,0.92,0.93,0.94,0.95
+
+# click twin
+elbow-helper-click knee --y-values 0,0.1,0.3,0.6,0.85,0.9,0.92,0.93,0.94,0.95
+
+# HTTP API
+uvicorn elbow_helper.api:app --reload
+curl -X POST localhost:8000/knee -d '{"x": [0,0.1,0.3,0.6,0.85,0.9]}'
+
+# MCP (fastapi-mcp mounted on the same app, at /mcp)
+uvicorn elbow_helper.mcp_server:app --port 8021
+```
+
+Every surface exposes the same four operations — `knee`, `elbow`, `diagnostics`, `locator` — matching `robust_knee`, `robust_elbow`, `plot_diagnostics`, and the standalone `KneeLocator` one-to-one. Data goes in as inline comma-separated values, a `.npy` file, or a CSV column (CLI), or a JSON body (`x`/`y` lists, HTTP). `RobustKneeConfig` overrides travel as `--config-json '{"bootstrap_replicates": 500}'` (CLI) or a `config_overrides` object (HTTP). The `diagnostics` operation returns the SVG itself, not a JSON wrapper around it.
 
 ## Acknowledgements
 

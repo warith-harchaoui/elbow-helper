@@ -10,6 +10,23 @@ Not yet tagged or published — first public commits, still under active
 development.
 
 ### Added
+- **CLI, HTTP API, and MCP surfaces**, mirroring the `ai-helpers` suite's
+  standard architecture (`~/ai-helpers/.private/CODING.md` §19-§23): a new
+  `elbow_helper._core_cli` shared core (`do_knee`/`do_elbow`/
+  `do_diagnostics`/`do_locator`, JSON-safe serialization of `ClearKnee`/
+  `NoClearKnee` including numpy-scalar coercion) backs four adapters —
+  `cli_argparse.py` (always installed; subcommands `knee`/`elbow`/
+  `diagnostics`/`locator`, three ways to pass a curve: inline comma-separated
+  values, a `.npy` path, or a CSV column), `cli_click.py` (`[cli]` extra,
+  identical commands), `api.py` (`[api]` extra, FastAPI; each route carries
+  an explicit `operation_id`), and `mcp_server.py` (`[mcp]` extra,
+  `fastapi-mcp` mounted on a copy of the API app — never a standalone tool
+  server). New console scripts `elbow-helper`, `elbow-helper-click`,
+  `elbow-helper-mcp`. New tests: `test_cli_argparse.py`, `test_cli_click.py`,
+  `test_api.py`, `test_mcp_server.py`. New README.md/LISEZ-MOI.md "CLI / API
+  / MCP" section. `pyproject.toml` description/keywords also had a stray
+  pre-Acknowledgements "Kneedle" mention cleaned up (missed by the earlier
+  sweep — `.toml` wasn't in that pass's file-type filter).
 - **`EXAMPLES.md`**: a runnable cookbook (a clear knee, the k-means elbow, an
   explicit abstention, a `1 - exp(-t/tau)` saturation curve, the diagnostic
   figure, the standalone locator, configuration tuning), linked from both
