@@ -1,10 +1,10 @@
 # elbow-helper
 
-[🇫🇷](LISEZ-MOI.md)&nbsp;&nbsp;|&nbsp;&nbsp;[🇬🇧](README.md)
+[🇫🇷](https://github.com/warith-harchaoui/elbow-helper/blob/main/LISEZ-MOI.md)&nbsp;&nbsp;|&nbsp;&nbsp;[🇬🇧](https://github.com/warith-harchaoui/elbow-helper/blob/main/README.md)
 
 **Détection de coude robuste au bruit : un coude assorti de son incertitude ou une abstention franche.**
 
-![Logo Elbow Helper](assets/logo.png)
+![Logo Elbow Helper](https://raw.githubusercontent.com/warith-harchaoui/elbow-helper/main/assets/logo.png)
 
 Face à la question « où se trouve le coude ? », un algorithme classique répond toujours quelque chose, même sur une droite ou sur du bruit pur. `elbow-helper` enveloppe un repéreur de coude réécrit de zéro dans une procédure de décision prudente, qui pose une question plus exigeante :
 
@@ -29,7 +29,7 @@ pip install -e ".[dev]"     # + pytest
 
 ## Prise en main
 
-Voir [`EXAMPLES.md`](EXAMPLES.md) pour d'autres recettes (en anglais) : le coude de k-means, une abstention explicite, une courbe de saturation exponentielle, la figure de diagnostic, le repéreur autonome et le réglage de la configuration.
+Voir [`EXAMPLES.md`](https://github.com/warith-harchaoui/elbow-helper/blob/main/EXAMPLES.md) pour d'autres recettes (en anglais) : le coude de k-means, une abstention explicite, une courbe de saturation exponentielle, la figure de diagnostic, le repéreur autonome et le réglage de la configuration.
 
 ```python
 import numpy as np
@@ -108,7 +108,7 @@ from elbow_helper.plotting import plot_diagnostics
 plot_diagnostics(x, y, curve="concave", direction="increasing", out="diag.svg", language="fr")
 ```
 
-![Figure de diagnostic : une courbe qui monte puis s'aplatit, avec le coude repéré et sa bande de confiance à 90 % en surbrillance, à côté d'une légende compacte avec la probabilité de détection, la p-value du modèle nul, le contraste de pente, une probabilité a posteriori dérivée du BIC et un score de qualité d'ajustement normalisé contre un pire cas.](assets/diagnostics.svg)
+![Figure de diagnostic : une courbe qui monte puis s'aplatit, avec le coude repéré et sa bande de confiance à 90 % en surbrillance, à côté d'une légende compacte avec la probabilité de détection, la p-value du modèle nul, le contraste de pente, une probabilité a posteriori dérivée du BIC et un score de qualité d'ajustement normalisé contre un pire cas.](https://raw.githubusercontent.com/warith-harchaoui/elbow-helper/main/assets/diagnostics.svg)
 
 Le SVG est écrit à la main, sans matplotlib et sans rien à installer en plus : le diagnostic fait partie du cœur du paquet. La courbe et son coude repéré voisinent avec une légende compacte qui étaye l'estimation : la probabilité de détection, la p-value du modèle nul, le contraste de pente, une probabilité a posteriori dérivée du BIC (les chances, sous l'approximation du facteur de Bayes de Kass et Raftery, que le modèle à coude soit le bon) et un score de qualité d'ajustement normalisé contre un pire cas délibérément pessimiste plutôt que contre la moyenne d'échantillon, trop facile à battre (voir `doc/ELBOW-fr.tex` pour la dérivation des deux). Quand les preuves sont trop faibles, la figure bascule dans un état d'abstention honnête plutôt que d'afficher un résultat trompeur : une courbe grisée en pointillés et la raison, jamais un marqueur qui laisserait croire à plus de confiance que les données n'en autorisent.
 
@@ -132,11 +132,11 @@ kl.knee, kl.all_knees
 
 ## Mathématiques
 
-`doc/ELBOW-fr.tex` ([🇬🇧 doc/ELBOW-en.tex](doc/ELBOW-en.tex)) démontre, depuis les premiers principes, chaque formule que ce paquet met en œuvre : la normalisation du pipeline à coude unique, le filtre de Spearman, la recherche de coude par courbe de différence, le regroupement par persistance, la pente de Theil-Sen, le BIC, la validation croisée par blocs, le bootstrap et le test nul, jusqu'à la recherche multi-coudes derrière `robust_knees` (voir aussi `research/multiknee/RESULTS.md`). Son socle de vraisemblance gaussienne, la théorie générale de pourquoi `L := exp(E[log p])` plutôt qu'un produit brut, et comment cette même construction se lit sur un modèle de classification, est isolé dans une note compagne, `doc/LIKELIHOOD-fr.tex` ([🇬🇧 doc/LIKELIHOOD-en.tex](doc/LIKELIHOOD-en.tex)), puisque ce socle ne dépend en rien de l'ajustement de courbes. Le texte privilégie l'intuition, avec un exemple travaillé avant chaque formule, pour des lecteurs allant de la fin du lycée jusqu'à un doctorat en mathématiques appliquées. Les références se trouvent dans `doc/references.bib`, avec quelques renvois vers mes [livres IA préférés](https://deraison.ai/ai-books) là où une technique méritait un traitement plus long. Le document est en LaTeX natif, pas en Markdown, vu le public visé : compilez-le avec `latexmk -pdf ELBOW-fr.tex` (ou `ELBOW-en.tex`, `LIKELIHOOD-fr.tex`, `LIKELIHOOD-en.tex`) depuis `doc/` ou lisez directement les copies déjà compilées, `doc/ELBOW-fr.pdf` / `doc/ELBOW-en.pdf` / `doc/LIKELIHOOD-fr.pdf` / `doc/LIKELIHOOD-en.pdf`.
+`doc/ELBOW-fr.tex` ([🇬🇧 doc/ELBOW-en.tex](https://github.com/warith-harchaoui/elbow-helper/blob/main/doc/ELBOW-en.tex)) démontre, depuis les premiers principes, chaque formule que ce paquet met en œuvre : la normalisation du pipeline à coude unique, le filtre de Spearman, la recherche de coude par courbe de différence, le regroupement par persistance, la pente de Theil-Sen, le BIC, la validation croisée par blocs, le bootstrap et le test nul, jusqu'à la recherche multi-coudes derrière `robust_knees` (voir aussi `research/multiknee/RESULTS.md`). Son socle de vraisemblance gaussienne, la théorie générale de pourquoi `L := exp(E[log p])` plutôt qu'un produit brut, et comment cette même construction se lit sur un modèle de classification, est isolé dans une note compagne, `doc/LIKELIHOOD-fr.tex` ([🇬🇧 doc/LIKELIHOOD-en.tex](https://github.com/warith-harchaoui/elbow-helper/blob/main/doc/LIKELIHOOD-en.tex)), puisque ce socle ne dépend en rien de l'ajustement de courbes. Le texte privilégie l'intuition, avec un exemple travaillé avant chaque formule, pour des lecteurs allant de la fin du lycée jusqu'à un doctorat en mathématiques appliquées. Les références se trouvent dans `doc/references.bib`, avec quelques renvois vers mes [livres IA préférés](https://deraison.ai/ai-books) là où une technique méritait un traitement plus long. Le document est en LaTeX natif, pas en Markdown, vu le public visé : compilez-le avec `latexmk -pdf ELBOW-fr.tex` (ou `ELBOW-en.tex`, `LIKELIHOOD-fr.tex`, `LIKELIHOOD-en.tex`) depuis `doc/` ou lisez directement les copies déjà compilées, `doc/ELBOW-fr.pdf` / `doc/ELBOW-en.pdf` / `doc/LIKELIHOOD-fr.pdf` / `doc/LIKELIHOOD-en.pdf`.
 
 ## Paysage
 
-[🗺️ Paysage](PAYSAGE.md) ([🇬🇧 LANDSCAPE.md](LANDSCAPE.md)) : comment `elbow-helper` se positionne face à `kneed`, `ruptures`, `kneebow`, au `KElbowVisualizer` de Yellowbrick, au paquet R `segmented`, à l'estimation à l'œil et au réflexe de demander à un LLM, noté sur 11 critères et placé sur une carte ACP.
+[🗺️ Paysage](https://github.com/warith-harchaoui/elbow-helper/blob/main/PAYSAGE.md) ([🇬🇧 LANDSCAPE.md](https://github.com/warith-harchaoui/elbow-helper/blob/main/LANDSCAPE.md)) : comment `elbow-helper` se positionne face à `kneed`, `ruptures`, `kneebow`, au `KElbowVisualizer` de Yellowbrick, au paquet R `segmented`, à l'estimation à l'œil et au réflexe de demander à un LLM, noté sur 11 critères et placé sur une carte ACP.
 
 ## CLI / API / MCP
 

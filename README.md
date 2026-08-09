@@ -1,10 +1,10 @@
 # elbow-helper
 
-[🇫🇷](LISEZ-MOI.md)&nbsp;&nbsp;|&nbsp;&nbsp;[🇬🇧](README.md)
+[🇫🇷](https://github.com/warith-harchaoui/elbow-helper/blob/main/LISEZ-MOI.md)&nbsp;&nbsp;|&nbsp;&nbsp;[🇬🇧](https://github.com/warith-harchaoui/elbow-helper/blob/main/README.md)
 
 **Noise-robust knee and elbow detection: it reports a knee with uncertainty; it abstains outright otherwise.**
 
-![Elbow Helper Logo](assets/logo.png)
+![Elbow Helper Logo](https://raw.githubusercontent.com/warith-harchaoui/elbow-helper/main/assets/logo.png)
 
 An algorithm can answer the question "where might a knee or an elbow be?" and it will always return something, even on a straight line or on pure noise. `elbow-helper` wraps a from-scratch knee locator in a conservative decision procedure that answers a harder question instead:
 
@@ -29,7 +29,7 @@ pip install -e ".[dev]"     # + pytest
 
 ## Quickstart
 
-See [`EXAMPLES.md`](EXAMPLES.md) for more recipes: the k-means elbow, an explicit abstention, an exponential-saturation curve, the diagnostic figure, the standalone locator, and configuration tuning.
+See [`EXAMPLES.md`](https://github.com/warith-harchaoui/elbow-helper/blob/main/EXAMPLES.md) for more recipes: the k-means elbow, an explicit abstention, an exponential-saturation curve, the diagnostic figure, the standalone locator, and configuration tuning.
 
 ```python
 import numpy as np
@@ -108,7 +108,7 @@ from elbow_helper.plotting import plot_diagnostics
 plot_diagnostics(x, y, curve="concave", direction="increasing", out="diag.svg")
 ```
 
-![Diagnostic figure: a curve rising then flattening, with the located knee marked and its 90% confidence band shaded, next to a compact evidence legend with detection probability, null-model p-value, slope contrast, a BIC-derived posterior model probability, and a worst-case-normalized fit-quality score.](assets/diagnostics.svg)
+![Diagnostic figure: a curve rising then flattening, with the located knee marked and its 90% confidence band shaded, next to a compact evidence legend with detection probability, null-model p-value, slope contrast, a BIC-derived posterior model probability, and a worst-case-normalized fit-quality score.](https://raw.githubusercontent.com/warith-harchaoui/elbow-helper/main/assets/diagnostics.svg)
 
 Hand-authored SVG, no matplotlib, no extra to install: the diagnostic is a core feature. The curve and its located knee sit next to a compact evidence legend backing the point estimate: the detection probability, the null-model p-value, the slope contrast, a BIC-derived posterior probability (the odds, under Kass & Raftery's Bayes-factor approximation, that the knee model is correct), and a fit-quality score normalized against a deliberately pessimistic worst case rather than the easily-beaten sample mean (see `doc/ELBOW-en.tex` / `doc/ELBOW-fr.tex` for the derivation of both). When the evidence is too weak, the figure switches to an honest abstention state instead: a greyed, dashed curve and the reason, never a marker implying more confidence than the data supports. Pass `language="fr"` for the French chrome text.
 
@@ -132,11 +132,11 @@ kl.knee, kl.all_knees
 
 ## Mathematics
 
-`doc/ELBOW-en.tex` ([🇫🇷 doc/ELBOW-fr.tex](doc/ELBOW-fr.tex)) derives every formula this package runs, from the single-knee pipeline's normalisation, Spearman screen, difference-curve knee search, persistence clustering, Theil-Sen slope, BIC, blocked cross-validation, bootstrap and null test, through to the multi-knee research behind `robust_knees` (see also `research/multiknee/RESULTS.md`). Written intuition-first, with a worked example before every formula, for readers from the end of high school through a Ph.D. in applied mathematics. Its Gaussian likelihood foundation, the general theory behind why `L := exp(E[log p])` rather than a raw product, and how the same construction reads on a classification model, is factored out into a companion note, `doc/LIKELIHOOD-en.tex` ([🇫🇷 doc/LIKELIHOOD-fr.tex](doc/LIKELIHOOD-fr.tex)), since that foundation doesn't depend on curve-fitting at all. Citations are in `doc/references.bib`, including a few pointers into my own [Favourite AI books](https://deraison.ai/ai-books) where a technique used here deserves a book-length treatment. Native LaTeX (not Markdown), given the audience: compile with `latexmk -pdf ELBOW-en.tex` (or `ELBOW-fr.tex`, `LIKELIHOOD-en.tex`, `LIKELIHOOD-fr.tex`) from inside `doc/`, or read the compiled copies directly, `doc/ELBOW-en.pdf` / `doc/ELBOW-fr.pdf` / `doc/LIKELIHOOD-en.pdf` / `doc/LIKELIHOOD-fr.pdf`.
+`doc/ELBOW-en.tex` ([🇫🇷 doc/ELBOW-fr.tex](https://github.com/warith-harchaoui/elbow-helper/blob/main/doc/ELBOW-fr.tex)) derives every formula this package runs, from the single-knee pipeline's normalisation, Spearman screen, difference-curve knee search, persistence clustering, Theil-Sen slope, BIC, blocked cross-validation, bootstrap and null test, through to the multi-knee research behind `robust_knees` (see also `research/multiknee/RESULTS.md`). Written intuition-first, with a worked example before every formula, for readers from the end of high school through a Ph.D. in applied mathematics. Its Gaussian likelihood foundation, the general theory behind why `L := exp(E[log p])` rather than a raw product, and how the same construction reads on a classification model, is factored out into a companion note, `doc/LIKELIHOOD-en.tex` ([🇫🇷 doc/LIKELIHOOD-fr.tex](https://github.com/warith-harchaoui/elbow-helper/blob/main/doc/LIKELIHOOD-fr.tex)), since that foundation doesn't depend on curve-fitting at all. Citations are in `doc/references.bib`, including a few pointers into my own [Favourite AI books](https://deraison.ai/ai-books) where a technique used here deserves a book-length treatment. Native LaTeX (not Markdown), given the audience: compile with `latexmk -pdf ELBOW-en.tex` (or `ELBOW-fr.tex`, `LIKELIHOOD-en.tex`, `LIKELIHOOD-fr.tex`) from inside `doc/`, or read the compiled copies directly, `doc/ELBOW-en.pdf` / `doc/ELBOW-fr.pdf` / `doc/LIKELIHOOD-en.pdf` / `doc/LIKELIHOOD-fr.pdf`.
 
 ## Landscape
 
-[🗺️ Landscape](LANDSCAPE.md) ([🇫🇷 PAYSAGE.md](PAYSAGE.md)): how `elbow-helper` compares to `kneed`, `ruptures`, `kneebow`, Yellowbrick's `KElbowVisualizer`, R's `segmented` package, manual eyeballing and asking an LLM, rated on 11 criteria and positioned on a PCA map.
+[🗺️ Landscape](https://github.com/warith-harchaoui/elbow-helper/blob/main/LANDSCAPE.md) ([🇫🇷 PAYSAGE.md](https://github.com/warith-harchaoui/elbow-helper/blob/main/PAYSAGE.md)): how `elbow-helper` compares to `kneed`, `ruptures`, `kneebow`, Yellowbrick's `KElbowVisualizer`, R's `segmented` package, manual eyeballing and asking an LLM, rated on 11 criteria and positioned on a PCA map.
 
 ## CLI / API / MCP
 

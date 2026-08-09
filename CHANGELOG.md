@@ -4,10 +4,9 @@ All notable changes to `elbow-helper` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.1.0] - 2026-08-09
 
-Not yet tagged or published — first public commits, still under active
-development.
+First public release: tagged, GitHub-released, and published to PyPI.
 
 ### Added
 - **`doc/LIKELIHOOD-en.tex` / `doc/LIKELIHOOD-fr.tex`**, a new companion note
@@ -123,8 +122,6 @@ development.
   `ELBOW-fr.pdf` are the checked-in compiled copies. Every reference to the
   old `.md` filenames (README, LISEZ-MOI.md, LANDSCAPE.md, PAYSAGE.md, and
   source docstrings) updated to point at the `.tex` sources.
-
-### Changed
 - **The locator module and its test file renamed for naming consistency**
   (`src/elbow_helper/locator.py`, `tests/test_locator.py`), and every
   prose mention of the algorithm's name across the codebase, tests, README,
@@ -146,5 +143,3 @@ development.
   `typing.Callable`/`Tuple`/`Optional`) and dead local variables in the
   `research/multiknee/` prototype scripts and `elbow_helper/clustering.py`.
 
-### Notes
-- Not yet tagged, released, or published to PyPI.
