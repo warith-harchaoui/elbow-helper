@@ -17,5 +17,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - run: pip install -e ".[plot,dev]"
+      - run: pip install -e ".[cli,api,mcp,dev]"
       - run: pytest
+      - run: pip install ruff==0.15.21
+      - run: ruff check .
