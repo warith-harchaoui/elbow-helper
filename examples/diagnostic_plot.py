@@ -21,7 +21,10 @@ y = np.where(x <= knee, 3.0 * x, 3.0 * knee + 0.2 * (x - knee))
 y = y / y.max() + rng.normal(0, 0.02, x.size)
 
 plot_diagnostics(
-    x, y, curve="concave", direction="increasing",
+    x,
+    y,
+    curve="concave",
+    direction="increasing",
     config=RobustKneeConfig(random_seed=0),
     out="diagnostics.svg",
 )

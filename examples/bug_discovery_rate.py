@@ -34,7 +34,10 @@ bugs_per_day = np.where(
 bugs_per_day = np.clip(bugs_per_day + rng.normal(0, 0.3, days.size), 0, None)
 
 result = robust_knee(
-    days, bugs_per_day, curve="convex", direction="decreasing",
+    days,
+    bugs_per_day,
+    curve="convex",
+    direction="decreasing",
     config=RobustKneeConfig(random_seed=0),
 )
 

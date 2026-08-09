@@ -77,6 +77,8 @@ def test_gate_returns_zero_for_k_max_zero():
     x = np.linspace(0, 1, n)
     y = rng.normal(0, 1, n)
     segs = dp_optimal_partition(x, y, k_max=0, min_seg=5)
-    k_hat, p_values = sequential_fwer_gate(x, y, segs, alpha=0.05, n_permutations=50, min_seg=5)
+    k_hat, p_values = sequential_fwer_gate(
+        x, y, segs, alpha=0.05, n_permutations=50, min_seg=5
+    )
     assert k_hat == 0
     assert p_values == []

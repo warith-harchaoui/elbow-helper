@@ -20,7 +20,10 @@ x = np.linspace(0.0, 1.0, 80)
 y = 0.2 + 0.5 * x + rng.normal(0, 0.01, x.size)  # monotone, no knee
 
 result = robust_knee(
-    x, y, curve="concave", direction="increasing",
+    x,
+    y,
+    curve="concave",
+    direction="increasing",
     config=RobustKneeConfig(random_seed=0),
 )
 

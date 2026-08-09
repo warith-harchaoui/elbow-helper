@@ -148,8 +148,14 @@ def estimate_noise_variance_first_diff(y: np.ndarray) -> float:
 class _ForwardTables:
     """Forward log-partition function ``logZ[k][t]`` for k = 1..K segments."""
 
-    def __init__(self, table: SegmentCostTable, n: int, k_max_segments: int,
-                 sigma2: float, min_seg: int):
+    def __init__(
+        self,
+        table: SegmentCostTable,
+        n: int,
+        k_max_segments: int,
+        sigma2: float,
+        min_seg: int,
+    ):
         self.table = table
         self.n = n
         self.sigma2 = sigma2
@@ -166,16 +172,20 @@ class _ForwardTables:
                 s_hi = t - min_seg
                 if s_hi < s_lo:
                     continue
-                vals = np.array([
-                    self.logZ[k - 1][s] + self._ll(s, t)
-                    for s in range(s_lo, s_hi + 1)
-                ])
+                vals = np.array(
+                    [
+                        self.logZ[k - 1][s] + self._ll(s, t)
+                        for s in range(s_lo, s_hi + 1)
+                    ]
+                )
                 self.logZ[k][t] = _logsumexp(vals)
 
     def _ll(self, i: int, j: int) -> float:
         m = j - i
         cost = self.table.cost(i, j)
-        return float(-0.5 * cost / self.sigma2 - 0.5 * m * np.log(2 * np.pi * self.sigma2))
+        return float(
+            -0.5 * cost / self.sigma2 - 0.5 * m * np.log(2 * np.pi * self.sigma2)
+        )
 
     def sample_segmentation(self, K: int, rng: np.random.Generator) -> List[int]:
         """Backward-sample one segmentation with exactly ``K`` segments."""
@@ -185,9 +195,7 @@ class _ForwardTables:
             s_lo = self.min_seg * (k - 1)
             s_hi = t - self.min_seg
             candidates = np.arange(s_lo, s_hi + 1)
-            log_w = np.array([
-                self.logZ[k - 1][s] + self._ll(s, t) for s in candidates
-            ])
+            log_w = np.array([self.logZ[k - 1][s] + self._ll(s, t) for s in candidates])
             log_w -= _logsumexp(log_w)
             w = np.exp(log_w)
             w = w / w.sum()
@@ -199,15 +207,22 @@ class _ForwardTables:
 
     def total_loglik(self, cuts: Sequence[int]) -> float:
         boundaries = (0, *cuts, self.n)
-        return float(sum(
-            self._ll(boundaries[i], boundaries[i + 1])
-            for i in range(len(boundaries) - 1)
-        ))
+        return float(
+            sum(
+                self._ll(boundaries[i], boundaries[i + 1])
+                for i in range(len(boundaries) - 1)
+            )
+        )
 
 
 def icl_scores(
-    dp_results: Sequence[Segmentation], x: np.ndarray, y: np.ndarray,
-    sigma2: float, min_seg: int = 3, n_samples: int = 200, seed: int = 0,
+    dp_results: Sequence[Segmentation],
+    x: np.ndarray,
+    y: np.ndarray,
+    sigma2: float,
+    min_seg: int = 3,
+    n_samples: int = 200,
+    seed: int = 0,
 ) -> List[float]:
     """ICL-style score for each DP-optimal segmentation in ``dp_results``.
 
@@ -272,8 +287,7 @@ def icl_scores(
             scores.append(np.inf)
             continue
         samples_ll = [
-            fwd.total_loglik(fwd.sample_segmentation(K, rng))
-            for _ in range(n_samples)
+            fwd.total_loglik(fwd.sample_segmentation(K, rng)) for _ in range(n_samples)
         ]
         entropy = logZ_K - float(np.mean(samples_ll))
         scores.append(float(base + 2.0 * entropy))

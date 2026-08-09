@@ -15,7 +15,11 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from segmentation import SegmentCostTable, dp_optimal_partition, greedy_binary_segmentation
+from segmentation import (
+    SegmentCostTable,
+    dp_optimal_partition,
+    greedy_binary_segmentation,
+)
 
 
 def _direct_ols_rss(x, y):
@@ -101,8 +105,13 @@ def test_greedy_is_never_better_than_dp():
     n = 70
     x = np.linspace(0, 1, n)
     y = np.piecewise(
-        x, [x < 0.3, (x >= 0.3) & (x < 0.6), x >= 0.6],
-        [lambda t: 3 * t, lambda t: 0.9 + 0.2 * (t - 0.3), lambda t: 0.96 - 1.5 * (t - 0.6)],
+        x,
+        [x < 0.3, (x >= 0.3) & (x < 0.6), x >= 0.6],
+        [
+            lambda t: 3 * t,
+            lambda t: 0.9 + 0.2 * (t - 0.3),
+            lambda t: 0.96 - 1.5 * (t - 0.6),
+        ],
     ) + rng.normal(0, 0.05, n)
 
     dp = dp_optimal_partition(x, y, k_max=4, min_seg=3)
@@ -121,8 +130,13 @@ def test_greedy_can_strictly_underperform_dp_even_when_noiseless():
     n = 90
     x = np.linspace(0, 1, n)
     y = np.piecewise(
-        x, [x < 0.33, (x >= 0.33) & (x < 0.66), x >= 0.66],
-        [lambda t: 5 * t, lambda t: 1.65 - 0.1 * (t - 0.33), lambda t: 1.617 + 4 * (t - 0.66)],
+        x,
+        [x < 0.33, (x >= 0.33) & (x < 0.66), x >= 0.66],
+        [
+            lambda t: 5 * t,
+            lambda t: 1.65 - 0.1 * (t - 0.33),
+            lambda t: 1.617 + 4 * (t - 0.66),
+        ],
     )
     dp = dp_optimal_partition(x, y, k_max=2, min_seg=3)
     greedy = greedy_binary_segmentation(x, y, k_max=2, min_seg=3)

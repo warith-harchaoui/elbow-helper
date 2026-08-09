@@ -50,8 +50,12 @@ def _criterion_methods(
 ) -> Dict[str, int]:
     out = {}
     out[f"{label_prefix}+BIC"] = _argmin_k([plain_bic(s) for s in segs])
-    out[f"{label_prefix}+mBIC_add"] = _argmin_k([modified_bic_additive(s) for s in segs])
-    out[f"{label_prefix}+mBIC_sub"] = _argmin_k([modified_bic_subtractive(s) for s in segs])
+    out[f"{label_prefix}+mBIC_add"] = _argmin_k(
+        [modified_bic_additive(s) for s in segs]
+    )
+    out[f"{label_prefix}+mBIC_sub"] = _argmin_k(
+        [modified_bic_subtractive(s) for s in segs]
+    )
     return out
 
 
@@ -64,7 +68,9 @@ class Trial:
     seconds: float
 
 
-def run_one_curve(true_k: int, noise: float, noise_label: str, seed: int) -> List[Trial]:
+def run_one_curve(
+    true_k: int, noise: float, noise_label: str, seed: int
+) -> List[Trial]:
     x, y, _true_idx = make_piecewise_curve(true_k, n=N, noise_sigma=noise, seed=seed)
     trials: List[Trial] = []
 
@@ -83,7 +89,9 @@ def run_one_curve(true_k: int, noise: float, noise_label: str, seed: int) -> Lis
 
     t0 = time.perf_counter()
     sigma2 = estimate_noise_variance_first_diff(y)
-    icl_sc = icl_scores(dp_segs, x, y, sigma2=sigma2, min_seg=MIN_SEG, n_samples=150, seed=seed)
+    icl_sc = icl_scores(
+        dp_segs, x, y, sigma2=sigma2, min_seg=MIN_SEG, n_samples=150, seed=seed
+    )
     icl_time = time.perf_counter() - t0
     icl_k = _argmin_k(icl_sc)
     trials.append(Trial("DP+ICL", true_k, noise_label, icl_k, dp_time + icl_time))
@@ -93,15 +101,24 @@ def run_one_curve(true_k: int, noise: float, noise_label: str, seed: int) -> Lis
         x, y, dp_segs, alpha=ALPHA, n_permutations=150, min_seg=MIN_SEG, seed=seed
     )
     dp_fwer_time = time.perf_counter() - t0
-    trials.append(Trial("DP+FWER", true_k, noise_label, dp_fwer_k, dp_time + dp_fwer_time))
+    trials.append(
+        Trial("DP+FWER", true_k, noise_label, dp_fwer_k, dp_time + dp_fwer_time)
+    )
 
     t0 = time.perf_counter()
     greedy_fwer_k, _ = sequential_fwer_gate(
         x, y, greedy_segs, alpha=ALPHA, n_permutations=150, min_seg=MIN_SEG, seed=seed
     )
     greedy_fwer_time = time.perf_counter() - t0
-    trials.append(Trial("Greedy+FWER", true_k, noise_label, greedy_fwer_k,
-                         greedy_time + greedy_fwer_time))
+    trials.append(
+        Trial(
+            "Greedy+FWER",
+            true_k,
+            noise_label,
+            greedy_fwer_k,
+            greedy_time + greedy_fwer_time,
+        )
+    )
 
     # Combination: mBIC (subtractive) proposes k, but capped at whatever the
     # DP+FWER gate independently accepts -- "explore with a criterion,
@@ -109,8 +126,15 @@ def run_one_curve(true_k: int, noise: float, noise_label: str, seed: int) -> Lis
     # recommended composition.
     mbic_k = _argmin_k([modified_bic_subtractive(s) for s in dp_segs])
     combined_k = min(mbic_k, dp_fwer_k)
-    trials.append(Trial("DP+mBIC_sub+FWERconfirm", true_k, noise_label, combined_k,
-                         dp_time + dp_fwer_time))
+    trials.append(
+        Trial(
+            "DP+mBIC_sub+FWERconfirm",
+            true_k,
+            noise_label,
+            combined_k,
+            dp_time + dp_fwer_time,
+        )
+    )
 
     return trials
 
@@ -145,7 +169,9 @@ def summarize(trials: List[Trial]) -> str:
     )
 
     lines.append("## Overall accuracy by method\n")
-    lines.append("| method | P(k_hat = true_k) | P(over) | P(under) | mean |bias| | mean seconds/curve |")
+    lines.append(
+        "| method | P(k_hat = true_k) | P(over) | P(under) | mean |bias| | mean seconds/curve |"
+    )
     lines.append("|---|---|---|---|---|---|")
     overall_rank = []
     for method in sorted(by_method):
@@ -174,11 +200,17 @@ def summarize(trials: List[Trial]) -> str:
                     continue
                 exact = sum(t.k_hat == true_k for t in cell) / len(cell)
                 mean_k = np.mean([t.k_hat for t in cell])
-                lines.append(f"| {true_k} | {noise_label} | {exact:.2f} | {mean_k:.2f} |")
+                lines.append(
+                    f"| {true_k} | {noise_label} | {exact:.2f} | {mean_k:.2f} |"
+                )
 
     lines.append("\n## False-positive rate on true_k = 0 specifically\n")
-    lines.append("This is the headline number the original research question was about:")
-    lines.append("does the method overselect breakpoints on data with no real structure?\n")
+    lines.append(
+        "This is the headline number the original research question was about:"
+    )
+    lines.append(
+        "does the method overselect breakpoints on data with no real structure?\n"
+    )
     lines.append("| method | P(k_hat > 0 | true_k = 0) |")
     lines.append("|---|---|")
     for method in sorted(by_method):
@@ -195,8 +227,10 @@ def summarize(trials: List[Trial]) -> str:
 
 
 if __name__ == "__main__":
-    print(f"Running {len(TRUE_KS) * len(NOISE_LEVELS) * N_REPLICATES} synthetic curves "
-          f"x ~9 methods each...")
+    print(
+        f"Running {len(TRUE_KS) * len(NOISE_LEVELS) * N_REPLICATES} synthetic curves "
+        f"x ~9 methods each..."
+    )
     trials = run_all()
     report = summarize(trials)
     out_path = __file__.replace("compare.py", "RESULTS.md")

@@ -131,7 +131,9 @@ def test_icl_bic_plus_entropy_prefers_fewer_breakpoints_on_a_straight_line():
     y = 0.5 * x + 0.1 + rng.normal(0, 0.05, n)  # no real structure beyond k=0
     dp_results = dp_optimal_partition(x, y, k_max=3, min_seg=5)
     sigma2 = estimate_noise_variance_first_diff(y)
-    scores = icl_scores(dp_results, x, y, sigma2=sigma2, min_seg=5, n_samples=200, seed=0)
+    scores = icl_scores(
+        dp_results, x, y, sigma2=sigma2, min_seg=5, n_samples=200, seed=0
+    )
     assert int(np.argmin(scores)) == 0
 
 
@@ -142,5 +144,7 @@ def test_icl_recovers_a_real_breakpoint():
     y = np.where(x < 0.4, 3 * x, 1.2 + 0.1 * (x - 0.4)) + rng.normal(0, 0.05, n)
     dp_results = dp_optimal_partition(x, y, k_max=3, min_seg=5)
     sigma2 = estimate_noise_variance_first_diff(y)
-    scores = icl_scores(dp_results, x, y, sigma2=sigma2, min_seg=5, n_samples=200, seed=0)
+    scores = icl_scores(
+        dp_results, x, y, sigma2=sigma2, min_seg=5, n_samples=200, seed=0
+    )
     assert int(np.argmin(scores)) == 1

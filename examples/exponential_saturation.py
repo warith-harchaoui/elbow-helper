@@ -28,7 +28,10 @@ y = 1.0 - np.exp(-t / tau)
 y = y + rng.normal(0, 0.01, t.size)  # light noise: a clean charging curve
 
 result = robust_knee(
-    t, y, curve="concave", direction="increasing",
+    t,
+    y,
+    curve="concave",
+    direction="increasing",
     config=RobustKneeConfig(random_seed=0),
 )
 

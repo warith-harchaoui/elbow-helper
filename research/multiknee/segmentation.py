@@ -174,8 +174,9 @@ def dp_optimal_partition(
         cuts.reverse()
         boundaries = (0, *cuts, n)
         results.append(
-            Segmentation(breakpoints=tuple(cuts), boundaries=boundaries,
-                         sse=float(C[k][n]), n=n)
+            Segmentation(
+                breakpoints=tuple(cuts), boundaries=boundaries, sse=float(C[k][n]), n=n
+            )
         )
     return results
 
@@ -210,8 +211,7 @@ def greedy_binary_segmentation(
 
     boundaries = [0, n]
     results = [
-        Segmentation(breakpoints=(), boundaries=(0, n),
-                     sse=table.cost(0, n), n=n)
+        Segmentation(breakpoints=(), boundaries=(0, n), sse=table.cost(0, n), n=n)
     ]
 
     for _ in range(k_max):
@@ -238,7 +238,11 @@ def greedy_binary_segmentation(
         )
         cuts = tuple(boundaries[1:-1])
         results.append(
-            Segmentation(breakpoints=cuts, boundaries=tuple(boundaries),
-                         sse=float(total_sse), n=n)
+            Segmentation(
+                breakpoints=cuts,
+                boundaries=tuple(boundaries),
+                sse=float(total_sse),
+                n=n,
+            )
         )
     return results

@@ -31,14 +31,19 @@ hit_rate = cache_size / (cache_size + K)
 hit_rate = hit_rate + rng.normal(0, 0.01, cache_size.size)
 
 result = robust_knee(
-    cache_size, hit_rate, curve="concave", direction="increasing",
+    cache_size,
+    hit_rate,
+    curve="concave",
+    direction="increasing",
     config=RobustKneeConfig(random_seed=0),
 )
 
 print(result)
 if result.is_clear:
     knee_hit_rate = result.knee_x / (result.knee_x + K)
-    print(f"  knee at cache size = {result.knee_x:.0f} items  ({result.knee_x/K:.2f}x K)")
+    print(
+        f"  knee at cache size = {result.knee_x:.0f} items  ({result.knee_x / K:.2f}x K)"
+    )
     print(f"  hit rate at knee   = {knee_hit_rate:.1%}")
     print(f"  90% CI             = ({result.ci90[0]:.0f}, {result.ci90[1]:.0f})")
 

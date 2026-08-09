@@ -31,15 +31,22 @@ latency_ms = baseline_ms / (1.0 - rho)
 latency_ms = latency_ms + rng.normal(0, 0.6, rho.size)
 
 result = robust_knee(
-    rho, latency_ms, curve="convex", direction="increasing",
+    rho,
+    latency_ms,
+    curve="convex",
+    direction="increasing",
     config=RobustKneeConfig(random_seed=0),
 )
 
 print(result)
 if result.is_clear:
     knee_latency = baseline_ms / (1.0 - result.knee_x)
-    print(f"  knee at utilization = {result.knee_x:.3f}  ({result.knee_x:.0%} of capacity)")
-    print(f"  latency at knee     = {knee_latency:.1f} ms  ({knee_latency/baseline_ms:.1f}x baseline)")
+    print(
+        f"  knee at utilization = {result.knee_x:.3f}  ({result.knee_x:.0%} of capacity)"
+    )
+    print(
+        f"  latency at knee     = {knee_latency:.1f} ms  ({knee_latency / baseline_ms:.1f}x baseline)"
+    )
     print(f"  90% CI              = ({result.ci90[0]:.3f}, {result.ci90[1]:.3f})")
 
 # Note: the knee lands around rho ~ 0.60, well before the mathematical
