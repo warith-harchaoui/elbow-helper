@@ -113,7 +113,7 @@ def _add_data_flags(p: argparse.ArgumentParser) -> None:
     p.add_argument(
         "--config-json",
         default=None,
-        help='RobustKneeConfig field overrides as JSON, e.g. \'{"bootstrap_replicates": 500}\'',
+        help="RobustKneeConfig field overrides as JSON, e.g. '{\"bootstrap_replicates\": 500}'",
     )
 
 
@@ -194,13 +194,17 @@ def build_parser() -> argparse.ArgumentParser:
         prog="elbow-helper",
         description="Noise-robust knee/elbow detection: a knee with uncertainty, or an explicit abstention.",
     )
-    parser.add_argument("-v", "--verbose", action="count", default=0, help="repeat for more logs")
+    parser.add_argument(
+        "-v", "--verbose", action="count", default=0, help="repeat for more logs"
+    )
     sub = parser.add_subparsers(dest="command", required=True)
 
     p_knee = sub.add_parser("knee", help="locate a knee with uncertainty, or abstain")
     _add_data_flags(p_knee)
 
-    p_elbow = sub.add_parser("elbow", help="the convex/decreasing convenience (k-means elbow)")
+    p_elbow = sub.add_parser(
+        "elbow", help="the convex/decreasing convenience (k-means elbow)"
+    )
     _add_data_flags(p_elbow)
 
     p_diag = sub.add_parser("diagnostics", help="render the diagnostic SVG")
@@ -208,7 +212,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_diag.add_argument("--out", help="write the SVG to this path")
     p_diag.add_argument("--language", choices=["en", "fr"], default="en")
 
-    p_loc = sub.add_parser("locator", help="the standalone locator (no uncertainty evidence)")
+    p_loc = sub.add_parser(
+        "locator", help="the standalone locator (no uncertainty evidence)"
+    )
     _add_data_flags(p_loc)
     p_loc.add_argument("--sensitivity", type=float, default=1.0)
     p_loc.add_argument("--online", action="store_true", default=True)
@@ -233,7 +239,9 @@ def _dispatch(args: argparse.Namespace) -> dict | str:
     overrides = _config_overrides_from_args(args)
     if args.command == "knee":
         x, y = _xy_from_args(args)
-        return core.do_knee(x, y, curve=args.curve, direction=args.direction, config_overrides=overrides)
+        return core.do_knee(
+            x, y, curve=args.curve, direction=args.direction, config_overrides=overrides
+        )
     if args.command == "elbow":
         x, y = _xy_from_args(args)
         if y is None:
@@ -242,16 +250,25 @@ def _dispatch(args: argparse.Namespace) -> dict | str:
     if args.command == "diagnostics":
         x, y = _xy_from_args(args)
         return core.do_diagnostics(
-            x, y, curve=args.curve, direction=args.direction,
-            config_overrides=overrides, out=args.out, language=args.language,
+            x,
+            y,
+            curve=args.curve,
+            direction=args.direction,
+            config_overrides=overrides,
+            out=args.out,
+            language=args.language,
         )
     if args.command == "locator":
         x, y = _xy_from_args(args)
         if y is None:
             raise ValueError("locator needs both --x-* and --y-*")
         return core.do_locator(
-            x, y, sensitivity=args.sensitivity, curve=args.curve,
-            direction=args.direction, online=args.online,
+            x,
+            y,
+            sensitivity=args.sensitivity,
+            curve=args.curve,
+            direction=args.direction,
+            online=args.online,
         )
     raise ValueError(f"unknown command {args.command!r}")  # pragma: no cover
 

@@ -67,8 +67,13 @@ def test_knee_json_output(runner, cli) -> None:
     result = runner.invoke(
         cli,
         [
-            "knee", "--x-values", _values_flag(x), "--y-values", _values_flag(y),
-            "--config-json", '{"random_seed": 0, "bootstrap_replicates": 60, "null_replicates": 120}',
+            "knee",
+            "--x-values",
+            _values_flag(x),
+            "--y-values",
+            _values_flag(y),
+            "--config-json",
+            '{"random_seed": 0, "bootstrap_replicates": 60, "null_replicates": 120}',
         ],
     )
     assert result.exit_code == 0
@@ -90,8 +95,13 @@ def test_elbow_json_output(runner, cli) -> None:
     result = runner.invoke(
         cli,
         [
-            "elbow", "--x-values", _values_flag(x), "--y-values", _values_flag(y),
-            "--config-json", '{"random_seed": 0, "bootstrap_replicates": 60, "null_replicates": 120}',
+            "elbow",
+            "--x-values",
+            _values_flag(x),
+            "--y-values",
+            _values_flag(y),
+            "--config-json",
+            '{"random_seed": 0, "bootstrap_replicates": 60, "null_replicates": 120}',
         ],
     )
     assert result.exit_code == 0
@@ -105,8 +115,13 @@ def test_diagnostics_writes_svg(runner, cli, tmp_path) -> None:
     result = runner.invoke(
         cli,
         [
-            "diagnostics", "--x-values", _values_flag(x), "--y-values", _values_flag(y),
-            "--out", str(out_path),
+            "diagnostics",
+            "--x-values",
+            _values_flag(x),
+            "--y-values",
+            _values_flag(y),
+            "--out",
+            str(out_path),
         ],
     )
     assert result.exit_code == 0
@@ -125,7 +140,8 @@ def test_locator_json_output(runner, cli) -> None:
     """``locator`` returns the raw knee/all_knees payload."""
     x, y = clear_knee_curve(seed=1, noise=0.0, n=60)
     result = runner.invoke(
-        cli, ["locator", "--x-values", _values_flag(x), "--y-values", _values_flag(y)],
+        cli,
+        ["locator", "--x-values", _values_flag(x), "--y-values", _values_flag(y)],
     )
     assert result.exit_code == 0
     payload = json.loads(result.output)

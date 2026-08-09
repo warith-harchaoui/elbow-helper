@@ -20,7 +20,9 @@ import numpy as np
 from .multi_segmentation import Segmentation, SegmentCostTable
 
 
-def _fitted_values(x: np.ndarray, y: np.ndarray, boundaries: Sequence[int]) -> np.ndarray:
+def _fitted_values(
+    x: np.ndarray, y: np.ndarray, boundaries: Sequence[int]
+) -> np.ndarray:
     """OLS-fitted y for a given (discontinuous) segmentation.
 
     Parameters
@@ -142,7 +144,9 @@ def sequential_fwer_gate(
             r_star = rng.choice(resid, size=resid.size, replace=True)
             y_star = fitted + r_star
             table_star = SegmentCostTable(x, y_star)
-            best_reduction = _best_single_split_reduction(table_star, prev.boundaries, min_seg)
+            best_reduction = _best_single_split_reduction(
+                table_star, prev.boundaries, min_seg
+            )
             if best_reduction >= observed_reduction - 1e-12:
                 count_ge += 1
         p_value = (count_ge + 1) / (n_permutations + 1)

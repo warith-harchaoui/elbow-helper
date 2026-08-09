@@ -4,6 +4,14 @@ All notable changes to `elbow-helper` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.1] - 2026-08-09
+
+### Changed
+
+- **CI ran `ruff check` but never `ruff format --check`**, so formatting
+  drifted across 36 test files (line wrapping). Reformatted the tree and
+  added the missing CI step.
+
 ## [0.1.0] - 2026-08-09
 
 First public release: tagged, GitHub-released, and published to PyPI.

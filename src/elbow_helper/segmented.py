@@ -131,8 +131,12 @@ def confirm_segmented_model(
 
     if left.sum() < 3 or right.sum() < 3:
         return SegmentEvidence(
-            passes=False, slope_contrast=0.0, m_left=float("nan"),
-            m_right=float("nan"), bic_improvement=0.0, cv_improvement=0.0,
+            passes=False,
+            slope_contrast=0.0,
+            m_left=float("nan"),
+            m_right=float("nan"),
+            bic_improvement=0.0,
+            cv_improvement=0.0,
             reason=Reason.WEAK_SLOPE_CHANGE,
         )
 

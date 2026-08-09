@@ -73,8 +73,13 @@ def test_knee_json_output_is_valid(capsys) -> None:
     out = _run(
         capsys,
         [
-            "knee", "--x-values", _values_flag(x), "--y-values", _values_flag(y),
-            "--config-json", '{"random_seed": 0, "bootstrap_replicates": 60, "null_replicates": 120}',
+            "knee",
+            "--x-values",
+            _values_flag(x),
+            "--y-values",
+            _values_flag(y),
+            "--config-json",
+            '{"random_seed": 0, "bootstrap_replicates": 60, "null_replicates": 120}',
         ],
     )
     payload = json.loads(out)
@@ -95,8 +100,13 @@ def test_elbow_json_output(capsys) -> None:
     out = _run(
         capsys,
         [
-            "elbow", "--x-values", _values_flag(x), "--y-values", _values_flag(y),
-            "--config-json", '{"random_seed": 0, "bootstrap_replicates": 60, "null_replicates": 120}',
+            "elbow",
+            "--x-values",
+            _values_flag(x),
+            "--y-values",
+            _values_flag(y),
+            "--config-json",
+            '{"random_seed": 0, "bootstrap_replicates": 60, "null_replicates": 120}',
         ],
     )
     payload = json.loads(out)
@@ -110,8 +120,13 @@ def test_diagnostics_writes_svg(capsys, tmp_path) -> None:
     out = _run(
         capsys,
         [
-            "diagnostics", "--x-values", _values_flag(x), "--y-values", _values_flag(y),
-            "--out", str(out_path),
+            "diagnostics",
+            "--x-values",
+            _values_flag(x),
+            "--y-values",
+            _values_flag(y),
+            "--out",
+            str(out_path),
         ],
     )
     assert out.strip().startswith("<svg")

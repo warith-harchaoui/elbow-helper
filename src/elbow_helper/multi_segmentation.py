@@ -205,7 +205,8 @@ def dp_optimal_partition(
         cuts.reverse()
         boundaries = (0, *cuts, n)
         results.append(
-            Segmentation(breakpoints=tuple(cuts), boundaries=boundaries,
-                         sse=float(C[k][n]), n=n)
+            Segmentation(
+                breakpoints=tuple(cuts), boundaries=boundaries, sse=float(C[k][n]), n=n
+            )
         )
     return results

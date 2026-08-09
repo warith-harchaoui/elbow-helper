@@ -103,8 +103,15 @@ def kmeans_inertia_curve(seed, true_k=8, k_max=24, n_per_cluster=50):
     return ks.astype(float), inertias
 
 
-def pca_scree_curve(seed, n_samples=300, true_d=6, n_noise_dims=19, signal_scale=8.0,
-                     noise_scale=0.6, noise_decay=0.88):
+def pca_scree_curve(
+    seed,
+    n_samples=300,
+    true_d=6,
+    n_noise_dims=19,
+    signal_scale=8.0,
+    noise_scale=0.6,
+    noise_decay=0.88,
+):
     """Eigenvalues of the sample covariance for data with ``true_d`` signal
     dimensions (large variance) and ``n_noise_dims`` noise dimensions (small,
     smoothly decaying variance): a scree plot with a genuine elbow at

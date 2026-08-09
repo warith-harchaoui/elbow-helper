@@ -80,7 +80,9 @@ def robust_knees(
 
         segs = dp_optimal_partition(x_norm, y_scaled, config.k_max, min_seg)
         diagnostics.update(
-            n=n, min_seg=min_seg, k_max_requested=config.k_max,
+            n=n,
+            min_seg=min_seg,
+            k_max_requested=config.k_max,
             k_max_effective=len(segs) - 1,
         )
 
@@ -93,8 +95,13 @@ def robust_knees(
         p_values: list = []
         if config.require_fwer_confirmation:
             fwer_k, p_values = sequential_fwer_gate(
-                x_norm, y_scaled, segs, config.fwer_alpha,
-                config.fwer_permutations, min_seg, seed,
+                x_norm,
+                y_scaled,
+                segs,
+                config.fwer_alpha,
+                config.fwer_permutations,
+                min_seg,
+                seed,
             )
             diagnostics["fwer_k"] = fwer_k
             diagnostics["fwer_p_values"] = [round(p, 4) for p in p_values]
@@ -129,4 +136,6 @@ def robust_knees(
     except Exception as exc:  # numerical safety net -- never crash the caller
         oh.warning(f"[elbow-helper] internal failure: {exc}")
         diagnostics["error"] = str(exc)
-        return InvalidKnees(reason=Reason.INTERNAL_NUMERICAL_FAILURE, diagnostics=diagnostics)
+        return InvalidKnees(
+            reason=Reason.INTERNAL_NUMERICAL_FAILURE, diagnostics=diagnostics
+        )

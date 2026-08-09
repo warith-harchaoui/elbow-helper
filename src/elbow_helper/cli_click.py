@@ -48,8 +48,12 @@ def _emit(result: dict | str) -> None:
 
 
 def _resolve_xy(
-    x_values: Optional[str], x_npy: Optional[str], x_csv: Optional[str],
-    y_values: Optional[str], y_npy: Optional[str], y_csv: Optional[str],
+    x_values: Optional[str],
+    x_npy: Optional[str],
+    x_csv: Optional[str],
+    y_values: Optional[str],
+    y_npy: Optional[str],
+    y_csv: Optional[str],
 ) -> tuple[list, Optional[list]]:
     """Resolve x/y series from the click data options, with the y-only shorthand.
 
@@ -115,10 +119,13 @@ def _data_options(func):
         click.option("--y-npy", help="path to a 1-D .npy file of y values"),
         click.option("--y-csv", help="PATH:COLUMN_INDEX into a CSV file for y"),
         click.option("--curve", type=click.Choice(["concave", "convex"]), default=None),
-        click.option("--direction", type=click.Choice(["increasing", "decreasing"]), default=None),
         click.option(
-            "--config-json", default=None,
-            help='RobustKneeConfig field overrides as JSON, e.g. \'{"bootstrap_replicates": 500}\'',
+            "--direction", type=click.Choice(["increasing", "decreasing"]), default=None
+        ),
+        click.option(
+            "--config-json",
+            default=None,
+            help="RobustKneeConfig field overrides as JSON, e.g. '{\"bootstrap_replicates\": 500}'",
         ),
     ]
     for opt in reversed(opts):
@@ -144,7 +151,15 @@ def cli(verbose: int) -> None:
 @cli.command("knee", help="Locate a knee with uncertainty, or abstain.")
 @_data_options
 def knee_cmd(
-    x_values, x_npy, x_csv, y_values, y_npy, y_csv, curve, direction, config_json,
+    x_values,
+    x_npy,
+    x_csv,
+    y_values,
+    y_npy,
+    y_csv,
+    curve,
+    direction,
+    config_json,
 ) -> None:
     """Locate a knee with uncertainty, or abstain.
 
@@ -159,13 +174,23 @@ def knee_cmd(
     """
     x, y = _resolve_xy(x_values, x_npy, x_csv, y_values, y_npy, y_csv)
     overrides = json.loads(config_json) if config_json else None
-    _emit(core.do_knee(x, y, curve=curve, direction=direction, config_overrides=overrides))
+    _emit(
+        core.do_knee(x, y, curve=curve, direction=direction, config_overrides=overrides)
+    )
 
 
 @cli.command("elbow", help="The convex/decreasing convenience (k-means elbow).")
 @_data_options
 def elbow_cmd(
-    x_values, x_npy, x_csv, y_values, y_npy, y_csv, curve, direction, config_json,
+    x_values,
+    x_npy,
+    x_csv,
+    y_values,
+    y_npy,
+    y_csv,
+    curve,
+    direction,
+    config_json,
 ) -> None:
     """The convex/decreasing convenience (k-means elbow).
 
@@ -182,7 +207,9 @@ def elbow_cmd(
     _ = curve, direction
     x, y = _resolve_xy(x_values, x_npy, x_csv, y_values, y_npy, y_csv)
     if y is None:
-        raise click.UsageError("elbow needs both an x and a y series (no y-only shorthand)")
+        raise click.UsageError(
+            "elbow needs both an x and a y series (no y-only shorthand)"
+        )
     overrides = json.loads(config_json) if config_json else None
     _emit(core.do_elbow(x, y, config_overrides=overrides))
 
@@ -192,7 +219,17 @@ def elbow_cmd(
 @click.option("--out", default=None, help="write the SVG to this path")
 @click.option("--language", type=click.Choice(["en", "fr"]), default="en")
 def diagnostics_cmd(
-    x_values, x_npy, x_csv, y_values, y_npy, y_csv, curve, direction, config_json, out, language,
+    x_values,
+    x_npy,
+    x_csv,
+    y_values,
+    y_npy,
+    y_csv,
+    curve,
+    direction,
+    config_json,
+    out,
+    language,
 ) -> None:
     """Render the diagnostic SVG.
 
@@ -213,8 +250,13 @@ def diagnostics_cmd(
     overrides = json.loads(config_json) if config_json else None
     _emit(
         core.do_diagnostics(
-            x, y, curve=curve, direction=direction,
-            config_overrides=overrides, out=out, language=language,
+            x,
+            y,
+            curve=curve,
+            direction=direction,
+            config_overrides=overrides,
+            out=out,
+            language=language,
         )
     )
 
@@ -224,8 +266,17 @@ def diagnostics_cmd(
 @click.option("--sensitivity", type=float, default=1.0)
 @click.option("--online/--no-online", default=True)
 def locator_cmd(
-    x_values, x_npy, x_csv, y_values, y_npy, y_csv, curve, direction, config_json,
-    sensitivity, online,
+    x_values,
+    x_npy,
+    x_csv,
+    y_values,
+    y_npy,
+    y_csv,
+    curve,
+    direction,
+    config_json,
+    sensitivity,
+    online,
 ) -> None:
     """The standalone locator (no uncertainty evidence).
 
@@ -247,7 +298,16 @@ def locator_cmd(
     x, y = _resolve_xy(x_values, x_npy, x_csv, y_values, y_npy, y_csv)
     if y is None:
         raise click.UsageError("locator needs both an x and a y series")
-    _emit(core.do_locator(x, y, sensitivity=sensitivity, curve=curve, direction=direction, online=online))
+    _emit(
+        core.do_locator(
+            x,
+            y,
+            sensitivity=sensitivity,
+            curve=curve,
+            direction=direction,
+            online=online,
+        )
+    )
 
 
 if __name__ == "__main__":  # pragma: no cover

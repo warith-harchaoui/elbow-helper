@@ -17,8 +17,8 @@ def test_clear_knee_is_accepted_with_uncertainty(fast_config):
     r = robust_knee(x, y, "concave", "increasing", fast_config)
     assert isinstance(r, ClearKnee)
     assert r.reason == Reason.CLEAR_KNEE
-    assert abs(r.knee_x - 0.3) < 0.1              # near the true knee
-    assert r.ci90[1] > r.ci90[0]                  # a real interval
+    assert abs(r.knee_x - 0.3) < 0.1  # near the true knee
+    assert r.ci90[1] > r.ci90[0]  # a real interval
     assert r.detection_rate >= fast_config.min_bootstrap_detection_rate
     assert r.null_p_value <= fast_config.max_null_p_value
 

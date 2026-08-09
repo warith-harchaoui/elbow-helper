@@ -222,7 +222,10 @@ def _smallest_stable_window(
     for m in cluster.members:
         by_window.setdefault(m.window, set()).add(m.sensitivity)
     for w in windows:  # ascending
-        if w in by_window and len(by_window[w]) / all_sens >= config.min_sensitivity_support:
+        if (
+            w in by_window
+            and len(by_window[w]) / all_sens >= config.min_sensitivity_support
+        ):
             return w
     # Fall back to the smallest window that appears at all.
     present = sorted(by_window)
@@ -257,7 +260,9 @@ def select_unique_cluster(
         second = persistent[1]
         both_strong = second.support_frac > config.secondary_support_frac
         not_dominant = primary.support < config.min_dominance_ratio * second.support
-        well_separated = abs(primary.median_knee - second.median_knee) > 2 * config.cluster_tolerance
+        well_separated = (
+            abs(primary.median_knee - second.median_knee) > 2 * config.cluster_tolerance
+        )
         if well_separated and (both_strong or not_dominant):
             return None, Reason.MULTIPLE_PLAUSIBLE_KNEES
 

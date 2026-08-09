@@ -124,7 +124,10 @@ def create_app() -> FastAPI:
             The serialized ``ClearKnee``/``NoClearKnee``.
         """
         return core.do_knee(
-            body.x, body.y, curve=body.curve, direction=body.direction,
+            body.x,
+            body.y,
+            curve=body.curve,
+            direction=body.direction,
             config_overrides=body.config_overrides,
         )
 
@@ -142,7 +145,9 @@ def create_app() -> FastAPI:
         dict
             The serialized ``ClearKnee``/``NoClearKnee``.
         """
-        return core.do_elbow(body.k, body.inertia, config_overrides=body.config_overrides)
+        return core.do_elbow(
+            body.k, body.inertia, config_overrides=body.config_overrides
+        )
 
     @app.post("/diagnostics", operation_id="diagnostics")
     def diagnostics(body: DiagnosticsRequest) -> Response:
@@ -159,8 +164,12 @@ def create_app() -> FastAPI:
             The SVG document, ``Content-Type: image/svg+xml``.
         """
         svg = core.do_diagnostics(
-            body.x, body.y, curve=body.curve, direction=body.direction,
-            config_overrides=body.config_overrides, language=body.language,
+            body.x,
+            body.y,
+            curve=body.curve,
+            direction=body.direction,
+            config_overrides=body.config_overrides,
+            language=body.language,
         )
         return Response(content=svg, media_type="image/svg+xml")
 
@@ -179,8 +188,12 @@ def create_app() -> FastAPI:
             ``{"knee": float | None, "all_knees": list[float]}``.
         """
         return core.do_locator(
-            body.x, body.y, sensitivity=body.sensitivity,
-            curve=body.curve, direction=body.direction, online=body.online,
+            body.x,
+            body.y,
+            sensitivity=body.sensitivity,
+            curve=body.curve,
+            direction=body.direction,
+            online=body.online,
         )
 
     return app

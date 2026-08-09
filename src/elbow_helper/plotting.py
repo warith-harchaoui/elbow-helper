@@ -186,7 +186,9 @@ def _catmull_rom(pts: Sequence[Tuple[float, float]], tension: float = 6.0) -> st
         p3 = pts[i + 2] if i + 2 < n else pts[i + 1]
         c1x, c1y = p1[0] + (p2[0] - p0[0]) / tension, p1[1] + (p2[1] - p0[1]) / tension
         c2x, c2y = p2[0] - (p3[0] - p1[0]) / tension, p2[1] - (p3[1] - p1[1]) / tension
-        seg.append(f" C{_fmt(c1x)},{_fmt(c1y)} {_fmt(c2x)},{_fmt(c2y)} {_fmt(p2[0])},{_fmt(p2[1])}")
+        seg.append(
+            f" C{_fmt(c1x)},{_fmt(c1y)} {_fmt(c2x)},{_fmt(c2y)} {_fmt(p2[0])},{_fmt(p2[1])}"
+        )
     return "".join(seg)
 
 
@@ -388,7 +390,9 @@ def render_svg(
 
     inferred_curve = prepared.curve if prepared is not None else curve
     inferred_direction = prepared.direction if prepared is not None else direction
-    result = robust_knee(x, y, curve=inferred_curve, direction=inferred_direction, config=config)
+    result = robust_knee(
+        x, y, curve=inferred_curve, direction=inferred_direction, config=config
+    )
 
     p: List[str] = []
     if isinstance(result, ClearKnee) and prepared is not None:
@@ -397,7 +401,7 @@ def render_svg(
     else:
         title_txt = strings["title_abstain"]
         reason = getattr(result, "reason", "unknown")
-        subtitle_txt = f'{strings["reason"]}: {reason}'
+        subtitle_txt = f"{strings['reason']}: {reason}"
     desc_txt = f"{title_txt}. {subtitle_txt}"
 
     p.append(_svg_open("kn-title", "kn-desc"))
@@ -411,7 +415,7 @@ def render_svg(
     )
     p.append(
         f'<text x="{_PL:.0f}" y="106" font-size="17" fill="{_SUBINK}">'
-        f'{escape(subtitle_txt)}</text>'
+        f"{escape(subtitle_txt)}</text>"
     )
 
     use_raw = raw_axis and prepared is not None
@@ -454,7 +458,7 @@ def render_svg(
         p.append(
             f'<text x="{_PL - 14:.1f}" y="{gy + 5:.1f}" text-anchor="end" '
             f'font-family="{_FONT_MONO}" font-size="13" fill="{_SUBINK}">'
-            f'{escape(label)}</text>'
+            f"{escape(label)}</text>"
         )
     p.append(
         f'<line x1="{_PL:.1f}" y1="{_PB:.1f}" x2="{_PR:.1f}" y2="{_PB:.1f}" '
@@ -468,12 +472,12 @@ def render_svg(
     p.append(
         f'<text x="{(_PL + _PR) / 2:.1f}" y="{_PB + 56:.1f}" text-anchor="middle" '
         f'font-size="15" fill="{_INK}">'
-        f'{escape(x_label if use_raw and x_label else strings["x_axis"])}</text>'
+        f"{escape(x_label if use_raw and x_label else strings['x_axis'])}</text>"
     )
     p.append(
         f'<text x="30" y="{(_PT + _PB) / 2:.1f}" text-anchor="middle" font-size="15" '
         f'fill="{_INK}" transform="rotate(-90 30 {(_PT + _PB) / 2:.1f})">'
-        f'{escape(y_label if use_raw and y_label else strings["y_axis"])}</text>'
+        f"{escape(y_label if use_raw and y_label else strings['y_axis'])}</text>"
     )
 
     if prepared is None:
@@ -497,16 +501,20 @@ def render_svg(
 
     # --- raw points + smoothed curve ---
     for px, py in pts:
-        p.append(f'<circle cx="{px:.1f}" cy="{py:.1f}" r="2.6" fill="{_MUTED}" opacity="0.55"/>')
+        p.append(
+            f'<circle cx="{px:.1f}" cy="{py:.1f}" r="2.6" fill="{_MUTED}" opacity="0.55"/>'
+        )
     smoothed = smooth_curve(yn, max(3, prepared.n // 12))
     smoothed_disp = (
-        prepared.y_lo + smoothed * (prepared.y_hi - prepared.y_lo) if use_raw else smoothed
+        prepared.y_lo + smoothed * (prepared.y_hi - prepared.y_lo)
+        if use_raw
+        else smoothed
     )
     spts = [(sx(float(px)), sy(float(py))) for px, py in zip(x_disp, smoothed_disp)]
-    line = [f'M{_fmt(spts[0][0])},{_fmt(spts[0][1])}']
+    line = [f"M{_fmt(spts[0][0])},{_fmt(spts[0][1])}"]
     line.append(_catmull_rom(spts))
     stroke = _CURVE if is_clear else _MUTED
-    dash = '' if is_clear else ' stroke-dasharray="6 5"'
+    dash = "" if is_clear else ' stroke-dasharray="6 5"'
     p.append(
         f'<path d="{"".join(line)}" fill="none" stroke="{stroke}" '
         f'stroke-width="3" stroke-linecap="round" stroke-linejoin="round"{dash}/>'
@@ -530,12 +538,14 @@ def render_svg(
             f'<rect x="{lo_px:.1f}" y="{_PT - 6:.1f}" width="{(hi_px - lo_px):.1f}" '
             f'height="{(_PB - _PT + 6):.1f}" fill="{_ACCENT}" fill-opacity="0.10"/>'
         )
-        p.append(f'<circle cx="{kx:.1f}" cy="{ky:.1f}" r="15" fill="{_ACCENT}" opacity="0.16"/>')
+        p.append(
+            f'<circle cx="{kx:.1f}" cy="{ky:.1f}" r="15" fill="{_ACCENT}" opacity="0.16"/>'
+        )
         p.append(
             f'<circle cx="{kx:.1f}" cy="{ky:.1f}" r="8" fill="{_BG}" '
             f'stroke="{_ACCENT}" stroke-width="3"/>'
         )
-        call_txt = f'{strings["knee_pill"]} · x = {result.knee_x:.3g}'
+        call_txt = f"{strings['knee_pill']} · x = {result.knee_x:.3g}"
         pill_w = 168.0
         # The evidence legend now lives in its own gutter past _PR, so the
         # callout (clamped to the plot area) can never reach it.
@@ -579,7 +589,9 @@ def render_svg(
     return "".join(p)
 
 
-def _emit_legend(p: List[str], result: "ClearKnee", strings: dict, fit_score: float) -> None:
+def _emit_legend(
+    p: List[str], result: "ClearKnee", strings: dict, fit_score: float
+) -> None:
     """Append a compact evidence legend: detection probability, null p, slope
     contrast, BIC-derived posterior probability, and worst-case-normalized fit
     quality.
@@ -603,18 +615,23 @@ def _emit_legend(p: List[str], result: "ClearKnee", strings: dict, fit_score: fl
         this figure's own display space.
     """
     rows = [
-        (_CURVE, f'{strings["detection_rate"]}: {result.detection_rate:.0%}'),
-        (_CURVE_DEEP, f'{strings["null_p"]}: {result.null_p_value:.3g}'),
-        (_ACCENT, f'{strings["slope_contrast"]}: {result.slope_contrast:.0%}'),
-        (_MUTED, f'{strings["bic"]}: {_bic_posterior_probability(result.bic_improvement):.1%}'),
-        (_GOOD, f'{strings["fit_quality"]}: {fit_score:.0%}'),
+        (_CURVE, f"{strings['detection_rate']}: {result.detection_rate:.0%}"),
+        (_CURVE_DEEP, f"{strings['null_p']}: {result.null_p_value:.3g}"),
+        (_ACCENT, f"{strings['slope_contrast']}: {result.slope_contrast:.0%}"),
+        (
+            _MUTED,
+            f"{strings['bic']}: {_bic_posterior_probability(result.bic_improvement):.1%}",
+        ),
+        (_GOOD, f"{strings['fit_quality']}: {fit_score:.0%}"),
     ]
     row_h = 40.0
     block_h = row_h * len(rows)
     ly0 = (_PT + _PB) / 2.0 - block_h / 2.0
     for i, (colour, line) in enumerate(rows):
         row_y = ly0 + row_h * i + row_h / 2.0
-        p.append(f'<circle cx="{_LX + 6:.1f}" cy="{row_y - 5:.1f}" r="5" fill="{colour}"/>')
+        p.append(
+            f'<circle cx="{_LX + 6:.1f}" cy="{row_y - 5:.1f}" r="5" fill="{colour}"/>'
+        )
         p.append(
             f'<text x="{_LX + 22:.1f}" y="{row_y:.1f}" font-family="{_FONT_MONO}" '
             f'font-size="13" fill="{_INK}">{escape(line)}</text>'
@@ -781,7 +798,7 @@ def render_svg_multi(
         subtitle_txt = strings["subtitle_multi"]
     else:
         title_txt = strings["title_abstain"]
-        subtitle_txt = f'{strings["reason"]}: {getattr(result, "reason", "unknown")}'
+        subtitle_txt = f"{strings['reason']}: {getattr(result, 'reason', 'unknown')}"
     desc_txt = f"{title_txt}. {subtitle_txt}"
 
     x_lo, x_hi = float(x.min()), float(x.max())
@@ -807,7 +824,7 @@ def render_svg_multi(
     )
     p.append(
         f'<text x="{_PL:.0f}" y="106" font-size="17" fill="{_SUBINK}">'
-        f'{escape(subtitle_txt)}</text>'
+        f"{escape(subtitle_txt)}</text>"
     )
 
     x_ticks = _linear_ticks(x_lo, x_hi)
@@ -821,7 +838,7 @@ def render_svg_multi(
         p.append(
             f'<text x="{_PL - 14:.1f}" y="{gy + 5:.1f}" text-anchor="end" '
             f'font-family="{_FONT_MONO}" font-size="13" fill="{_SUBINK}">'
-            f'{escape(_fmt_tick(gv))}</text>'
+            f"{escape(_fmt_tick(gv))}</text>"
         )
     p.append(
         f'<line x1="{_PL:.1f}" y1="{_PB:.1f}" x2="{_PR:.1f}" y2="{_PB:.1f}" '
@@ -831,7 +848,7 @@ def render_svg_multi(
         p.append(
             f'<text x="{sx(gv):.1f}" y="{_PB + 26:.1f}" text-anchor="middle" '
             f'font-family="{_FONT_MONO}" font-size="13" fill="{_INK}">'
-            f'{escape(_fmt_tick(gv))}</text>'
+            f"{escape(_fmt_tick(gv))}</text>"
         )
     p.append(
         f'<text x="{(_PL + _PR) / 2:.1f}" y="{_PB + 56:.1f}" text-anchor="middle" '
@@ -840,7 +857,7 @@ def render_svg_multi(
     p.append(
         f'<text x="30" y="{(_PT + _PB) / 2:.1f}" text-anchor="middle" font-size="15" '
         f'fill="{_INK}" transform="rotate(-90 30 {(_PT + _PB) / 2:.1f})">'
-        f'{escape(y_label or strings["y_axis"])}</text>'
+        f"{escape(y_label or strings['y_axis'])}</text>"
     )
 
     if not is_valid:
@@ -850,10 +867,12 @@ def render_svg_multi(
 
     pts = [(sx(float(px)), sy(float(py))) for px, py in zip(x, y)]
     for px, py in pts:
-        p.append(f'<circle cx="{px:.1f}" cy="{py:.1f}" r="2.6" fill="{_MUTED}" opacity="0.55"/>')
+        p.append(
+            f'<circle cx="{px:.1f}" cy="{py:.1f}" r="2.6" fill="{_MUTED}" opacity="0.55"/>'
+        )
     smoothed = smooth_curve(y, max(3, len(y) // 12))
     spts = [(sx(float(px)), sy(float(py))) for px, py in zip(x, smoothed)]
-    line = [f'M{_fmt(spts[0][0])},{_fmt(spts[0][1])}']
+    line = [f"M{_fmt(spts[0][0])},{_fmt(spts[0][1])}"]
     line.append(_catmull_rom(spts))
     p.append(
         f'<path d="{"".join(line)}" fill="none" stroke="{_CURVE}" '

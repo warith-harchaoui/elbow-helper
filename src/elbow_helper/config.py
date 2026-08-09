@@ -31,7 +31,14 @@ class RobustKneeConfig:
 
     # --- scale-space search ---
     smoothing_fractions: Tuple[float, ...] = (
-        0.0, 0.02, 0.03, 0.05, 0.08, 0.12, 0.18, 0.25
+        0.0,
+        0.02,
+        0.03,
+        0.05,
+        0.08,
+        0.12,
+        0.18,
+        0.25,
     )
     sensitivity_fractions: Tuple[float, ...] = (0.0, 0.01, 0.02, 0.05)
 
@@ -60,7 +67,7 @@ class RobustKneeConfig:
     min_dominance_ratio: float = 2.0
 
     # --- slope / model confirmation ---
-    slope_left_window: Tuple[float, float] = (0.15, 0.03)   # (far, near) offsets
+    slope_left_window: Tuple[float, float] = (0.15, 0.03)  # (far, near) offsets
     slope_right_window: Tuple[float, float] = (0.03, 0.15)  # (near, far) offsets
     min_slope_contrast: float = 0.30
     min_cv_improvement: float = 0.10

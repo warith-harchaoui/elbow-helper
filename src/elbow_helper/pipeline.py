@@ -72,8 +72,10 @@ def robust_knee(
         return NoClearKnee(reason=a.reason, diagnostics=diagnostics)
 
     diagnostics.update(
-        curve=prepared.curve, direction=prepared.direction,
-        n=prepared.n, spearman=round(prepared.spearman, 4),
+        curve=prepared.curve,
+        direction=prepared.direction,
+        n=prepared.n,
+        spearman=round(prepared.spearman, 4),
         violation_rate=round(prepared.violation_rate, 4),
     )
 
@@ -139,7 +141,9 @@ def robust_knee(
         )
         knee_index = int(np.argmin(np.abs(prepared.x_norm - result.knee_x_norm)))
         sensitivity = float(
-            np.median([m.sensitivity for m in cluster.members]) if cluster.members else 1.0
+            np.median([m.sensitivity for m in cluster.members])
+            if cluster.members
+            else 1.0
         )
 
         oh.info(
@@ -168,12 +172,12 @@ def robust_knee(
     except Exception as exc:  # numerical safety net — never crash the caller
         oh.warning(f"[elbow-helper] internal failure: {exc}")
         diagnostics["error"] = str(exc)
-        return NoClearKnee(reason=Reason.INTERNAL_NUMERICAL_FAILURE, diagnostics=diagnostics)
+        return NoClearKnee(
+            reason=Reason.INTERNAL_NUMERICAL_FAILURE, diagnostics=diagnostics
+        )
 
 
-def robust_elbow(
-    x, y=None, config: Optional[RobustKneeConfig] = None
-) -> KneeResult:
+def robust_elbow(x, y=None, config: Optional[RobustKneeConfig] = None) -> KneeResult:
     """Convenience wrapper for the classic convex-decreasing *elbow*.
 
     Equivalent to :func:`robust_knee` with ``curve="convex"`` and

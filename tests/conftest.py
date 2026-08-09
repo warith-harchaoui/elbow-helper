@@ -64,9 +64,11 @@ def two_knee_curve(seed=0, n=90, noise=0.015):
     y = np.piecewise(
         x,
         [x <= 0.33, (x > 0.33) & (x <= 0.66), x > 0.66],
-        [lambda t: 2.5 * t,
-         lambda t: 2.5 * 0.33 + 0.3 * (t - 0.33),
-         lambda t: 2.5 * 0.33 + 0.3 * 0.33 + 2.5 * (t - 0.66)],
+        [
+            lambda t: 2.5 * t,
+            lambda t: 2.5 * 0.33 + 0.3 * (t - 0.33),
+            lambda t: 2.5 * 0.33 + 0.3 * 0.33 + 2.5 * (t - 0.66),
+        ],
     )
     y = (y - y.min()) / (y.max() - y.min())
     return x, y + rng.normal(0, noise, n)

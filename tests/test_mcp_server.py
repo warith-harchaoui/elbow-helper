@@ -40,7 +40,9 @@ def client():
         yield c
 
 
-def _mcp_call(client, method: str, params: dict, session_id: str | None = None) -> tuple:
+def _mcp_call(
+    client, method: str, params: dict, session_id: str | None = None
+) -> tuple:
     """POST one JSON-RPC message to /mcp; returns (response, mcp-session-id).
 
     Parameters
@@ -138,9 +140,12 @@ def test_knee_tool_call_matches_the_library_decision(client) -> None:
         {
             "name": "knee",
             "arguments": {
-                "x": x.tolist(), "y": y.tolist(),
+                "x": x.tolist(),
+                "y": y.tolist(),
                 "config_overrides": {
-                    "random_seed": 0, "bootstrap_replicates": 60, "null_replicates": 120,
+                    "random_seed": 0,
+                    "bootstrap_replicates": 60,
+                    "null_replicates": 120,
                 },
             },
         },

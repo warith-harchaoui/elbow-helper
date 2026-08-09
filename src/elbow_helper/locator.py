@@ -174,9 +174,7 @@ class KneeLocator:
         self.knee_y = self.norm_knee_y = None
         if self.knee is not None:
             self.knee_y = self.y[self.x == self.knee][0]
-            self.norm_knee_y = self.y_normalized[
-                self.x_normalized == self.norm_knee
-            ][0]
+            self.norm_knee_y = self.y_normalized[self.x_normalized == self.norm_knee][0]
 
     @staticmethod
     def __normalize(a: np.ndarray) -> np.ndarray:
@@ -278,9 +276,7 @@ class KneeLocator:
                         norm_knee = self.x_normalized[threshold_index]
 
                 y_at_knee = self.y[self.x == knee][0]
-                y_norm_at_knee = self.y_normalized[
-                    self.x_normalized == norm_knee
-                ][0]
+                y_norm_at_knee = self.y_normalized[self.x_normalized == norm_knee][0]
                 if knee not in self.all_knees:
                     self.all_knees_y.append(y_at_knee)
                     self.all_norm_knees_y.append(y_norm_at_knee)

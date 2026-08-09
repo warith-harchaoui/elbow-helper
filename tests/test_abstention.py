@@ -39,17 +39,21 @@ def test_insufficient_data(fast_config):
 
 
 def test_length_mismatch(fast_config):
-    r = robust_knee(np.arange(30.0), np.arange(29.0), "concave", "increasing", fast_config)
+    r = robust_knee(
+        np.arange(30.0), np.arange(29.0), "concave", "increasing", fast_config
+    )
     assert r.reason == Reason.INVALID_INPUT
 
 
 def test_every_abstention_uses_a_known_code(fast_config):
     rng = np.random.default_rng(0)
     curves = [
-        (np.arange(30.0), np.ones(30)),                      # zero range
-        (np.arange(60.0), rng.normal(0, 1, 60)),             # incompatible shape
-        (np.linspace(0, 1, 80), 0.2 + 0.5 * np.linspace(0, 1, 80)
-         + rng.normal(0, 0.01, 80)),                          # clean line
+        (np.arange(30.0), np.ones(30)),  # zero range
+        (np.arange(60.0), rng.normal(0, 1, 60)),  # incompatible shape
+        (
+            np.linspace(0, 1, 80),
+            0.2 + 0.5 * np.linspace(0, 1, 80) + rng.normal(0, 0.01, 80),
+        ),  # clean line
     ]
     for x, y in curves:
         r = robust_knee(x, y, "concave", "increasing", fast_config)

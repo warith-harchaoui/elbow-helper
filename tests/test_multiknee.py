@@ -31,8 +31,13 @@ def _two_knee_curve(seed, n=100, noise=0.02):
     rng = np.random.default_rng(seed)
     x = np.linspace(0, 1, n)
     y = np.piecewise(
-        x, [x < 0.3, (x >= 0.3) & (x < 0.65), x >= 0.65],
-        [lambda t: 3 * t, lambda t: 0.9 + 0.2 * (t - 0.3), lambda t: 0.97 + 2.2 * (t - 0.65)],
+        x,
+        [x < 0.3, (x >= 0.3) & (x < 0.65), x >= 0.65],
+        [
+            lambda t: 3 * t,
+            lambda t: 0.9 + 0.2 * (t - 0.3),
+            lambda t: 0.97 + 2.2 * (t - 0.65),
+        ],
     ) + rng.normal(0, noise, n)
     return x, y
 
@@ -112,10 +117,12 @@ def alternating_slope_curve(seed, n=150, noise=0.02):
     y = np.piecewise(
         x,
         [x < 0.2, (x >= 0.2) & (x < 0.45), (x >= 0.45) & (x < 0.65), x >= 0.65],
-        [lambda t: 4 * t,
-         lambda t: 0.8 + 0.1 * (t - 0.2),
-         lambda t: 0.825 - 4 * (t - 0.45),
-         lambda t: 0.025 - 0.05 * (t - 0.65)],
+        [
+            lambda t: 4 * t,
+            lambda t: 0.8 + 0.1 * (t - 0.2),
+            lambda t: 0.825 - 4 * (t - 0.45),
+            lambda t: 0.025 - 0.05 * (t - 0.65),
+        ],
     )
     y = y + rng.normal(0, noise, n)
     return x, y
@@ -236,8 +243,17 @@ def test_diagnostics_are_populated(fast_multi_config):
     x, y = _one_knee_curve(seed=0)
     r = robust_knees(x, y, config=fast_multi_config)
     assert isinstance(r, Knees)
-    for key in ("n", "min_seg", "k_max_requested", "k_max_effective",
-                "mbic_scores", "mbic_k", "fwer_k", "fwer_p_values", "final_k"):
+    for key in (
+        "n",
+        "min_seg",
+        "k_max_requested",
+        "k_max_effective",
+        "mbic_scores",
+        "mbic_k",
+        "fwer_k",
+        "fwer_p_values",
+        "final_k",
+    ):
         assert key in r.diagnostics
 
 

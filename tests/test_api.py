@@ -39,8 +39,13 @@ def test_knee_endpoint_clear(client) -> None:
     resp = client.post(
         "/knee",
         json={
-            "x": x.tolist(), "y": y.tolist(),
-            "config_overrides": {"random_seed": 0, "bootstrap_replicates": 60, "null_replicates": 120},
+            "x": x.tolist(),
+            "y": y.tolist(),
+            "config_overrides": {
+                "random_seed": 0,
+                "bootstrap_replicates": 60,
+                "null_replicates": 120,
+            },
         },
     )
     assert resp.status_code == 200
@@ -79,8 +84,13 @@ def test_elbow_endpoint(client) -> None:
     resp = client.post(
         "/elbow",
         json={
-            "k": x.tolist(), "inertia": y.tolist(),
-            "config_overrides": {"random_seed": 0, "bootstrap_replicates": 60, "null_replicates": 120},
+            "k": x.tolist(),
+            "inertia": y.tolist(),
+            "config_overrides": {
+                "random_seed": 0,
+                "bootstrap_replicates": 60,
+                "null_replicates": 120,
+            },
         },
     )
     assert resp.status_code == 200
@@ -99,7 +109,9 @@ def test_diagnostics_endpoint_returns_svg(client) -> None:
 def test_diagnostics_endpoint_language_fr(client) -> None:
     """``POST /diagnostics`` with ``language: "fr"`` renders French chrome text."""
     x, y = clear_knee_curve(seed=1, noise=0.02)
-    resp = client.post("/diagnostics", json={"x": x.tolist(), "y": y.tolist(), "language": "fr"})
+    resp = client.post(
+        "/diagnostics", json={"x": x.tolist(), "y": y.tolist(), "language": "fr"}
+    )
     assert resp.status_code == 200
     assert "coude" in resp.text.lower()
 

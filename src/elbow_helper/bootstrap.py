@@ -89,9 +89,15 @@ def bootstrap_knee(
     detection_rate = len(knees) / b if b else 0.0
     if not knees:
         return BootstrapEvidence(
-            passes=False, detection_rate=detection_rate, ci90=(0.0, 0.0),
-            ci90_width=1.0, primary_cluster_rate=0.0, secondary_cluster_rate=0.0,
-            median_shift=1.0, knees=[], reason=Reason.BOOTSTRAP_UNSTABLE,
+            passes=False,
+            detection_rate=detection_rate,
+            ci90=(0.0, 0.0),
+            ci90_width=1.0,
+            primary_cluster_rate=0.0,
+            secondary_cluster_rate=0.0,
+            median_shift=1.0,
+            knees=[],
+            reason=Reason.BOOTSTRAP_UNSTABLE,
         )
 
     knees_arr = np.array(knees)
