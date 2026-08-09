@@ -12,6 +12,14 @@ Face à la question « où se trouve le coude ? », un algorithme classique rép
 
 La priorité, dès la conception, a été de limiter les faux coudes, quitte à s'abstenir plus souvent qu'un outil moins prudent.
 
+## Documentation
+
+[💻 Documentation](https://harchaoui.org/warith/ai-helpers/docs/elbow-helper-doc/)
+
+[🗺️ Paysage](https://github.com/warith-harchaoui/elbow-helper/blob/main/PAYSAGE.md)
+
+[📋 Exemples](https://github.com/warith-harchaoui/elbow-helper/blob/main/EXAMPLES.md)
+
 ## Pourquoi ce paquet existe
 
 Sur une courbe à rendements décroissants, le coude marque l'endroit où chaque unité supplémentaire investie rapporte de moins en moins : des groupes en plus pour un k-means, des itérations en plus pour un optimiseur, du budget en plus sur un canal publicitaire. Les outils de détection existants savent très bien proposer un point ; ce qui leur manque, c'est une notion de confiance. Sur une courbe bruitée, une estimation ponctuelle isolée s'avère trop facile à surinterpréter. `elbow-helper` transforme ce point en une décision appuyée sur des preuves et refuse de trancher quand ces preuves sont trop minces.
@@ -165,6 +173,10 @@ uvicorn elbow_helper.mcp_server:app --port 8021
 ```
 
 Chaque surface expose les quatre mêmes opérations, `knee`, `elbow`, `diagnostics` et `locator`, qui correspondent une à une à `robust_knee`, `robust_elbow`, `plot_diagnostics` et au `KneeLocator` autonome. Les données entrent en valeurs inline séparées par des virgules, en fichier `.npy` ou en colonne CSV (CLI) ou en corps JSON (`x`/`y` en listes, HTTP). Les surcharges de `RobustKneeConfig` passent en `--config-json '{"bootstrap_replicates": 500}'` (CLI) ou en objet `config_overrides` (HTTP). L'opération `diagnostics` renvoie le SVG lui-même, pas un objet JSON qui l'enveloppe.
+
+## Auteur
+
+[Warith HARCHAOUI](https://linkedin.com/in/warith-harchaoui)
 
 ## Remerciements
 

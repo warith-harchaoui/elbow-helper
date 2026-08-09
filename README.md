@@ -12,6 +12,14 @@ An algorithm can answer the question "where might a knee or an elbow be?" and it
 
 The design priority is to minimise false-positive knees, even at the cost of more abstentions.
 
+## Documentation
+
+[💻 Documentation](https://harchaoui.org/warith/ai-helpers/docs/elbow-helper-doc/)
+
+[🗺️ Landscape](https://github.com/warith-harchaoui/elbow-helper/blob/main/LANDSCAPE.md)
+
+[📋 Examples](https://github.com/warith-harchaoui/elbow-helper/blob/main/EXAMPLES.md)
+
 ## Why it exists
 
 A knee, on a curve of diminishing returns, marks the point past which extra input buys little extra output: more clusters in k-means, more iterations in an optimiser, more budget on a marketing channel. Existing knee-detection heuristics are excellent at proposing where that point sits, but they carry no notion of confidence. A single point estimate on a noisy curve is easy to over-trust in practice. This package turns that point estimate into a decision backed by evidence. It refuses to answer when the evidence is weak.
@@ -20,7 +28,7 @@ A knee, on a curve of diminishing returns, marks the point past which extra inpu
 
 The whole package depends on `numpy` and [`os-helper`](https://github.com/warith-harchaoui/os-helper) only — nothing else, not even for the diagnostic figure. The knee-locating algorithm is implemented from scratch, in NumPy only, so there is no `scipy`, `scikit-learn`, `statsmodels`, or `joblib` runtime dependency. `elbow_helper.plotting` writes hand-authored SVG (see Diagnostics below) rather than reaching for matplotlib, so it needs no extra install. See Acknowledgements below for the implementation this algorithm follows.
 
-## Install
+## Installation
 
 ```bash
 pip install -e .            # everything: numpy + os-helper, diagnostics included
@@ -165,6 +173,10 @@ uvicorn elbow_helper.mcp_server:app --port 8021
 ```
 
 Every surface exposes the same four operations — `knee`, `elbow`, `diagnostics`, `locator` — matching `robust_knee`, `robust_elbow`, `plot_diagnostics`, and the standalone `KneeLocator` one-to-one. Data goes in as inline comma-separated values, a `.npy` file, or a CSV column (CLI), or a JSON body (`x`/`y` lists, HTTP). `RobustKneeConfig` overrides travel as `--config-json '{"bootstrap_replicates": 500}'` (CLI) or a `config_overrides` object (HTTP). The `diagnostics` operation returns the SVG itself, not a JSON wrapper around it.
+
+## Author
+
+[Warith HARCHAOUI](https://linkedin.com/in/warith-harchaoui)
 
 ## Acknowledgements
 
