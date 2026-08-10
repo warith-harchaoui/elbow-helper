@@ -18,7 +18,7 @@ La priorité, dès la conception, a été de limiter les faux coudes, quitte à 
 
 [🗺️ Paysage](https://github.com/warith-harchaoui/elbow-helper/blob/main/PAYSAGE.md)
 
-[📋 Exemples](https://github.com/warith-harchaoui/elbow-helper/blob/main/EXAMPLES.md)
+[📋 Exemples](https://github.com/warith-harchaoui/elbow-helper/blob/main/EXEMPLES.md)
 
 ## Pourquoi ce paquet existe
 
@@ -37,7 +37,7 @@ pip install -e ".[dev]"     # + pytest
 
 ## Prise en main
 
-Voir [`EXAMPLES.md`](https://github.com/warith-harchaoui/elbow-helper/blob/main/EXAMPLES.md) pour d'autres recettes (en anglais) : le coude de k-means, une abstention explicite, une courbe de saturation exponentielle, la figure de diagnostic, le repéreur autonome et le réglage de la configuration.
+Voir [`EXEMPLES.md`](https://github.com/warith-harchaoui/elbow-helper/blob/main/EXEMPLES.md) pour d'autres recettes : le coude de k-means, une abstention explicite, une courbe de saturation exponentielle, la figure de diagnostic, le repéreur autonome et le réglage de la configuration.
 
 ```python
 import numpy as np
