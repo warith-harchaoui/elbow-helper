@@ -1,0 +1,16 @@
+# Minimal local conda environment: pins Python + pip, then hands off entirely
+# to requirements.txt (the single source of truth for actual dependencies) so
+# this file never drifts out of sync with pip's view of the project.
+#
+# Usage:
+#   conda env create -f environment.yaml
+#   conda activate elbow-helper
+#   pip install -e .[cli,api,mcp]   # optional extras, see pyproject.toml
+name: elbow-helper
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+      - -r requirements.txt

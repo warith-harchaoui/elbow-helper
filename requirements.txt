@@ -1,0 +1,5 @@
+# Core runtime dependencies (the library + argparse CLI need only these).
+# Optional extras (cli/api/mcp) live behind pyproject.toml's
+# [project.optional-dependencies] -- install with `pip install -e ".[cli,api,mcp]"`.
+numpy>=1.24
+os-helper>=1.8

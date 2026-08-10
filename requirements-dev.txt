@@ -1,0 +1,5 @@
+# Development / CI dependencies for elbow-helper.
+#
+# Derived from pyproject.toml's [dev] extra -- edit that extra, not this
+# file, to change what installs.
+-e .[dev]
