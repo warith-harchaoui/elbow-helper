@@ -1,7 +1,7 @@
 # EXAMPLES.md
 
 Runnable recipes for `elbow-helper`. Each one is also a standalone script
-under `examples/`: copy the code, or just run the file. See
+under `examples/`: copy the code or just run the file. See
 [`README.md`](README.md) for the full API reference and the pipeline this
 all rests on.
 
@@ -342,7 +342,7 @@ kl = KneeLocator(x, y, S=1.0, curve="concave", direction="increasing", online=Tr
 kl.knee, kl.all_knees
 ```
 
-Useful for exploring a curve interactively, or as a building block in your
+Useful for exploring a curve interactively or as a building block in your
 own pipeline; `robust_knee` is the one to reach for when you need the
 uncertainty estimate and the abstention guarantee.
 

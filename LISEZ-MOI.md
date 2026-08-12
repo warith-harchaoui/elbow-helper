@@ -35,6 +35,8 @@ pip install -e .            # tout : numpy + os-helper, diagnostics compris
 pip install -e ".[dev]"     # + pytest
 ```
 
+Vous préférez conda ? `conda env create -f environment.yaml && conda activate elbow-helper` installe Python et pip, puis `requirements.txt`, la même liste de dépendances que déclare `pyproject.toml`.
+
 ## Prise en main
 
 Voir [`EXEMPLES.md`](https://github.com/warith-harchaoui/elbow-helper/blob/main/EXEMPLES.md) pour d'autres recettes : le coude de k-means, une abstention explicite, une courbe de saturation exponentielle, la figure de diagnostic, le repéreur autonome et le réglage de la configuration.

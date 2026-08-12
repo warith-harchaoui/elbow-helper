@@ -49,7 +49,7 @@ The most popular way practitioners actually find k-means's elbow: fit for severa
 The most statistically serious alternative here: proper broken-line regression, with standard errors, Davies' test, and multi-breakpoint support (`psi`) in a mature, peer-reviewed R package. What it asks of the caller is real statistical fluency, a model formula, starting breakpoint guesses, and R itself rather than a one-line Python call. `elbow-helper` automates the parts of this workflow, smoothing-scale search, bootstrap, null test, that `segmented` leaves to a human analyst's judgement.
 
 ### Manual eyeballing
-The universal baseline: look at the plot, decide where it bends. A careful analyst can genuinely say "I don't see a clear knee here", which is more than most automated tools manage, but the judgement is not reproducible across people, or even across the same person on different days. It does not scale past a handful of curves either.
+The universal baseline: look at the plot, decide where it bends. A careful analyst can genuinely say "I don't see a clear knee here", which is more than most automated tools manage, but the judgement is not reproducible across people or even across the same person on different days. It does not scale past a handful of curves either.
 
 ### Ask an LLM
 A modern variant of eyeballing: paste the data or a screenshot into a chat model and ask where the knee is. Large language models are fluent at describing shape in words and can hedge sensibly when asked to, but the answer is not deterministic across runs, carries no calibrated uncertainty, and rests on no reproducible derivation a reader could check.
