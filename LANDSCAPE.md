@@ -2,7 +2,7 @@
 
 [🇫🇷](PAYSAGE.md)&nbsp;&nbsp;|&nbsp;&nbsp;[🇬🇧](LANDSCAPE.md)
 
-How `elbow-helper` compares to *every other way of finding a knee*. Each approach is rated on **this project's job — reporting a knee only when the evidence supports it, and saying so explicitly otherwise** — not penalised for excelling at a different job (raw changepoint detection, exploratory visualization, statistical inference in R).
+How `elbow-helper` compares to *every other way of finding a knee*. Each approach is rated on **this project's job: reporting a knee only when the evidence supports it, and saying so explicitly otherwise**, not penalised for excelling at a different job (raw changepoint detection, exploratory visualization, statistical inference in R).
 
 ## Positioning
 

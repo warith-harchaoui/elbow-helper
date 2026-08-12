@@ -33,9 +33,9 @@ if result.is_clear:
 ```
 
 ```text
-ClearKnee(knee_x=0.304, ci90=(0.296, 0.315), detection_rate=0.98, null_p=0.00498)
-  true knee ~ 0.3, located at 0.304
-  90% CI    = (0.296, 0.315)
+ClearKnee(knee_x=0.3418, ci90=(0.3418, 0.3797), detection_rate=0.98, null_p=0.00498)
+  true knee ~ 0.3, located at 0.342
+  90% CI    = (0.342, 0.380)
   detection = 0.98, null p = 0.00498
 ```
 
@@ -70,9 +70,9 @@ if result.is_clear:
 ```
 
 ```text
-ClearKnee(knee_x=8.0, ci90=(7.6, 8.4), detection_rate=1.00, null_p=0.00498)
-  elbow at k = 8.0  (true k = 8)
-  90% CI     = (7.6, 8.4)
+ClearKnee(knee_x=9, ci90=(9, 11.5), detection_rate=1.00, null_p=0.00498)
+  elbow at k = 9.0  (true k = 8)
+  90% CI     = (9.0, 11.5)
 ```
 
 ![The k-means inertia curve with the detected elbow at k=8](figures/kmeans_en.png)
@@ -103,12 +103,12 @@ print(f"  reason = {result.reason}")
 ```
 
 ```text
-NoClearKnee(reason='INCOMPATIBLE_GLOBAL_SHAPE')
-  reason = INCOMPATIBLE_GLOBAL_SHAPE
+NoClearKnee(reason='NO_PERSISTENT_CLUSTER')
+  reason = NO_PERSISTENT_CLUSTER
 ```
 
 Every abstention carries one of the fifteen reason codes documented in the
-README's "Abstention reason codes" section — `result.diagnostics` has the
+README's "Abstention reason codes" section; `result.diagnostics` has the
 full numeric trail behind the decision, useful for tuning `RobustKneeConfig`
 against your own curve family.
 
@@ -116,10 +116,10 @@ Full script: [`examples/no_knee.py`](examples/no_knee.py).
 
 ## 4. A saturating curve: `1 - exp(-t / tau)`
 
-Charging voltages, learning curves, dose-response curves — anything that
-rises fast then asymptotically approaches a ceiling — share this shape. It
-is a useful stress test: unlike a broken-line knee, it has no true slope
-discontinuity, it is smooth everywhere.
+Charging voltages, learning curves, and dose-response curves all share this
+shape: a rise that is fast at first, then approaches a ceiling
+asymptotically. It is a useful stress test: unlike a broken-line knee, it
+has no true slope discontinuity, it is smooth everywhere.
 
 ```python
 import numpy as np
@@ -148,7 +148,7 @@ ClearKnee(knee_x=1.980, ci90=(1.946, 2.114), detection_rate=0.99, null_p=0.00498
 
 Worth knowing before reading too much into the exact number: the located
 knee sits consistently around **1.9 tau**, not 1 tau. The textbook "time
-constant" tau marks `1 - e^-1 ≈ 63%` of the rise — mathematically clean, but
+constant" tau marks `1 - e^-1 ≈ 63%` of the rise, mathematically clean but
 not where a curve visually reads as "flattened". The pipeline (like a human
 eye) settles on roughly 2 time constants (`1 - e^-2 ≈ 85%`), the same
 informal "practically settled" convention used in RC-circuit and
@@ -300,7 +300,7 @@ Full script: [`examples/bug_discovery_rate.py`](examples/bug_discovery_rate.py).
 
 ## 8. The diagnostic figure
 
-`elbow_helper.plotting` needs no extra install — it writes a self-contained
+`elbow_helper.plotting` needs no extra install: it writes a self-contained
 SVG by hand, no matplotlib.
 
 ```python
@@ -318,10 +318,10 @@ plot_diagnostics(
 The figure shows the curve with its located knee and 90% CI band (or, on
 abstention, a greyed dashed curve and the reason) next to a compact evidence
 legend: detection probability, null-model p-value, slope contrast, a
-BIC-derived posterior model probability — a bounded `[0, 1]` reading (e.g.
-"99.9%"), not the raw, unbounded `bic_improvement` nats the API itself
+BIC-derived posterior model probability (a bounded `[0, 1]` reading, e.g.
+"99.9%", not the raw, unbounded `bic_improvement` nats the API itself
 returns, since a raw log-likelihood difference has no natural scale to
-compare against — and a fit-quality score normalized against a
+compare against), and a fit-quality score normalized against a
 deliberately pessimistic worst case (the hardest single observed point to
 predict everything else from) rather than the sample mean, which a real
 fit can too easily do worse than. See `doc/ELBOW-en.tex` /
@@ -332,8 +332,8 @@ Full script: [`examples/diagnostic_plot.py`](examples/diagnostic_plot.py).
 ## 9. The standalone locator
 
 The from-scratch bump-peak locator underneath `robust_knee` is usable on its
-own, without the full conservative pipeline (no bootstrap, no null test, no
-persistence clustering — just the geometric peak-finding step):
+own, without the full conservative pipeline: no bootstrap, no null test, no
+persistence clustering, just the geometric peak-finding step.
 
 ```python
 from elbow_helper import KneeLocator
@@ -362,5 +362,5 @@ validation_config = config.with_(bootstrap_replicates=500, null_replicates=1000)
 `cluster_tolerance` and `max_neighbor_shift` are the two most worth
 recalibrating for your own data: they sit slightly above the 0.05 reference
 value to absorb the locator's discretisation jitter at modest sample sizes
-(n around 60-100) — tighten them for cleaner, larger datasets, loosen them
+(n around 60-100): tighten them for cleaner, larger datasets, loosen them
 for noisier or shorter ones.

@@ -26,7 +26,7 @@ A knee, on a curve of diminishing returns, marks the point past which extra inpu
 
 ## Dependencies
 
-The whole package depends on `numpy` and [`os-helper`](https://github.com/warith-harchaoui/os-helper) only — nothing else, not even for the diagnostic figure. The knee-locating algorithm is implemented from scratch, in NumPy only, so there is no `scipy`, `scikit-learn`, `statsmodels`, or `joblib` runtime dependency. `elbow_helper.plotting` writes hand-authored SVG (see Diagnostics below) rather than reaching for matplotlib, so it needs no extra install. See Acknowledgements below for the implementation this algorithm follows.
+The whole package depends on `numpy` and [`os-helper`](https://github.com/warith-harchaoui/os-helper) only: nothing else, not even for the diagnostic figure. The knee-locating algorithm is implemented from scratch, in NumPy only, so there is no `scipy`, `scikit-learn`, `statsmodels`, or `joblib` runtime dependency. `elbow_helper.plotting` writes hand-authored SVG (see Diagnostics below) rather than reaching for matplotlib, so it needs no extra install. See Acknowledgements below for the implementation this algorithm follows.
 
 ## Installation
 
@@ -138,9 +138,50 @@ kl = KneeLocator(x, y, S=1.0, curve="concave", direction="increasing", online=Tr
 kl.knee, kl.all_knees
 ```
 
+## Multiple knees: `robust_knees`
+
+`robust_knee` answers "is there one knee?". A curve with several genuine
+regime changes, three pricing tiers on a demand curve, say, needs a
+different question: how many breakpoints does this curve actually have and
+where are they? `robust_knees` (plural) answers that one. It searches over every
+possible number of segments with a dynamic program, scores each candidate
+with a modified BIC (a fit-quality score that penalises extra breakpoints,
+so adding one has to earn its keep), then confirms the winning count with a
+Bonferroni-gated permutation test to hold the false-positive rate down as
+the search space grows.
+
+```python
+import numpy as np
+from elbow_helper import RobustKneesConfig, robust_knees
+
+rng = np.random.default_rng(3)
+x = np.linspace(0, 1, 100)
+y = np.piecewise(
+    x,
+    [x < 0.3, (x >= 0.3) & (x < 0.65), x >= 0.65],
+    [lambda t: 3 * t, lambda t: 0.9 + 0.2 * (t - 0.3), lambda t: 0.97 + 2.2 * (t - 0.65)],
+) + rng.normal(0, 0.02, x.size)
+
+result = robust_knees(x, y, config=RobustKneesConfig(random_seed=0, fwer_permutations=200))
+print(result)
+```
+
+```text
+Knees(k=2, x=[0.2929, 0.6465])
+```
+
+The two breakpoints land close to the curve's true regime changes at 0.3 and
+0.65. Unlike `robust_knee`, an empty result here is not an abstention: it is
+the pipeline's confident conclusion that the curve has no real breakpoint,
+having survived the same search and false-positive gates a nonempty result
+would have had to survive. Only a preprocessing failure (bad input, too
+little data, zero range) returns `InvalidKnees` instead of `Knees`. See
+`research/multiknee/RESULTS.md` and `doc/ELBOW-en.tex` (sections 5-20) for
+the validation behind this design.
+
 ## Mathematics
 
-`doc/ELBOW-en.tex` ([🇫🇷 doc/ELBOW-fr.tex](https://github.com/warith-harchaoui/elbow-helper/blob/main/doc/ELBOW-fr.tex)) derives every formula this package runs, from the single-knee pipeline's normalisation, Spearman screen, difference-curve knee search, persistence clustering, Theil-Sen slope, BIC, blocked cross-validation, bootstrap and null test, through to the multi-knee research behind `robust_knees` (see also `research/multiknee/RESULTS.md`). Written intuition-first, with a worked example before every formula, for readers from the end of high school through a Ph.D. in applied mathematics. Its Gaussian likelihood foundation, the general theory behind why `L := exp(E[log p])` rather than a raw product, and how the same construction reads on a classification model, is factored out into a companion note, `doc/LIKELIHOOD-en.tex` ([🇫🇷 doc/LIKELIHOOD-fr.tex](https://github.com/warith-harchaoui/elbow-helper/blob/main/doc/LIKELIHOOD-fr.tex)), since that foundation doesn't depend on curve-fitting at all. Citations are in `doc/references.bib`, including a few pointers into my own [Favourite AI books](https://deraison.ai/ai-books) where a technique used here deserves a book-length treatment. Native LaTeX (not Markdown), given the audience: compile with `latexmk -pdf ELBOW-en.tex` (or `ELBOW-fr.tex`, `LIKELIHOOD-en.tex`, `LIKELIHOOD-fr.tex`) from inside `doc/`, or read the compiled copies directly, `doc/ELBOW-en.pdf` / `doc/ELBOW-fr.pdf` / `doc/LIKELIHOOD-en.pdf` / `doc/LIKELIHOOD-fr.pdf`.
+`doc/ELBOW-en.tex` ([🇫🇷 doc/ELBOW-fr.tex](https://github.com/warith-harchaoui/elbow-helper/blob/main/doc/ELBOW-fr.tex)) derives every formula this package runs: the single-knee pipeline's normalisation, Spearman screen, difference-curve knee search, persistence clustering, Theil-Sen slope, BIC, blocked cross-validation, bootstrap and null test, and the multi-knee research behind `robust_knees` (see also `research/multiknee/RESULTS.md`). It is written intuition-first, with a worked example before every formula, for readers anywhere from the end of high school to a Ph.D. in applied mathematics. Its Gaussian likelihood foundation, the general theory behind why `L := exp(E[log p])` rather than a raw product, and how the same construction reads on a classification model, is factored out into a companion note, `doc/LIKELIHOOD-en.tex` ([🇫🇷 doc/LIKELIHOOD-fr.tex](https://github.com/warith-harchaoui/elbow-helper/blob/main/doc/LIKELIHOOD-fr.tex)), since that foundation doesn't depend on curve-fitting at all. Citations are in `doc/references.bib`, including a few pointers into my own [Favourite AI books](https://deraison.ai/ai-books) where a technique used here deserves a book-length treatment. Native LaTeX (not Markdown), given the audience: compile with `latexmk -pdf ELBOW-en.tex` (or `ELBOW-fr.tex`, `LIKELIHOOD-en.tex`, `LIKELIHOOD-fr.tex`) from inside `doc/`, or read the compiled copies directly, `doc/ELBOW-en.pdf` / `doc/ELBOW-fr.pdf` / `doc/LIKELIHOOD-en.pdf` / `doc/LIKELIHOOD-fr.pdf`.
 
 ## Landscape
 
@@ -148,7 +189,7 @@ kl.knee, kl.all_knees
 
 ## CLI / API / MCP
 
-Beyond the Python library, `elbow-helper` exposes three more doors onto the same pipeline — an argparse CLI (always installed), a click CLI twin, and an HTTP API with an MCP server mounted on it — all four thin adapters over the same shared core (`elbow_helper._core_cli`), so none of them can drift from what the library itself returns.
+Beyond the Python library, `elbow-helper` exposes three more doors onto the same pipeline: an argparse CLI (always installed), a click CLI twin, and an HTTP API with an MCP server mounted on it. All four are thin adapters over the same shared core (`elbow_helper._core_cli`), so none of them can drift from what the library itself returns.
 
 ```bash
 pip install -e .                 # library + argparse CLI
@@ -172,7 +213,7 @@ curl -X POST localhost:8000/knee -d '{"x": [0,0.1,0.3,0.6,0.85,0.9]}'
 uvicorn elbow_helper.mcp_server:app --port 8021
 ```
 
-Every surface exposes the same four operations — `knee`, `elbow`, `diagnostics`, `locator` — matching `robust_knee`, `robust_elbow`, `plot_diagnostics`, and the standalone `KneeLocator` one-to-one. Data goes in as inline comma-separated values, a `.npy` file, or a CSV column (CLI), or a JSON body (`x`/`y` lists, HTTP). `RobustKneeConfig` overrides travel as `--config-json '{"bootstrap_replicates": 500}'` (CLI) or a `config_overrides` object (HTTP). The `diagnostics` operation returns the SVG itself, not a JSON wrapper around it.
+Every surface exposes the same four operations (`knee`, `elbow`, `diagnostics`, `locator`), matching `robust_knee`, `robust_elbow`, `plot_diagnostics`, and the standalone `KneeLocator` one-to-one. Data goes in as inline comma-separated values, a `.npy` file, or a CSV column (CLI), or a JSON body (`x`/`y` lists, HTTP). `RobustKneeConfig` overrides travel as `--config-json '{"bootstrap_replicates": 500}'` (CLI) or a `config_overrides` object (HTTP). The `diagnostics` operation returns the SVG itself, not a JSON wrapper around it.
 
 ## Author
 

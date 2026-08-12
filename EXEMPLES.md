@@ -33,9 +33,9 @@ if result.is_clear:
 ```
 
 ```text
-ClearKnee(knee_x=0.304, ci90=(0.296, 0.315), detection_rate=0.98, null_p=0.00498)
-  true knee ~ 0.3, located at 0.304
-  90% CI    = (0.296, 0.315)
+ClearKnee(knee_x=0.3418, ci90=(0.3418, 0.3797), detection_rate=0.98, null_p=0.00498)
+  true knee ~ 0.3, located at 0.342
+  90% CI    = (0.342, 0.380)
   detection = 0.98, null p = 0.00498
 ```
 
@@ -71,9 +71,9 @@ if result.is_clear:
 ```
 
 ```text
-ClearKnee(knee_x=8.0, ci90=(7.6, 8.4), detection_rate=1.00, null_p=0.00498)
-  elbow at k = 8.0  (true k = 8)
-  90% CI     = (7.6, 8.4)
+ClearKnee(knee_x=9, ci90=(9, 11.5), detection_rate=1.00, null_p=0.00498)
+  elbow at k = 9.0  (true k = 8)
+  90% CI     = (9.0, 11.5)
 ```
 
 ![La courbe d'inertie de k-means avec le coude détecté à k=8](figures/kmeans_fr.png)
@@ -104,8 +104,8 @@ print(f"  reason = {result.reason}")
 ```
 
 ```text
-NoClearKnee(reason='INCOMPATIBLE_GLOBAL_SHAPE')
-  reason = INCOMPATIBLE_GLOBAL_SHAPE
+NoClearKnee(reason='NO_PERSISTENT_CLUSTER')
+  reason = NO_PERSISTENT_CLUSTER
 ```
 
 Chaque abstention porte l'un des quinze codes documentés dans la section

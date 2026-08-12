@@ -138,9 +138,52 @@ kl = KneeLocator(x, y, S=1.0, curve="concave", direction="increasing", online=Tr
 kl.knee, kl.all_knees
 ```
 
+## Plusieurs coudes : `robust_knees`
+
+`robust_knee` répond à « y a-t-il un coude ? ». Une courbe avec plusieurs vrais
+changements de régime, trois paliers de prix sur une courbe de demande par
+exemple, appelle une autre question : combien de ruptures cette courbe
+comporte-t-elle réellement et où ? C'est à cela que répond `robust_knees`
+(au pluriel). La recherche balaie tous les découpages possibles par
+programmation dynamique, note chaque candidat avec un BIC modifié (un score
+de qualité d'ajustement qui pénalise chaque rupture supplémentaire, donc
+en ajouter une doit se justifier), puis confirme le nombre gagnant par un
+test de permutation à seuil ajusté (Bonferroni) pour maîtriser le taux de
+faux positifs à mesure que l'espace de recherche grandit.
+
+```python
+import numpy as np
+from elbow_helper import RobustKneesConfig, robust_knees
+
+rng = np.random.default_rng(3)
+x = np.linspace(0, 1, 100)
+y = np.piecewise(
+    x,
+    [x < 0.3, (x >= 0.3) & (x < 0.65), x >= 0.65],
+    [lambda t: 3 * t, lambda t: 0.9 + 0.2 * (t - 0.3), lambda t: 0.97 + 2.2 * (t - 0.65)],
+) + rng.normal(0, 0.02, x.size)
+
+result = robust_knees(x, y, config=RobustKneesConfig(random_seed=0, fwer_permutations=200))
+print(result)
+```
+
+```text
+Knees(k=2, x=[0.2929, 0.6465])
+```
+
+Les deux ruptures repérées tombent près des vrais changements de régime de
+la courbe, à 0,3 et 0,65. Contrairement à `robust_knee`, un résultat vide
+ici n'est pas une abstention : c'est la conclusion assurée du pipeline que
+la courbe n'a pas de vraie rupture, après avoir survécu aux mêmes filtres
+de recherche et de faux positifs qu'un résultat non vide aurait dû
+franchir. Seul un échec du prétraitement (entrée invalide, trop peu de
+données, intervalle nul) renvoie `InvalidKnees` plutôt que `Knees`. Voir
+`research/multiknee/RESULTS.md` et `doc/ELBOW-fr.tex` (sections 5 à 20)
+pour la validation derrière ce choix.
+
 ## Mathématiques
 
-`doc/ELBOW-fr.tex` ([🇬🇧 doc/ELBOW-en.tex](https://github.com/warith-harchaoui/elbow-helper/blob/main/doc/ELBOW-en.tex)) démontre, depuis les premiers principes, chaque formule que ce paquet met en œuvre : la normalisation du pipeline à coude unique, le filtre de Spearman, la recherche de coude par courbe de différence, le regroupement par persistance, la pente de Theil-Sen, le BIC, la validation croisée par blocs, le bootstrap et le test nul, jusqu'à la recherche multi-coudes derrière `robust_knees` (voir aussi `research/multiknee/RESULTS.md`). Son socle de vraisemblance gaussienne, la théorie générale de pourquoi `L := exp(E[log p])` plutôt qu'un produit brut, et comment cette même construction se lit sur un modèle de classification, est isolé dans une note compagne, `doc/LIKELIHOOD-fr.tex` ([🇬🇧 doc/LIKELIHOOD-en.tex](https://github.com/warith-harchaoui/elbow-helper/blob/main/doc/LIKELIHOOD-en.tex)), puisque ce socle ne dépend en rien de l'ajustement de courbes. Le texte privilégie l'intuition, avec un exemple travaillé avant chaque formule, pour des lecteurs allant de la fin du lycée jusqu'à un doctorat en mathématiques appliquées. Les références se trouvent dans `doc/references.bib`, avec quelques renvois vers mes [livres IA préférés](https://deraison.ai/ai-books) là où une technique méritait un traitement plus long. Le document est en LaTeX natif, pas en Markdown, vu le public visé : compilez-le avec `latexmk -pdf ELBOW-fr.tex` (ou `ELBOW-en.tex`, `LIKELIHOOD-fr.tex`, `LIKELIHOOD-en.tex`) depuis `doc/` ou lisez directement les copies déjà compilées, `doc/ELBOW-fr.pdf` / `doc/ELBOW-en.pdf` / `doc/LIKELIHOOD-fr.pdf` / `doc/LIKELIHOOD-en.pdf`.
+`doc/ELBOW-fr.tex` ([🇬🇧 doc/ELBOW-en.tex](https://github.com/warith-harchaoui/elbow-helper/blob/main/doc/ELBOW-en.tex)) démontre, depuis les premiers principes, chaque formule que ce paquet met en œuvre : la normalisation du pipeline à coude unique, le filtre de Spearman, la recherche de coude par courbe de différence, le regroupement par persistance, la pente de Theil-Sen, le BIC, la validation croisée par blocs, le bootstrap et le test nul, jusqu'à la recherche multi-coudes derrière `robust_knees` (voir aussi `research/multiknee/RESULTS.md`). Son socle de vraisemblance gaussienne, la théorie générale de pourquoi `L := exp(E[log p])` plutôt qu'un produit brut et comment cette même construction se lit sur un modèle de classification, est isolé dans une note compagne, `doc/LIKELIHOOD-fr.tex` ([🇬🇧 doc/LIKELIHOOD-en.tex](https://github.com/warith-harchaoui/elbow-helper/blob/main/doc/LIKELIHOOD-en.tex)), puisque ce socle ne dépend en rien de l'ajustement de courbes. Le texte privilégie l'intuition, avec un exemple travaillé avant chaque formule, pour des lecteurs allant de la fin du lycée jusqu'à un doctorat en mathématiques appliquées. Les références se trouvent dans `doc/references.bib`, avec quelques renvois vers mes [livres IA préférés](https://deraison.ai/ai-books) là où une technique méritait un traitement plus long. Le document est en LaTeX natif, pas en Markdown, vu le public visé : compilez-le avec `latexmk -pdf ELBOW-fr.tex` (ou `ELBOW-en.tex`, `LIKELIHOOD-fr.tex`, `LIKELIHOOD-en.tex`) depuis `doc/` ou lisez directement les copies déjà compilées, `doc/ELBOW-fr.pdf` / `doc/ELBOW-en.pdf` / `doc/LIKELIHOOD-fr.pdf` / `doc/LIKELIHOOD-en.pdf`.
 
 ## Paysage
 
