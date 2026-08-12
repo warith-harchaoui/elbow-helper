@@ -4,6 +4,26 @@ All notable changes to `elbow-helper` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- **`requirements.txt` / `requirements-dev.txt` / `environment.yaml`**, bringing
+  the project in line with the rest of the suite's manifests. `requirements.txt`
+  mirrors `pyproject.toml`'s `[project].dependencies`; `requirements-dev.txt`
+  points at the `[dev]` extra; `environment.yaml` is a minimal conda env that
+  hands off to `requirements.txt`, so it never drifts out of sync. README.md /
+  LISEZ-MOI.md's Installation sections now mention the conda path.
+- **`robust_knees` section in README.md / LISEZ-MOI.md**: the plural multi-knee
+  API was fully public and tested but only mentioned in passing. Added a
+  concise section to both, output verified against the actual code.
+
+### Fixed
+- **Three stale example outputs in `EXAMPLES.md` / `EXEMPLES.md`** no longer
+  matched `examples/*.py`'s current behavior despite identical code and seed:
+  `clear_knee.py` (`knee_x` 0.304 to 0.3418), `kmeans_elbow.py` (`knee_x` 8.0
+  to 9), `no_knee.py` (abstention reason `INCOMPATIBLE_GLOBAL_SHAPE` to
+  `NO_PERSISTENT_CLUSTER`). Updated all three to the verified current output.
+
 ## [0.1.1] - 2026-08-09
 
 ### Changed
@@ -30,7 +50,7 @@ First public release: tagged, GitHub-released, and published to PyPI.
   $L$ (bias and variance via the delta method, verified by Monte Carlo
   simulation) alongside a proof that the raw product is not an
   estimator of anything fixed; and two worked instantiations, each with
-  its own generative-model diagram and a dedicated figure — categorical
+  its own generative-model diagram and a dedicated figure: categorical
   classification (a 45-example, 3-class simulation) and regression under
   Gaussian noise (conditional-density bells drawn on the fitted line).
   `ELBOW-en.tex` / `ELBOW-fr.tex`'s own Section 1 now states the Gaussian
@@ -55,19 +75,19 @@ First public release: tagged, GitHub-released, and published to PyPI.
   standard architecture (`~/ai-helpers/.private/CODING.md` §19-§23): a new
   `elbow_helper._core_cli` shared core (`do_knee`/`do_elbow`/
   `do_diagnostics`/`do_locator`, JSON-safe serialization of `ClearKnee`/
-  `NoClearKnee` including numpy-scalar coercion) backs four adapters —
+  `NoClearKnee` including numpy-scalar coercion) backs four adapters:
   `cli_argparse.py` (always installed; subcommands `knee`/`elbow`/
   `diagnostics`/`locator`, three ways to pass a curve: inline comma-separated
   values, a `.npy` path, or a CSV column), `cli_click.py` (`[cli]` extra,
   identical commands), `api.py` (`[api]` extra, FastAPI; each route carries
   an explicit `operation_id`), and `mcp_server.py` (`[mcp]` extra,
-  `fastapi-mcp` mounted on a copy of the API app — never a standalone tool
+  `fastapi-mcp` mounted on a copy of the API app; never a standalone tool
   server). New console scripts `elbow-helper`, `elbow-helper-click`,
   `elbow-helper-mcp`. New tests: `test_cli_argparse.py`, `test_cli_click.py`,
   `test_api.py`, `test_mcp_server.py`. New README.md/LISEZ-MOI.md "CLI / API
   / MCP" section. `pyproject.toml` description/keywords also had a stray
   pre-Acknowledgements "Kneedle" mention cleaned up (missed by the earlier
-  sweep — `.toml` wasn't in that pass's file-type filter).
+  sweep; `.toml` wasn't in that pass's file-type filter).
 - **`EXAMPLES.md`**: a runnable cookbook (a clear knee, the k-means elbow, an
   explicit abstention, a `1 - exp(-t/tau)` saturation curve, a queueing-
   latency capacity-planning knee, cache-sizing diminishing returns, a
@@ -104,14 +124,14 @@ First public release: tagged, GitHub-released, and published to PyPI.
 ### Changed
 - **`elbow_helper.plotting` no longer uses matplotlib.** `plot_diagnostics`
   now renders a hand-authored, self-contained SVG (Catmull-Rom spline, house
-  palette, additive dark-mode block — no runtime image library) instead of a
+  palette, additive dark-mode block; no runtime image library) instead of a
   four-panel matplotlib figure. The `[plot]` extra is gone: diagnostics are a
   **core** feature, nothing extra to install. The new figure shows the curve
   with the located knee and its 90% CI band (or an honest greyed/dashed
   abstention state with the reason, when the evidence is too weak) next to a
   compact evidence legend: detection probability, null-model p-value, slope
   contrast, and a BIC-derived posterior model probability. That last number
-  is not the raw `bic_improvement` nats — a raw ΔBIC has no natural
+  is not the raw `bic_improvement` nats: a raw ΔBIC has no natural
   ceiling, so it is converted through Kass and Raftery's (1995) Bayes-factor
   approximation (`BF ~= exp(bic_improvement / 2)`, posterior probability
   `BF / (1 + BF)`) into a bounded [0, 1] reading, e.g. "99.9%", that means
@@ -121,7 +141,7 @@ First public release: tagged, GitHub-released, and published to PyPI.
   `examples/diagnostic_plot.py` and the README/LISEZ-MOI.md Diagnostics
   sections updated to match, with a real generated figure
   (`assets/diagnostics.svg`) embedded in both.
-- **`MATH-en.md` / `MATH-fr.md` replaced by `ELBOW-en.tex` / `ELBOW-fr.tex`** —
+- **`MATH-en.md` / `MATH-fr.md` replaced by `ELBOW-en.tex` / `ELBOW-fr.tex`**:
   the mathematics writeup is now native LaTeX (`amsmath`, `natbib` against
   `references.bib`, numbered equations, a proper table of contents) rather
   than markdown, given the target audience (readers from the end of high
@@ -137,12 +157,12 @@ First public release: tagged, GitHub-released, and published to PyPI.
   reworded to describe it generically ("the locator", "the difference-curve
   method", ...). The name now appears exactly once per language, in the
   README/LISEZ-MOI.md Acknowledgements section, where the original paper is
-  cited by title. No public API change — `KneeLocator`, `KneeCandidate` and
+  cited by title. No public API change: `KneeLocator`, `KneeCandidate` and
   every other exported name were already free of the word.
 
 ### Fixed
 - CI push trigger was scoped to `branches: [main]` while the repo's actual
-  default branch is `master` — the test workflow had never once run on a
+  default branch is `master`; the test workflow had never once run on a
   real push. Corrected to `master`.
 - `requires-python = ">=3.9"` while the hard dependency `os-helper` requires
   `>=3.10` on every published version, so the 3.9 CI matrix leg could never
