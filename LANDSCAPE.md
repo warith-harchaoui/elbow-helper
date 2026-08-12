@@ -28,7 +28,7 @@ How `elbow-helper` compares to *every other way of finding a knee*. Each approac
 
 ![Positioning map](https://raw.githubusercontent.com/warith-harchaoui/elbow-helper/main/assets/landscape.png)
 
-The map is a 2-D summary of the eleven criteria, so read it as a shape, not a scoreboard. `elbow-helper` is at the top-right corner. The axes read **Horizontal — Nimble ↔ Precise** and **Vertical — Thorough ↔ Adaptable**.
+The map is a 2-D summary of the eleven criteria, so read it as a shape, not a scoreboard. `elbow-helper` is at the top-right corner. The axes read **Horizontal: Nimble ↔ Precise** and **Vertical: Thorough ↔ Adaptable**.
 <!-- FIGURE:END -->
 
 ## Per-tool write-up

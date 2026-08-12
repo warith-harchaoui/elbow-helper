@@ -28,7 +28,7 @@ Représentation 2D du tableau ci-dessus.
 
 ![Carte de positionnement](https://raw.githubusercontent.com/warith-harchaoui/elbow-helper/main/assets/paysage.png)
 
-La carte est un résumé en 2D des 11 critères : à lire comme une forme, pas comme un classement. « elbow-helper » se situe dans le coin en haut à droite. Les axes se lisent **Horizontal — Simplicité ↔ Précision** et **Vertical — Clarté ↔ Adaptabilité**.
+La carte est un résumé en 2D des 11 critères : à lire comme une forme, pas comme un classement. « elbow-helper » se situe dans le coin en haut à droite. Les axes se lisent **Horizontal : Simplicité ↔ Précision** et **Vertical : Clarté ↔ Adaptabilité**.
 <!-- FIGURE:END -->
 
 ## Fiche par outil
