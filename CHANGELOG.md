@@ -6,6 +6,8 @@ All notable changes to `elbow-helper` are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-08-14
+
 ### Added
 - **`requirements.txt` / `requirements-dev.txt` / `environment.yaml`**, bringing
   the project in line with the rest of the suite's manifests. `requirements.txt`
