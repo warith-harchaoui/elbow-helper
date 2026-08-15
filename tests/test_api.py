@@ -132,6 +132,17 @@ def test_locator_endpoint_validation_error_on_missing_y(client) -> None:
     assert resp.status_code == 422
 
 
+def test_locator_endpoint_empty_curve_returns_400_not_500(client) -> None:
+    # /locator calls the raw KneeLocator directly (no abstention gate in
+    # front of it, unlike /knee and /elbow), so an empty curve used to
+    # surface as an unhandled ValueError -> FastAPI's generic 500,
+    # indistinguishable from an actual server bug. It's a client-input
+    # problem: 400.
+    resp = client.post("/locator", json={"x": [], "y": []})
+    assert resp.status_code == 400
+    assert "empty" in resp.json()["detail"]
+
+
 def test_openapi_operation_ids_are_stable(client) -> None:
     """Every route carries the operation_id the MCP door allowlists against."""
     schema = client.get("/openapi.json").json()

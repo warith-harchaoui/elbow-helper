@@ -154,3 +154,25 @@ def test_no_data_raises_usage_error(runner, cli) -> None:
     result = runner.invoke(cli, ["knee"])
     assert result.exit_code == 2
     assert "no data given" in result.output
+
+
+def test_main_prints_clean_error_on_a_real_library_exception(
+    capsys, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # CliRunner.invoke (used by every test above) catches exceptions itself,
+    # so it never exercises main() -- the actual `elbow-helper-click`
+    # console-script entry point. Drive main() directly: an unparseable
+    # --x-values raises a plain ValueError from float(), which used to
+    # propagate as a raw Python traceback instead of a clean "Error: ..."
+    # + exit 1.
+    pytest.importorskip("click")
+    from elbow_helper.cli_click import main
+
+    monkeypatch.setattr(
+        "sys.argv",
+        ["elbow-helper-click", "locator", "--x-values", "", "--y-values", ""],
+    )
+    with pytest.raises(SystemExit) as exc:
+        main()
+    assert exc.value.code == 1
+    assert "Error:" in capsys.readouterr().err

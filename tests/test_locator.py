@@ -62,3 +62,19 @@ def test_invalid_arguments_raise():
         pass
     else:  # pragma: no cover
         raise AssertionError("expected ValueError for invalid curve")
+
+
+def test_empty_input_raises_clear_value_error_not_a_reduction_crash():
+    # Every step (normalizing to [0, 1], averaging the difference-curve step
+    # size) reduces over the array, so an empty input used to surface as a
+    # confusing "zero-size array to reduction operation minimum which has no
+    # identity" deep inside __normalize instead of a clear error at the
+    # actual boundary -- reachable via the /locator HTTP route and CLI
+    # `locator` subcommand, which call this class directly (no abstention
+    # gate in front of it, unlike robust_knee/robust_elbow).
+    try:
+        KneeLocator([], [], curve="concave", direction="increasing")
+    except ValueError as exc:
+        assert "empty" in str(exc)
+    else:  # pragma: no cover
+        raise AssertionError("expected ValueError for empty input")

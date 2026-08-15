@@ -4,7 +4,22 @@ All notable changes to `elbow-helper` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.1.3] - 2026-08-15
+
+### Fixed
+- **`KneeLocator`**: an empty `(x, y)` input used to surface as a confusing
+  `"zero-size array to reduction operation minimum which has no identity"`
+  deep inside curve normalization, instead of a clear error at the actual
+  boundary. Now raises `ValueError` immediately. Reachable via the
+  unguarded `/locator` HTTP route and the CLI `locator` subcommand (unlike
+  `robust_knee`/`robust_elbow`, which have their own numerical-safety net).
+- **API**: `/locator`'s `ValueError` (e.g. the empty-input case above)
+  collapsed into FastAPI's generic 500. Added a `ValueError` exception
+  handler mapping it to 400.
+- **CLI**: a library exception now prints one clean `Error: ...` line to
+  stderr and exits 1, instead of a raw Python traceback, on both CLI
+  twins. `elbow-helper-click`'s console-script entry point now points at a
+  new `cli_click.main()` wrapper (was the bare `cli` group).
 
 ## [0.1.2] - 2026-08-14
 

@@ -296,7 +296,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     # Logs go to stderr so stdout stays clean, pipeable JSON (a suite convention).
     level = {0: logging.WARNING, 1: logging.INFO}.get(args.verbose, logging.DEBUG)
     oh.init_logging(level=level, stdout=False)
-    result = _dispatch(args)
+    try:
+        result = _dispatch(args)
+    except Exception as err:  # noqa: BLE001 — last resort: a clean CLI error, not a traceback
+        print(f"Error: {err}", file=sys.stderr)
+        return 1
     if isinstance(result, str):
         print(result)
     else:

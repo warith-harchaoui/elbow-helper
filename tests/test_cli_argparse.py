@@ -89,9 +89,11 @@ def test_knee_json_output_is_valid(capsys) -> None:
 
 
 def test_elbow_requires_both_series(capsys) -> None:
-    """``elbow`` refuses the y-only shorthand with a clear error."""
-    with pytest.raises(ValueError, match="both"):
-        cli_argparse.main(["elbow", "--y-values", "1,2,3,20,21,22"])
+    """``elbow`` refuses the y-only shorthand with a clear error, exit 1."""
+    code = cli_argparse.main(["elbow", "--y-values", "1,2,3,20,21,22"])
+    assert code == 1
+    err = capsys.readouterr().err
+    assert "Error:" in err and "both" in err
 
 
 def test_elbow_json_output(capsys) -> None:
@@ -134,10 +136,12 @@ def test_diagnostics_writes_svg(capsys, tmp_path) -> None:
     assert out_path.read_text(encoding="utf-8").startswith("<svg")
 
 
-def test_locator_needs_x_and_y() -> None:
+def test_locator_needs_x_and_y(capsys) -> None:
     """``locator`` refuses a y-only shorthand (it has no orientation inference)."""
-    with pytest.raises(ValueError, match="both"):
-        cli_argparse.main(["locator", "--y-values", "1,2,3,20,21,22"])
+    code = cli_argparse.main(["locator", "--y-values", "1,2,3,20,21,22"])
+    assert code == 1
+    err = capsys.readouterr().err
+    assert "Error:" in err and "both" in err
 
 
 def test_locator_json_output(capsys) -> None:
@@ -153,15 +157,19 @@ def test_locator_json_output(capsys) -> None:
 
 
 def test_no_data_raises(capsys) -> None:
-    """Calling ``knee`` with no data flags at all raises a clear error."""
-    with pytest.raises(ValueError, match="no data given"):
-        cli_argparse.main(["knee"])
+    """Calling ``knee`` with no data flags at all prints a clear error, exit 1."""
+    code = cli_argparse.main(["knee"])
+    assert code == 1
+    err = capsys.readouterr().err
+    assert "Error:" in err and "no data given" in err
 
 
-def test_ambiguous_input_raises() -> None:
-    """Passing two of --y-values/--y-npy/--y-csv at once is rejected."""
-    with pytest.raises(ValueError, match="at most one"):
-        cli_argparse.main(["knee", "--y-values", "1,2,3", "--y-npy", "unused.npy"])
+def test_ambiguous_input_raises(capsys) -> None:
+    """Passing two of --y-values/--y-npy/--y-csv at once is rejected, exit 1."""
+    code = cli_argparse.main(["knee", "--y-values", "1,2,3", "--y-npy", "unused.npy"])
+    assert code == 1
+    err = capsys.readouterr().err
+    assert "Error:" in err and "at most one" in err
 
 
 def test_parser_import_has_no_side_effects() -> None:

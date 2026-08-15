@@ -34,7 +34,8 @@ from __future__ import annotations
 from typing import Optional
 
 try:
-    from fastapi import FastAPI, Response
+    from fastapi import FastAPI, Request, Response
+    from fastapi.responses import JSONResponse
     from pydantic import BaseModel
 except ImportError as exc:  # pragma: no cover - exercised only without the extra
     raise ImportError(
@@ -108,6 +109,22 @@ def create_app() -> FastAPI:
         ),
         version=__version__,
     )
+
+    @app.exception_handler(ValueError)
+    async def _value_error_handler(request: Request, exc: ValueError) -> JSONResponse:
+        """Map a library ``ValueError`` to HTTP 400 instead of a generic 500.
+
+        ``/knee``/``/elbow``/``/diagnostics`` go through ``robust_knee``/
+        ``robust_elbow``, which never raise (a numerical-safety-net
+        ``except Exception`` inside them converts any internal failure to a
+        ``NoClearKnee``/diagnostics result instead). ``/locator`` is the
+        exception: it calls the raw, unguarded ``KneeLocator`` directly (by
+        design — it is the building block, not the conservative pipeline),
+        so a malformed request (e.g. an empty curve) surfaces here as a
+        ``ValueError`` that would otherwise fall through to FastAPI's
+        generic 500, indistinguishable from an actual server bug.
+        """
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
 
     @app.post("/knee", operation_id="knee")
     def knee(body: CurveRequest) -> dict:

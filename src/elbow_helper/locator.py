@@ -109,6 +109,15 @@ class KneeLocator:
         # Step 0: raw input
         self.x = np.asarray(x, dtype=float)
         self.y = np.asarray(y, dtype=float)
+        if self.x.size == 0:
+            # Every step below (normalizing to [0, 1], averaging the
+            # difference-curve step size) divides or reduces over the array,
+            # so an empty input surfaces as a confusing "zero-size array to
+            # reduction operation minimum which has no identity" deep inside
+            # __normalize rather than a clear error at the actual boundary.
+            raise ValueError(
+                "KneeLocator needs at least one (x, y) point, got an empty array"
+            )
         self.curve = curve
         self.direction = direction
         self.N = len(self.x)

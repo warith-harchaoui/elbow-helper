@@ -44,7 +44,7 @@ from .types import (
     Reason,
 )
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 
 __all__ = [
     "robust_knee",

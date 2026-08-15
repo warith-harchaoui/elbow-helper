@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "elbow-helper"
-version = "0.1.2"
+version = "0.1.3"
 description = "Noise-robust knee/elbow detection: a conservative wrapper around a from-scratch locator that either returns a knee with uncertainty or explicitly abstains."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -43,7 +43,7 @@ dev = ["pytest>=7", "httpx>=0.27"]
 # argparse CLI — no runtime dependency beyond the stdlib + core package.
 elbow-helper = "elbow_helper.cli_argparse:main"
 # click twin — install with the [cli] extra.
-elbow-helper-click = "elbow_helper.cli_click:cli"
+elbow-helper-click = "elbow_helper.cli_click:main"
 # HTTP API + MCP server (needs [mcp]) — fastapi-mcp mounts /mcp on the same
 # FastAPI app api.py serves, so one entry point covers both doors.
 elbow-helper-mcp = "elbow_helper.mcp_server:main"
