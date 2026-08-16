@@ -1146,6 +1146,154 @@ unrelated coincidences that happen to look similar.}
 \label{tab:parallel}
 \end{table}
 
+\section{Going further: a Gaussian process over functions}
+\label{sec:gp}
+
+\textbf{Intuition.} Every model this note has fit picks one function
+$f(x;\theta)$ and reports how likely the data looks under it. A
+Gaussian process keeps a whole family of plausible functions on hand
+at once, weighted by how well each one fits, and predicts by averaging
+over that family rather than committing to a single curve. That
+sounds like it should need new machinery; it does not. The same
+Gaussian log-likelihood Section~\ref{sec:regression} built reappears
+unchanged, applied to a vector of function values instead of one
+scalar prediction.
+
+\textbf{The friction point.} A distribution over an object as large as
+``a function'' sounds like it needs new mathematics: a function has,
+in principle, infinitely many outputs, one per possible input $x$. A
+Gaussian process sidesteps this by never writing down that
+infinite-dimensional object directly. It only ever describes finitely
+many outputs at a time. Pick any finite set of locations
+$x_1,\dots,x_n$; the process declares the corresponding function
+values $f(x_1),\dots,f(x_n)$ jointly Gaussian, mean zero by
+convention, covariance $K_{ij} := k(x_i,x_j)$ set by a \emph{kernel}
+function $k$. Ask about a different, larger finite set of points and
+the same rule gives a consistent joint Gaussian on that larger set
+too; that consistency is the entire content of the word ``process''
+here \citep{rasmussen2006}. In practice a Gaussian process is used
+through exactly two operations, choose a kernel, then condition that
+one big joint Gaussian on the observed data, never anything more
+exotic.
+
+\textbf{The kernel.} The squared-exponential kernel,
+$$k(x,x') = \sigma_f^2 \exp\!\left(-\frac{(x-x')^2}{2\ell^2}\right),$$
+has two knobs. $\sigma_f^2$ sets the vertical scale of typical
+variation. $\ell$, the \emph{lengthscale}, sets the horizontal one:
+how far apart two $x$-values must sit before the kernel calls them
+nearly uncorrelated, which is exactly how quickly the process is
+allowed to change. Points close together in $x$ get a covariance near
+$\sigma_f^2$, nearly identical function values; points many
+lengthscales apart get a covariance near $0$, free to differ.
+
+\textbf{Fitting with noise, and the return of the familiar
+likelihood.} Real observations carry noise: $y_i = f(x_i) +
+\varepsilon_i$, $\varepsilon_i \sim \mathcal N(0,\sigma_n^2)$ i.i.d.,
+the exact generative picture of Section~\ref{sec:regression}, applied
+now to the whole vector $y := (y_1,\dots,y_n)$ at once rather than one
+$y_i$ at a time. Under the Gaussian process prior, $y$ itself is
+jointly Gaussian, $y \sim \mathcal N(0, K + \sigma_n^2 I)$, so
+
+\begin{equation}
+\ln p(y \mid X,\theta) = -\frac12 y^\top (K+\sigma_n^2 I)^{-1} y
+- \frac12 \ln\lvert K+\sigma_n^2 I\rvert - \frac{n}{2}\ln(2\pi),
+\label{eq:gp-lml}
+\end{equation}
+
+the \emph{log marginal likelihood}: marginal because it is what is
+left of the joint density $p(y,f\mid X)$ after integrating $f$ out
+entirely, not just plugging in the one $f$ that happens to fit best.
+Equation~\eqref{eq:gp-lml} is not new mathematics; it is
+$\ln L_{\text{raw}}(\theta)$ from Section~\ref{sec:why}, generalized
+from a diagonal covariance to a full one. Setting $\sigma_f^2 \to 0$
+collapses $K$ to the zero matrix, $K+\sigma_n^2 I$ to $\sigma_n^2 I$,
+and Equation~\eqref{eq:gp-lml} exactly to $n\,\ell(\theta,\sigma_n^2)$,
+$n$ copies of Section~\ref{sec:regression}'s own per-observation
+log-likelihood summed rather than averaged, the same sum-versus-mean
+relation Section~\ref{sec:why} built for exactly this reason.
+
+\textbf{Prediction.} Conditioning a joint Gaussian on part of its own
+coordinates is a standard, fully worked-out linear-algebra identity
+\citep{rasmussen2006}: writing $K_*$ for the covariance between the
+$n$ training points and $m$ new test points and $K_{**}$ for the
+covariance among the test points themselves, the posterior over
+function values at the test points is again Gaussian,
+$$\mu_* = K_*^\top (K+\sigma_n^2 I)^{-1} y, \qquad
+\Sigma_* = K_{**} - K_*^\top (K+\sigma_n^2 I)^{-1} K_*,$$
+mean and covariance both computable from the same Cholesky factor of
+$K+\sigma_n^2 I$ Equation~\eqref{eq:gp-lml} already needs. Intuitively
+$\mu_*$ pulls each test point's prediction toward nearby training
+values, weighted by the kernel. $\Sigma_*$ shrinks near training
+data and grows in gaps the data never covered: the model's own honest
+account of where it is guessing.
+
+\textbf{Choosing the kernel's own hyperparameters.} The same principle
+every earlier section used, maximize the likelihood, applies again,
+except now what is being tuned is not a curve's slope and intercept
+but the \emph{shape} of the covariance itself: how smooth the model is
+even allowed to be before it sees a single data point. Maximizing
+Equation~\eqref{eq:gp-lml} over $\theta = (\ell,\sigma_f^2,\sigma_n^2)$
+is called type-II maximum likelihood, or empirical Bayes: type-I would
+maximize over the function values $f$ themselves at fixed
+hyperparameters; type-II integrates $f$ out first (Equation
+\eqref{eq:gp-lml} already reflects that integration) and maximizes
+over what is left.
+
+\textbf{On real data: California housing, one more time.} A $50$-block
+subsample of the same California housing dataset
+\citep{pace1997} Section~\ref{sec:regression} already used, one
+feature, median block income, against the target, median house value,
+kept to one dimension and a small $n$ so the exact $O(n^3)$ Cholesky
+solve stays cheap and a plotted uncertainty band stays legible. No
+GP library: the kernel, the Cholesky solve, Equation~\eqref{eq:gp-lml}
+and its grid-search maximization are plain numpy, the same from-scratch
+discipline as every other model in this note. $\sigma_f^2$ is fixed to
+the sample variance of $y$, a standard, data-driven default for the
+signal scale; $\ell$ and $\sigma_n^2$ are chosen by a grid search
+maximizing Equation~\eqref{eq:gp-lml}, landing on $\ell^\ast \approx
+3.13$ (standardized income units), $\sigma_n^2 \approx 0.49$, a log
+marginal likelihood of about $-62.90$.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figures/gp_posterior_housing_en.png}
+\caption{The fitted Gaussian process on $50$ real census blocks
+\citep{pace1997}: posterior mean (solid) and $\pm 2\sigma$ band
+(shaded) at every income level, not only the $50$ observed ones. The
+band narrows where blocks are dense and widens past roughly \$$70{,}000$
+of median income, where real observations thin out and the model is
+honestly less sure what a plausible house value looks like.}
+\label{fig:gp-posterior}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figures/gp_marginal_likelihood_en.png}
+\caption{The same $50$ blocks' log marginal likelihood
+(Equation~\eqref{eq:gp-lml}), profiled over the lengthscale $\ell$: at
+each $\ell$ on the horizontal axis, $\sigma_n^2$ is re-optimized by the
+same grid search, so the curve traces the best score reachable at that
+one choice of smoothness. Too small an $\ell$ lets the process
+interpolate every training point, including its noise; the marginal
+likelihood punishes that. Too large an $\ell$ flattens the fit toward
+a single straight line and loses real signal the data actually
+supports. The interior maximum at $\ell^\ast \approx 3.13$
+is Equation~\eqref{eq:gp-lml} trading those two failure modes off
+against each other automatically, with no held-out validation split
+required to find it \citep{rasmussen2006}.}
+\label{fig:gp-lml}
+\end{figure}
+
+Two of the $50$ real blocks in this experiment happen to sit at
+$\$500{,}000$, this dataset's own census-reporting cap rather than a
+true ceiling on house values; the Gaussian process was not told this,
+and treats those two points as any other noisy observation. Section
+\ref{sec:conclusion}'s bounded scores were built for exactly this kind
+of imperfection: real data rarely arrives clean; a likelihood-based
+model, whether one straight line, an MLP, or a whole distribution over
+curves, only ever reports how well it explains the data actually
+given to it.
+
 \clearpage
 
 \bibliography{references}
