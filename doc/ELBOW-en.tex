@@ -11,8 +11,9 @@
 \usepackage{xcolor}
 \usepackage{enumitem}
 \usepackage{float}
+\usepackage{booktabs}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc}
 
 \hypersetup{
   colorlinks=true,
@@ -56,14 +57,20 @@ question. Come back to them when it doesn't.
 
 An Introduction derives, once, the raw-likelihood-to-bounded-score
 machinery every later criterion reuses: why $\mathrm{BIC}$, $\mathrm{mBIC}$,
-and $\mathrm{ICL}$ all sit in natural log, and how a deliberately
+and $\mathrm{ICL}$ all sit in natural log and how a deliberately
 pessimistic worst case, not an unbounded raw number, turns any of them
 into a justified, interpretable $[0,1]$ score. From there, the note is
 organized around a single question, asked three times with increasing
 realism: what does \emph{one} knee mean geometrically
 (Part~\ref{part:one}), what does \emph{several} knees mean geometrically
 (Part~\ref{part:several}), and how do you trust either answer once the data
-is noisy (Part~\ref{part:noise})?
+is noisy (Part~\ref{part:noise})? Two of Part~\ref{part:one}'s worked
+examples extend onto real data rather than manufactured blobs or
+signal: the same k-means inertia curve and the same PCA scree plot, run
+for real on the $178$ wines and thirteen real chemical measurements of
+the wine recognition dataset \citep{aeberhard1992}, where
+\code{elbow\_helper.robust\_elbow} honestly abstains rather than confirm
+a knee that only outside knowledge of the data would make plausible.
 \end{abstract}
 
 \clearpage
@@ -150,6 +157,39 @@ shape parameters):
 \end{tikzpicture}
 \end{center}
 
+The same handful of symbols recurs across every section below, often
+several sections apart, so a standing reference is worth more than
+holding it all in memory on a single pass.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+Symbol & Meaning \\
+\midrule
+$n$ & number of points on the curve \\
+$x_i$, $y_i$ & the curve's own coordinates, point $i$ \\
+$k$ & number of breakpoints (knees) in a fit \\
+$\theta$ & a curve model's shape parameters \\
+$f(x;\theta)$ & the fitted curve (a line, a hinge, $k$ segments) \\
+$\sigma^2$ & noise variance around the true curve \\
+$\mathrm{RSS}$ & residual sum of squared errors, a fit's raw cost \\
+$\mathrm{MSE}$ & $\mathrm{RSS}/n$, error averaged per point \\
+$\mathrm{NLL}$ & negative log-likelihood, in nats \\
+$\mathrm{BIC}$, $\mathrm{mBIC}$, $\mathrm{ICL}$ & $\mathrm{NLL}$ plus a complexity penalty \\
+$p$ & number of free parameters a model spends \\
+$S$ & sensitivity: how deep a dip counts as a real knee \\
+$\alpha$ & the false-positive rate a sequential test controls \\
+$B$ & number of bootstrap or permutation replicates \\
+\bottomrule
+\end{tabular}
+\caption{Notation glossary. Every symbol is reintroduced at its first
+use; this table only exists so nothing has to be memorized on a single
+pass.}
+\label{tab:elbow-notation}
+\end{table}
+
 \begin{equation}
 L(\theta,\sigma^2) := \left(\prod_{i=1}^n (2\pi\sigma^2)^{-1/2}
 \exp\!\left(-\frac{(y_i - f(x_i;\theta))^2}{2\sigma^2}\right)\right)^{1/n}
@@ -181,7 +221,7 @@ Minimizing $\mathrm{MSE}$ over $\theta$ at fixed $\sigma^2$ is maximizing
 $\ell$ over $\theta$, the reason ordinary least squares and Gaussian
 maximum likelihood are one procedure, not two. Profiling out $\sigma^2$ at
 its best-supported value, the maximum likelihood estimate (MLE)
-$\hat\sigma^2 = \mathrm{MSE}$, and exponentiating $-2\ell$, the
+$\hat\sigma^2 = \mathrm{MSE}$ and exponentiating $-2\ell$, the
 conventional scaling for an information criterion, undoes the $\ln$ and
 lands on a single clean per-observation quantity, the measure information
 theory calls perplexity:
@@ -495,7 +535,25 @@ threshold $T_j$; in ``online'' mode the traversal keeps re-arming at every
 later, higher peak, so only the last, most persistent bump wins
 (\code{src/elbow\_helper/locator.py}, \code{find\_knee}).
 
+\textbf{Worked example.} Five normalized points, evenly spaced,
+$x_{\text{norm}} = (0, 0.25, 0.5, 0.75, 1)$, with $y_{\text{norm}} = (0,
+0.6, 0.8, 0.9, 1)$, a $\sqrt{x}$-shaped rise. The difference curve
+subtracts $x_{\text{norm}}$ point by point: $d = (0, 0.35, 0.3, 0.15,
+0)$, peaking at $d_{\max}=0.35$ on the second point. The mean spacing
+$\overline{|\Delta x_{\text{norm}}|}$ is $0.25$ here (four equal gaps
+covering a unit range). With sensitivity $S=1$, the threshold sits at
+$T = 0.35 - 1 \times 0.25 = 0.10$. Walking the curve past the peak,
+$d=0.3$ and $d=0.15$ both still clear $0.10$; only the last point,
+$d=0$, drops below it. The knee is declared one step before that drop,
+at the fourth point, $x_{\text{norm}}=0.75$: not the peak itself, but
+the last point still comfortably above the noise floor $S$ sets. Raise
+$S$ to $2$ and the threshold rises to $0.35 - 2\times 0.25 = -0.15$,
+below zero, so declaring is no longer picky about margin, the sole
+requirement is that $d(x)$ stay above the noise floor at all, an
+easy bar even a wiggle can clear.
+
 \section{The broken-line model: a knee as a change of slope}
+\label{sec:hinge}
 
 \textbf{Intuition.} A real knee should let a two-piece line (straight,
 then a different straight slope after the knee) fit the data noticeably
@@ -509,12 +567,27 @@ bends at $k$ without jumping:
 y = a + b\,x + c \cdot \max(0,\ x - k)
 \end{equation}
 
+\textbf{Worked example.} Take $a=1$, $b=1$, $c=2$, $k=3$. Before the
+knee, $\max(0, x-3)=0$ for every $x \le 3$, so the formula collapses to
+the plain line $y = 1 + x$: at $x=2$, $y=3$. Past the knee, the hinge
+term switches on: at $x=5$, $\max(0, 5-3)=2$, so $y = 1 + 5 + 2\cdot 2 =
+10$. Reading the slope off each side directly, before $k$ it is $b=1$;
+after $k$ it is $b+c=1+2=3$, three times steeper. Nothing jumps at
+$x=3$ itself: both readings of the formula agree there, $y = 1 + 3 = 4$
+from the left ($\max(0,0)=0$) and $y = 1+3+2\cdot 0 = 4$ from the right,
+because the hinge term is continuous by construction, exactly zero at
+$x=k$ rather than switching on abruptly. $c$ alone carries the whole
+story of the bend: $c=0$ is just a plain line with no knee at all,
+and the further $c$ sits from zero, in either direction, the sharper
+the change of slope at $k$.
+
 This is the algebraic object every confirmation check in
 Part~\ref{part:noise} is ultimately built around: fitting it by ordinary
 least squares and comparing its residual error against a plain line's
 answers the question ``does a bend here actually help''.
 
 \section{A worked example: the k-means inertia elbow}
+\label{sec:kmeans-example}
 
 \code{robust\_elbow}'s own docstring names this the flagship
 convex-decreasing case. It is worth seeing end to end: run k-means for
@@ -524,7 +597,7 @@ cluster stops paying for itself.
 
 \code{tests/test\_real\_world\_examples.py::\allowbreak kmeans\_inertia\_curve} builds
 eight well-separated 2D blobs, each its own mildly elongated ellipse rather
-than a plain isotropic Gaussian, and runs Lloyd's algorithm (fifteen random
+than a plain isotropic Gaussian and runs Lloyd's algorithm (fifteen random
 restarts per $k$, to avoid a bad local optimum blurring the curve) for $k =
 1, \dots, 24$. Inertia falls by two orders of magnitude at $k = 8$, the true
 cluster count. What happens after $k = 8$ is the point worth looking at
@@ -567,7 +640,7 @@ than large, exactly a $p$-value's usual convention.
 \includegraphics[width=0.8\textwidth]{figures/kmeans_en.png}
 \caption{The k-means inertia curve on a log-scale y-axis, with
 \code{elbow\_helper.robust\_elbow}'s detected elbow (dashed red line) at
-k=8, the true number of clusters, and a gently decaying tail past it.}
+k=8 (the true number of clusters) and a gently decaying tail past it.}
 \end{figure}
 
 \textbf{Two practical traps this example surfaced, worth stating plainly.}
@@ -580,7 +653,7 @@ for longer, noisier, elbow-anywhere measurement curves:
 left-heavy curve like this one outright.
 \code{tests/test\_real\_world\_examples.py} ships a \code{RobustKneeConfig}
 profile with both of those relaxed, plus several of the persistence and
-bootstrap thresholds loosened to match, and states in a comment exactly why:
+bootstrap thresholds loosened to match and states in a comment exactly why:
 short, clean applied curves are a genuinely different regime from the long,
 noisy time-series-like curves the defaults target, not a bug in either.
 Second: blocked cross-validation (Section~\ref{sec:bic-cv}) splits a curve
@@ -590,6 +663,47 @@ landing near the elbow can flip the sign of the held-out improvement on an
 unlucky seed. Three wider folds instead of five fixes it, a direct,
 checkable illustration of Section~\ref{sec:bic-cv}'s own point that
 cross-validation needs enough data per fold to say anything stable.
+
+\textbf{On real data, without manufactured blobs.} The eight blobs above
+are clean by construction: hand-picked ellipses, well separated, with
+just enough irregularity to keep the tail from going flat. Real
+measurements are never that accommodating. The wine recognition
+dataset \citep{aeberhard1992}, shipped with scikit-learn, gives $178$
+real Italian wines, each with thirteen real chemical measurements
+(alcohol, malic acid, ash, magnesium, total phenols, flavanoids, color
+intensity, among others) and a real cultivar out of three, never used
+for fitting, only for comparison after the fact. The thirteen
+measurements are standardized, then exactly the same k-means code as
+above, with the same relaxed short-curve \code{RobustKneeConfig}
+profile, runs for $k=1,\dots,12$ and calls
+\code{elbow\_helper.robust\_elbow} on the resulting inertia curve.
+
+By eye, the curve bends around $k=3$, which would line up nicely with
+the three real cultivars. \code{robust\_elbow} still declines to
+confirm it: \code{NoClearKnee}, reason \code{NO\_PERSISTENT\_CLUSTER}.
+That is not a bug; it is Section~\ref{sec:persistence} doing exactly
+what it exists to do. On real chemical measurements, the three
+cultivars' profiles partly overlap, so the $k=3$ candidate does not
+cluster together consistently enough across the smoothing widths and
+sensitivities tested to survive that check, even though a reader who
+already knows the answer would guess it correctly. This is exactly the
+design priority Section~\ref{sec:null-test} stated on a synthetic
+curve: elbow-helper is built to fail in the honest direction, an
+abstention over a hasty confirmation, even when that means passing on
+an answer a human, armed with information the algorithm does not have,
+could have guessed right.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/kmeans_wine_en.png}
+\caption{The real k-means inertia curve on the $178$ wines and thirteen
+real chemical measurements of the wine recognition dataset
+\citep{aeberhard1992}. The grey dotted line marks $k=3$, the real
+number of cultivars, for comparison only:
+\code{elbow\_helper.robust\_elbow} draws no red line there, since it
+abstains (\code{NoClearKnee}, \code{NO\_PERSISTENT\_CLUSTER}) rather
+than confirm this candidate.}
+\end{figure}
 
 \part{Several knees, the geometry of many bends}
 \label{part:several}
@@ -636,10 +750,22 @@ b = \frac{m\,S_{xy} - S_x S_y}{m\,S_{xx} - S_x^2}, \qquad a = \frac{S_y - b\,S_x
 \end{equation}
 
 and, substituting into $RSS = \sum_i (y_i - a - b x_i)^2$ and simplifying
-with the normal equations,
+with the normal equations, the formula below is itself computed
+directly from the six sums, never touching the points again. The
+normal equations themselves, obtained by zeroing the two partial
+derivatives $\partial RSS/\partial a$ and $\partial RSS/\partial b$,
+read $S_y = ma + b S_x$ and $S_{xy} = aS_x + bS_{xx}$; these are
+exactly the two equations the formula for $b$ and $a$ above solves.
+Expanding the square in $RSS$ gives $RSS = S_{yy} - 2aS_y - 2bS_{xy} +
+a^2 m + 2ab S_x + b^2 S_{xx}$, where the group $a^2 m + 2abS_x + b^2
+S_{xx}$ splits into $a(am + bS_x) + b(aS_x + bS_{xx})$; each
+parenthesis is exactly the right-hand side of a normal equation:
+$am+bS_x = S_y$ and $aS_x + bS_{xx} = S_{xy}$. That group therefore
+collapses to $aS_y + bS_{xy}$; putting it back into $RSS$ cancels
+two of the four terms carrying $a$ and $b$:
 
 \begin{equation}
-RSS = S_{yy} - a\,S_y - b\,S_{xy}
+RSS = S_{yy} - 2aS_y - 2bS_{xy} + aS_y + bS_{xy} = S_{yy} - a\,S_y - b\,S_{xy}
 \end{equation}
 
 Precomputing the six running sums once costs $O(n)$; every later
@@ -660,6 +786,67 @@ one final segment from $s$ to $t$, minimized over all valid $s$. Because the
 best $k$-segment answer depends only on the best $(k-1)$-segment answers,
 each already computed once, no combination is ever recomputed. This is
 Bellman's principle of optimality.
+
+\textbf{Why the shortcut is actually valid.} The claim above is not
+just a convenient assumption: it has a short proof by contradiction,
+the kind of argument worth seeing once rather than taking on faith.
+Suppose $C[k][t]$, the lowest total cost over every possible way to
+cut the first $t$ points into $k+1$ segments, is achieved by some
+particular partition whose very last cut sits at position $s^\ast$.
+That partition's first $k$ segments, covering points $1$ through
+$s^\ast$, are themselves \emph{some} $k$-segment partition of those
+points. Suppose, for contradiction, that they are not the
+\emph{cheapest} such partition, that some other way of cutting the
+first $s^\ast$ points into $k$ segments costs strictly less. Swap that
+cheaper arrangement in for the first part, keep the same last segment
+from $s^\ast$ to $t$ unchanged: the result is still a valid $(k+1)$-segment
+partition of the first $t$ points. Its total cost is strictly lower
+than $C[k][t]$, since only the part that got cheaper changed and
+nothing else did. That contradicts $C[k][t]$ being the minimum to begin
+with. So the first part of \emph{any} optimal partition must itself be
+optimal for its own smaller sub-problem, exactly the property that lets
+the recursion below look up an already-solved answer, $C[k-1][s]$,
+rather than re-solving that smaller problem from scratch at every
+step.
+
+\begin{center}
+\begin{tikzpicture}[
+  node distance=9mm and 7mm,
+  box/.style={draw, rounded corners, minimum height=8mm, minimum width=20mm,
+    align=center, font=\scriptsize, fill=blue!4},
+  sumbox/.style={draw, rounded corners, minimum height=8mm, minimum width=32mm,
+    align=center, font=\scriptsize, fill=orange!6},
+  minbox/.style={draw, circle, minimum size=9mm, align=center, font=\small\bfseries, fill=red!8},
+  ansbox/.style={draw, rounded corners, minimum height=9mm, minimum width=20mm,
+    align=center, font=\small, fill=green!8},
+  ->, >=Stealth, thick
+]
+\node[box] (c16) {$C[1][6]$\\already known};
+\node[box, below=of c16] (c17) {$C[1][7]$\\already known};
+\node[box, below=of c17] (c18) {$C[1][8]$\\already known};
+\node[sumbox, right=14mm of c16] (s6) {$C[1][6]+\operatorname{cost}(6,10)$};
+\node[sumbox, right=14mm of c17] (s7) {$C[1][7]+\operatorname{cost}(7,10)$};
+\node[sumbox, right=14mm of c18] (s8) {$C[1][8]+\operatorname{cost}(8,10)$};
+\node[minbox, right=16mm of s7] (m) {min};
+\node[ansbox, right=14mm of m] (ans) {$C[2][10]$};
+\draw (c16) -- (s6);
+\draw (c17) -- (s7);
+\draw (c18) -- (s8);
+\draw (s6) -- (m);
+\draw (s7) -- (m);
+\draw (s8) -- (m);
+\draw (m) -- (ans);
+\end{tikzpicture}
+\end{center}
+\begin{center}
+\footnotesize
+Computing $C[2][10]$ from three candidate last cuts, $s \in \{6,7,8\}$:
+each candidate reuses an already-solved $C[1][s]$, an answer computed
+once and looked up here rather than recomputed, adds the cost of one
+final segment, and the cheapest of the three candidates wins. A real
+run checks every valid $s$, not just three; the picture keeps a small
+slice for legibility.
+\end{center}
 
 \textbf{Formula.} With $C[k][t]$ the minimal total RSS of the first $t$
 points cut into $k+1$ segments:
@@ -745,10 +932,10 @@ the gap without closing it.}
 \section{A worked example: a mountain of alternating slopes}
 
 Part~\ref{part:one}'s \code{robust\_knee} needs \code{curve}/\code{direction}
-to know which of the four mirror images it is looking at, or must infer it
+to know which of the four mirror images it is looking at or must infer it
 from the whole curve's global shape. A curve that goes up, flattens, comes
 back down, and flattens again, a mountain, has no single global shape at
-all: Section~4's fixed-sign geometry cannot describe it, no matter how
+all: Section~\ref{sec:diff-curve}'s fixed-sign geometry cannot describe it, no matter how
 \code{curve}/\code{direction} are set.
 
 \code{robust\_knees} sidesteps the question entirely, because this part's
@@ -777,7 +964,7 @@ without any curve/direction argument.}
 Parts~\ref{part:one} and~\ref{part:several} describe the geometry of a bend
 as if the data were exact. Real data never is, so nothing above is trusted
 on its own. This part is the trust layer: a chain of independent checks a
-single-knee candidate must survive to become a \code{ClearKnee}, and a set
+single-knee candidate must survive to become a \code{ClearKnee}; a set
 of model-selection criteria that decide, for the multi-knee case, how many
 breakpoints the noise actually supports.
 
@@ -787,7 +974,7 @@ breakpoints the noise actually supports.
 more basic question: does $y$ move consistently with $x$ at all? Not ``is
 the relationship a straight line'' (Pearson correlation asks that and
 would be fooled by a genuine, curved knee shape) but ``when $x$ goes up,
-does $y$ tend to go up too, or down, however wiggly the path''. The trick is
+does $y$ tend to go up too or down, however wiggly the path''. The trick is
 to replace every value by its \emph{rank}, 1st smallest, 2nd smallest, and
 so on, before correlating. Ranks discard exactly the information that would
 make an ordinary correlation sensitive to the curve's exact shape or to
@@ -795,7 +982,7 @@ outliers, keeping only the ``does the order agree'' question.
 
 \textbf{Worked example.} Five points with $x = (1,2,3,4,5)$ and $y =
 (2,1,5,3,9)$. The $y$ ranks are $(2,1,3,4,5)$ (rank 1 is the smallest
-value, so $y=1$ at position 2 gets rank 1, and so on). Even though the raw
+value, so $y=1$ at position 2 gets rank 1 and so on). Even though the raw
 values wiggle ($2, 1, 5, \dots$), the ranks track $x$'s ranks $(1,2,3,4,5)$
 fairly closely, giving a high positive correlation despite the local dip.
 
@@ -830,7 +1017,7 @@ only \emph{proposes}.
 
 \textbf{Intuition.} A genuine knee should show up at nearly every smoothing
 width and every sensitivity, wandering only slightly. A knee that is really
-noise tends to jump around unpredictably as the smoothing changes, or shows
+noise tends to jump around unpredictably as the smoothing changes or shows
 up at only one or two settings and vanishes elsewhere. \code{elbow-helper}
 groups the candidate pool by location, within \code{cluster\_tolerance} of
 each other, in normalized $x$ units, then asks of the largest group: does
@@ -893,18 +1080,90 @@ negative log-likelihood
 \end{equation}
 
 is natural-log by construction, inherited from the Gaussian density's own
-$\exp$, not chosen freely, and that its extreme cases are best read
+$\exp$, not chosen freely and that its extreme cases are best read
 through $\mathrm{MSE}_{\text{worst}}$, a deliberately pessimistic finite
 baseline, rather than through $\mathrm{MSE} \to \infty$ or the
 easily-beaten sample mean. Every $\mathrm{BIC}$-family formula in this
 note, including the one below, opens with this same $n\ln(RSS/n)$ term.
 
+\textbf{Where the $p \ln n$ penalty comes from.} The complexity charge
+itself is not a rule of thumb; it falls out of asking a more honest
+question than ``how well can this model fit if I pick its very best
+parameters''. A model's \emph{marginal likelihood} instead asks: averaged
+fairly over every parameter setting that seemed plausible before seeing
+the data, not just the one that happens to fit best, how well does this
+model explain what was actually observed? That average is an integral,
+$\int p(y\mid\theta)\,p(\theta)\,d\theta$, weighting each candidate
+$\theta$ by a prior belief $p(\theta)$ and by how well that particular
+$\theta$ explains the data. A model with many free parameters can reach
+an impressively high peak by tuning $\theta$ exactly to the data, but if
+only a thin sliver of parameter space near that peak actually fits well
+while the much larger space the integral has to average over fits
+badly, the honest average comes out lower than the peak alone would
+suggest: an automatic complexity tax a bare best-fit comparison never
+pays.
+
+This integral rarely has a closed form, so it needs an approximation,
+and the \emph{Laplace approximation} is the general recipe for
+integrating any sharply peaked function. Zoom in close enough on any
+smooth curve near its own peak and it looks like a parabola, the same
+idea a tangent line captures one derivative earlier, now one derivative
+further. Write $g(\theta) := \ln\!\big[p(y\mid\theta)p(\theta)\big]$ (the
+log of the very thing being integrated) and expand it to second order
+around its own peak $\hat\theta$ (where $g'(\hat\theta)=0$):
+$$g(\theta) \approx g(\hat\theta) - \tfrac12\,|g''(\hat\theta)|\,(\theta-\hat\theta)^2.$$
+Exponentiating turns that parabola into a Gaussian bump centered at
+$\hat\theta$. A Gaussian bump is exactly the one peaked shape whose
+area under the curve has a closed form already known from the standard
+Gaussian integral, $\int e^{-u^2/(2v)}\,du = \sqrt{2\pi v}$:
+$$\int p(y\mid\theta)p(\theta)\,d\theta \;\approx\;
+e^{g(\hat\theta)}\sqrt{\frac{2\pi}{|g''(\hat\theta)|}}.$$
+
+\begin{center}
+\begin{tikzpicture}[scale=0.95]
+\draw[->, >=Stealth, thick] (-2.6,0) -- (2.9,0) node[right] {\small $\theta$};
+\draw[->, >=Stealth, thick] (0,-0.15) -- (0,1.35) node[above] {\small $p(y\mid\theta)p(\theta)$};
+\draw[thick, blue!55!black, domain=-2.3:2.6, smooth, variable=\x, samples=60]
+  plot ({\x},{exp(-0.5*\x*\x - 0.12*\x*\x*\x)});
+\draw[thick, red!65!black, dashed, domain=-2.3:2.3, smooth, variable=\x, samples=60]
+  plot ({\x},{exp(-0.5*\x*\x)});
+\filldraw[black] (0,1) circle (1.3pt);
+\node[font=\scriptsize] at (0,1.18) {$\hat\theta$};
+\node[blue!55!black, font=\scriptsize] at (2.1,0.55) {true integrand};
+\node[red!65!black, font=\scriptsize] at (-1.85,0.9) {Laplace's Gaussian};
+\end{tikzpicture}
+\end{center}
+\begin{center}
+\footnotesize
+The true integrand (solid) need not be symmetric at all; the Laplace
+approximation (dashed) is the Gaussian bump that matches its height and
+its curvature at the single peak $\hat\theta$. The two nearly coincide
+right at the peak, which is exactly the region carrying almost all of
+the integral's area and drift apart in the tails, which barely
+contribute area either way.
+\end{center}
+
+Taking $\ln$ of the approximation above turns the product into a sum,
+$\ln[\text{marginal likelihood}] \approx g(\hat\theta) + \tfrac12\ln(2\pi)
+- \tfrac12\ln|g''(\hat\theta)|$. The last piece is where $n$ and $p$
+enter: fitting $p$ parameters to $n$ independent observations, the
+curvature $|g''(\hat\theta)|$ grows in proportion to $n$ in each of the
+$p$ parameter directions, so $\ln|g''(\hat\theta)|$ grows like $p\ln n$
+plus pieces that do not grow with $n$ at all. As $n$ grows, that one
+$p\ln n$ term dominates every other piece in the expansion, the prior
+$\ln p(\hat\theta)$ included, so those smaller pieces are dropped and
+only the part that actually keeps growing survives: $-\tfrac12\,p\ln n$.
+Multiplying through by $-2$, the same $-2\ln(\cdot)$ scaling
+Section~\ref{sec:likelihood-intro} already used to turn a
+log-likelihood into an information-criterion-style number, turns that
+into exactly $+p\ln n$: Schwarz's penalty, not asserted but read off
+the leading term of an honest average over parameter space.
+
 \textbf{Formula.} Schwarz's fix for the overfitting problem in this
-section's Intuition paragraph adds a complexity penalty, $p \ln n$, on top
-of this same $\mathrm{NLL}$, through a Laplace approximation to the
-model's marginal likelihood carried out in the same natural log
-throughout. Dropping the additive constant $n(1+\ln 2\pi)$, which cancels
-when comparing two models on the same data:
+section's Intuition paragraph adds that complexity penalty, $p \ln n$,
+on top of this same $\mathrm{NLL}$. Dropping the additive constant
+$n(1+\ln 2\pi)$, which cancels when comparing two models on the same
+data:
 
 \begin{equation}
 \mathrm{BIC} = n \ln\!\left(\frac{RSS}{n}\right) + p \ln n
@@ -912,7 +1171,7 @@ when comparing two models on the same data:
 
 Lower is better. \code{elbow\_helper.numerics.bic} implements exactly
 this; the single-knee pipeline compares the $\mathrm{BIC}$ of the single
-line ($p = 2 + 1$) against the broken line ($p = 3 + 1$) from Section~3,
+line ($p = 2 + 1$) against the broken line ($p = 3 + 1$) from Section~\ref{sec:hinge},
 requiring an improvement of at least \code{config.min\_bic\_improvement}
 (default $10$) \citep{schwarz1978} \citep{hastie2009esl} \citep{bishop2006prml}.
 
@@ -973,7 +1232,34 @@ broken-line model, the part of $y$ the model did not explain, resample them
 with replacement, add the resampled residuals back onto the fitted model to
 build a synthetic ``redo'' curve, then rerun the \emph{entire} search on
 it. Repeat many times, Efron's bootstrap. A knee that shows up only in the
-original run, and rarely in the resampled redos, was probably a fluke.
+original run and rarely in the resampled redos was probably a fluke.
+
+\begin{center}
+\begin{tikzpicture}[
+  node distance=7mm and 6mm,
+  box/.style={draw, rounded corners, minimum height=10mm, minimum width=23mm,
+    align=center, font=\scriptsize, fill=blue!4},
+  ->, >=Stealth, thick
+]
+\node[box] (fit) {fitted curve\\+ residuals $r$};
+\node[box, right=of fit] (resample) {resample $r$\\with replacement};
+\node[box, right=of resample] (redo) {synthetic\\redo curve $y^\ast$};
+\node[box, right=of redo] (search) {rerun the\\full search};
+\node[box, right=of search, fill=green!8] (loc) {redetected\\knee location};
+\draw (fit) -- (resample);
+\draw (resample) -- (redo);
+\draw (redo) -- (search);
+\draw (search) -- (loc);
+\draw (loc.north) to[bend right=40] node[above, font=\scriptsize] {repeat $B$ times} (resample.north);
+\end{tikzpicture}
+\end{center}
+\begin{center}
+\footnotesize
+One bootstrap replicate, left to right. The loop on top runs the whole
+chain $B$ times, so what comes out is not one redetected location but a
+whole distribution of them, the raw material for both the detection
+rate and the 90\% interval below.
+\end{center}
 
 \textbf{Formula.} For each of $B$ replicates, $y^\ast = \hat y + r^\ast$
 where $r^\ast$ is a resample-with-replacement of the observed residuals.
@@ -993,6 +1279,28 @@ still manages to report a knee as strong as the one actually observed. If
 pure noise regularly produces something this strong, the observed knee is
 not trustworthy evidence of a real bend, it is just what noisy straight
 lines look like some of the time.
+
+\begin{center}
+\begin{tikzpicture}[scale=0.85]
+\draw[->, >=Stealth, thick] (0,0) -- (7.4,0) node[right, font=\small] {knee strength};
+\draw[->, >=Stealth, thick] (0,0) -- (0,3.3) node[above, font=\small] {count};
+\foreach \x/\h in {0.3/2.6, 0.9/2.9, 1.5/2.4, 2.1/1.9, 2.7/1.4, 3.3/0.9, 3.9/0.55, 4.5/0.3, 5.1/0.15}
+  \draw[fill=blue!25, draw=blue!55!black] (\x,0) rectangle ++(0.5,\h);
+\foreach \x/\h in {5.7/0.08, 6.3/0.04}
+  \draw[fill=red!25, draw=red!60!black] (\x,0) rectangle ++(0.5,\h);
+\draw[thick, red!70!black, dashed] (5.55,0) -- (5.55,3.05);
+\node[red!70!black, font=\scriptsize, align=left] at (6.35,2.9) {observed};
+\end{tikzpicture}
+\end{center}
+\begin{center}
+\footnotesize
+The null distribution of knee strength across $B$ simulated
+straight-line-plus-noise curves (blue), with the observed knee's own
+strength marked (red dashed line). $p$ is the fraction of that null
+distribution sitting at or beyond the mark (the shaded red bars): a
+small $p$ means pure noise essentially never reaches what was actually
+observed.
+\end{center}
 
 \textbf{Formula.} With $B = $ \code{config.null\_replicates} (default
 $200$) Monte Carlo replicates and a lexicographic, search-adjusted test
@@ -1067,6 +1375,16 @@ stronger complexity charge on its own; the second term is always $\le 0$
 and, by the concavity of $\ln$, sits closest to zero when segments are
 balanced and most negative when they are very uneven.
 
+\textbf{Worked example.} Take $n=100$ and $k=1$, one breakpoint, two
+segments. Split evenly, $\ell = (50, 50)$: the second term is
+$\ln(0.5)+\ln(0.5) \approx -1.386$. Split unevenly, $\ell = (10, 90)$:
+it is $\ln(0.1)+\ln(0.9) \approx -2.303-0.105=-2.408$, well past the
+balanced case, exactly the concavity of $\ln$ making a small segment
+cost disproportionately more than a large one gains back. Both cases
+share the same $3k\ln n = 3\ln 100 \approx 13.816$. Whether that leaves
+the uneven split more or less penalized than the even one depends
+entirely on the sign chosen next.
+
 \textbf{A genuine ambiguity, resolved empirically rather than assumed.}
 Folding this penalty into a lower-is-better criterion by direct addition,
 
@@ -1077,13 +1395,20 @@ Folding this penalty into a lower-is-better criterion by direct addition,
 makes the most-negative, uneven-segment case \emph{lower} the total, so this
 combination \emph{rewards} uneven segments, the opposite of the
 ``penalizes short and uneven segments'' behaviour the term is meant to
-have. Subtracting the same term instead,
+have. Plugging the worked numbers back in: additive contributes
+$13.816 + (-1.386) = 12.430$ for the balanced split but only $13.816 +
+(-2.408) = 11.408$ for the uneven one, a \emph{lower} number on a
+lower-is-better criterion, rewarding exactly the split that should cost
+more. Subtracting the same term instead,
 
 \begin{equation}
 \mathrm{mBIC}_{\text{subtractive}}(k) = n \ln\!\left(\frac{RSS(k)}{n}\right) + 3k \ln n - \sum_{j=1}^{k+1} \ln\!\left(\frac{\ell_j}{n}\right)
 \end{equation}
 
-does penalize uneven segments, matching the literature's stated intent.
+does penalize uneven segments, matching the literature's stated intent:
+the same two splits now contribute $13.816 - (-1.386) = 15.202$
+balanced against $13.816 - (-2.408) = 16.224$ uneven, the uneven split
+correctly costing more.
 Both forms are implemented and directly compared:
 \code{modified\_bic\_subtractive} reaches 0.85 overall accuracy and a 0\%
 false-positive rate at $\text{true } k = 0$; \code{modified\_bic\_additive}
@@ -1218,12 +1543,49 @@ considered and not implemented: Davies' asymptotic test
 favour of a permutation test whose correctness is checkable directly by
 simulation.
 
+\textbf{The four criteria, side by side.} Sections~\ref{sec:several-bic}
+through~\ref{sec:fwer} build up four different answers to the same
+question, how many breakpoints does the data actually support, each
+fixing a gap the previous one left open. Table~\ref{tab:criteria}
+collects them in one place, with every number pulled directly from the
+measurements already reported above rather than restated from memory.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\begin{tabular}{@{}p{2.1cm}p{2.9cm}p{3.6cm}p{1.6cm}p{1.6cm}@{}}
+\toprule
+Criterion & Penalizes & Blind spot it fixes & FP @ true $k{=}0$ & Overall accuracy \\
+\midrule
+Plain $\mathrm{BIC}(k)$ & regression parameters only, $p\ln n$ &
+  nothing: treats a breakpoint's location as a regular parameter it
+  is not & $27\%$ & $0.65$ \\
+$\mathrm{mBIC}_{\text{sub}}$ & parameters plus uneven segment
+  lengths, $3k\ln n - \sum\ln(\ell_j/n)$ &
+  plain BIC's blindness to placement freedom & $0\%$ & $0.85$ \\
+$\mathrm{ICL}$ & $\mathrm{BIC}(k)$ plus segmentation ambiguity,
+  $+\,2H(K)$ &
+  ambiguous segment boundaries a fit-only score cannot see & $0\%$
+  (corrected) & $0.82$ \\
+FWER sequential test & nothing additive: a permutation $p$-value per
+  breakpoint, Bonferroni-corrected & every BIC-family blind spot at
+  once, by testing directly instead of penalizing & $0\%$ & $0.82$ \\
+\bottomrule
+\end{tabular}
+\caption{The four several-knee criteria this note derives, compared on
+the same synthetic benchmark (Figure~\ref{fig:multiknee-comparison}).
+Lower is not always better across rows, each formula has its own
+scale, only within a row's own comparisons; the two right-hand columns
+are the common yardstick.}
+\label{tab:criteria}
+\end{table}
+
 \section{Where this leaves the shipped API}
 
 \code{elbow\_helper.robust\_knees} ships exactly the combination validated
 above: dynamic-program search (Section~\ref{sec:dp}), the subtractive-sign
-modified BIC as the primary criterion (Section~18), and the FWER
-sequential gate (Section~20) layered on top by default, taking
+modified BIC as the primary criterion (Section~\ref{sec:mbic}), and the FWER
+sequential gate (Section~\ref{sec:fwer}) layered on top by default, taking
 $\min(\text{mBIC's } k,\ \text{FWER's } k)$, matching \code{elbow-helper}'s
 stated design priority of minimizing false-positive knees even at the cost
 of more abstentions. Plain BIC, the additive mBIC, ICL, and greedy search
@@ -1273,8 +1635,8 @@ must stay below $\alpha/k_{\max}$. Otherwise the gate can never pass no
 matter how real the effect is. With the default $k_{\max}=4$ and
 $\text{fwer\_permutations}=200$, $1/201 \approx 0.005 < 0.05/4 = 0.0125$,
 comfortably clear. Push $k_{\max}$ up, as this six-breakpoint example
-needs, without also raising \code{fwer\_permutations}, and the gate
-silently locks itself out: this is exactly what happened on the first
+needs, without also raising \code{fwer\_permutations}, silently locks
+the gate out: this is exactly what happened on the first
 attempt at this example ($k_{\max}=8$, the default 100 permutations, every
 single breakpoint rejected with $k=0$), caught by looking at the
 diagnostics rather than assuming the algorithm had failed for some more
@@ -1302,7 +1664,7 @@ detected with one breakpoint, high noise (right) abstains with zero, the
 same true shape underneath both panels.}
 \end{figure}
 
-This is the design priority from Section~21 made visible on one curve:
+This is the design priority from Section~\ref{sec:null-test} made visible on one curve:
 \code{elbow-helper} is built to be wrong in the honest direction. A missed
 real knee at high noise is a cost this library accepts deliberately; a
 reported knee that is really noise is the failure mode every check in
@@ -1333,7 +1695,7 @@ detected elbow (dashed red line) at the boundary between 6 signal
 components and 19 noise components.}
 \end{figure}
 
-This example shares Section~4's practical trap exactly: a scree plot is
+This example shares Section~\ref{sec:kmeans-example}'s practical trap exactly: a scree plot is
 short and left-heavy in precisely the same way an inertia curve is, so it
 needs the same relaxed \code{RobustKneeConfig} profile. It also surfaces
 the convention worth knowing about before reading \code{knee\_x} off any
@@ -1342,6 +1704,38 @@ consistently lands one to two components \emph{past} the last true signal
 component, not exactly on it. Across every seed tested, the detected elbow
 falls at 6 or 7 components for a true signal dimension of 6, never below
 it, a systematic, predictable offset rather than noise.
+
+\textbf{On real data, without a known truth.} The signal and noise
+above are built with a known signal dimension $d=6$, set on purpose so
+a reader can check the answer. Real data never announces its own
+dimension. Take the same $178$ wines and thirteen chemical measurements
+\citep{aeberhard1992} again, now read as thirteen continuous variables
+rather than a space to cluster: standardized, the covariance matrix
+computed, its eigenvalues sorted in decreasing order give a real scree
+plot, with no signal-plus-noise construction underneath at all.
+\code{elbow\_helper.robust\_elbow}, called with the same short-curve
+profile, abstains again: \code{NoClearKnee}, reason
+\code{WEAK\_SLOPE\_CHANGE}. The curve decays, but without a single drop
+sharp enough for a slope change to clear the Theil-Sen contrast
+threshold of Section~\ref{sec:theilsen}; thirteen chemical measurements
+that are realistically correlated with each other (alcohol and total
+phenols are not independent, for instance) spread variance across more
+components than an idealized signal-plus-noise construction ever
+would. A reader who had only seen this figure would have no way to
+guess a "correct" number of components to keep; that is precisely the
+kind of situation where an unqualified point answer would be most
+dangerous and where elbow-helper's explicit abstention is worth the
+most.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/pca_wine_en.png}
+\caption{The real scree plot of the thirteen real chemical measurements
+of the same $178$ wines \citep{aeberhard1992}, with no known truth built
+underneath. \code{elbow\_helper.robust\_elbow} abstains
+(\code{NoClearKnee}, \code{WEAK\_SLOPE\_CHANGE}) rather than name an
+arbitrary component as the boundary.}
+\end{figure}
 
 \section{A worked example: an exponential saturation curve}
 
@@ -1411,7 +1805,7 @@ $C$ follows a Michaelis-Menten shape, $C/(C+K)$, with $K$ the cache size
 at which half the working set is already resident: fast early gains, then
 a long, flattening tail. This is concave and increasing, the same broad
 family as the exponential saturation curve two sections back, but built
-from a rational function rather than an exponential, and answering a cost
+from a rational function rather than an exponential and answering a cost
 question rather than a physical time-constant one.
 
 \begin{figure}[h]
@@ -1454,27 +1848,7 @@ example shows above. Reading \code{knee\_x} as
 genuinely flattened, a day or two either side'' over-trusts the point
 estimate past what it actually claims.
 
-\section*{Further reading}
 
-For a deeper or more rigorous treatment of the ideas above than this note
-attempts, not as sources of any specific claim already cited, but as
-places to go further:
-
-\begin{itemize}[leftmargin=*]
-\item Hastie, Tibshirani and Friedman on the bias-variance trade-offs
-  behind BIC, cross-validation and the bootstrap \citeyearpar{hastie2009esl}
-\item Bishop on the Bayesian model-selection framing that motivates BIC and
-  ICL \citeyearpar{bishop2006prml}
-\item Bouveyron, Celeux, Murphy and Raftery on mixture models and
-  model-based clustering at book length \citeyearpar{bouveyron2021mbc}
-\item Cormen, Leiserson, Rivest and Stein on dynamic programming in general
-  \citeyearpar{cormen2022algorithms}
-\item Dasgupta, Papadimitriou and Vazirani on dynamic programming again,
-  leaner and intuition-first: this project's own favourite treatment of the
-  recursion behind Section~\ref{sec:dp} \citeyearpar{dasgupta2006algorithms}
-\item L\'opez de Prado on validation rigor for ordered, sequential data
-  \citeyearpar{lopezdeprado2018financial}
-\end{itemize}
 
 \clearpage
 

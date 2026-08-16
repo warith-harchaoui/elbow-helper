@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="580" viewBox="0 0 1000 580" font-family="Roboto, system-ui, sans-serif" role="img" aria-labelledby="wd-title wd-desc">
+<title id="wd-title">Wald's martingale: two paths, two verdicts</title>
+<desc id="wd-desc">Wald's martingale: two paths, two verdicts. p₀=0.3, p₁=0.7, SPRT thresholds for α=β=0.05</desc>
+<rect width="1000" height="580" fill="#FFFFFF"/>
+<text x="140" y="52" font-size="24" font-weight="700" fill="#1D1D1F">Wald's martingale: two paths, two verdicts</text>
+<text x="140" y="82" font-size="16" fill="#6E6E73">p₀=0.3, p₁=0.7, SPRT thresholds for α=β=0.05</text>
+<line x1="140.0" y1="435.6" x2="950.0" y2="435.6" stroke="#EEEEEE" stroke-width="1.2"/>
+<text x="126.0" y="440.6" font-size="15" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">-2.94</text>
+<line x1="140.0" y1="310.0" x2="950.0" y2="310.0" stroke="#EEEEEE" stroke-width="1.2"/>
+<text x="126.0" y="315.0" font-size="15" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">0</text>
+<line x1="140.0" y1="184.4" x2="950.0" y2="184.4" stroke="#EEEEEE" stroke-width="1.2"/>
+<text x="126.0" y="189.4" font-size="15" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">2.94</text>
+<line x1="140.0" y1="470.0" x2="950.0" y2="470.0" stroke="#1D1D1F" stroke-width="1.6"/>
+<line x1="140.0" y1="150.0" x2="140.0" y2="470.0" stroke="#1D1D1F" stroke-width="1.6"/>
+<line x1="140.0" y1="470.0" x2="140.0" y2="476.0" stroke="#1D1D1F" stroke-width="1.4"/>
+<text x="140.0" y="498.0" font-size="15" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">0</text>
+<line x1="342.5" y1="470.0" x2="342.5" y2="476.0" stroke="#1D1D1F" stroke-width="1.4"/>
+<text x="342.5" y="498.0" font-size="15" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">5</text>
+<line x1="545.0" y1="470.0" x2="545.0" y2="476.0" stroke="#1D1D1F" stroke-width="1.4"/>
+<text x="545.0" y="498.0" font-size="15" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">10</text>
+<line x1="747.5" y1="470.0" x2="747.5" y2="476.0" stroke="#1D1D1F" stroke-width="1.4"/>
+<text x="747.5" y="498.0" font-size="15" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">15</text>
+<line x1="950.0" y1="470.0" x2="950.0" y2="476.0" stroke="#1D1D1F" stroke-width="1.4"/>
+<text x="950.0" y="498.0" font-size="15" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">20</text>
+<text x="545.0" y="532.0" font-size="17" fill="#1D1D1F" text-anchor="middle">observation t</text>
+<text x="40" y="310.0" font-size="16" fill="#1D1D1F" text-anchor="middle" transform="rotate(-90 40 310.0)">cumulative log-ratio sum</text>
+<line x1="140.0" y1="184.2" x2="950.0" y2="184.2" stroke="#8E8E93" stroke-width="1.6" stroke-dasharray="7 5"/>
+<text x="942.0" y="176.2" font-size="15" fill="#6E6E73" text-anchor="end">accept p₁</text>
+<line x1="140.0" y1="435.8" x2="950.0" y2="435.8" stroke="#8E8E93" stroke-width="1.6" stroke-dasharray="7 5"/>
+<text x="942.0" y="455.8" font-size="15" fill="#6E6E73" text-anchor="end">accept p₀</text>
+<path d="M 140.0 310.0 L 180.5 273.8 L 221.0 237.6 L 261.5 201.4 L 302.0 237.6 L 342.5 201.4 L 383.0 237.6 L 423.5 201.4 L 464.0 165.2" fill="none" stroke="#28CD41" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>
+<circle cx="464.0" cy="165.2" r="6" fill="#28CD41" stroke="#FFFFFF" stroke-width="1.4"/>
+<path d="M 140.0 310.0 L 180.5 273.8 L 221.0 237.6 L 261.5 201.4 L 302.0 165.2" fill="none" stroke="#28CD41" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>
+<circle cx="302.0" cy="165.2" r="6" fill="#28CD41" stroke="#FFFFFF" stroke-width="1.4"/>
+<path d="M 140.0 310.0 L 180.5 346.2 L 221.0 310.0 L 261.5 346.2 L 302.0 310.0 L 342.5 273.8 L 383.0 237.6 L 423.5 201.4 L 464.0 165.2" fill="none" stroke="#28CD41" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>
+<circle cx="464.0" cy="165.2" r="6" fill="#28CD41" stroke="#FFFFFF" stroke-width="1.4"/>
+<path d="M 140.0 310.0 L 180.5 273.8 L 221.0 310.0 L 261.5 273.8 L 302.0 237.6 L 342.5 273.8 L 383.0 237.6 L 423.5 273.8 L 464.0 237.6 L 504.5 201.4 L 545.0 237.6 L 585.5 201.4 L 626.0 237.6 L 666.5 201.4 L 707.0 165.2" fill="none" stroke="#FF3B30" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>
+<circle cx="707.0" cy="165.2" r="6" fill="#FF3B30" stroke="#FFFFFF" stroke-width="1.4"/>
+<path d="M 140.0 310.0 L 180.5 346.2 L 221.0 382.4 L 261.5 418.6 L 302.0 454.8" fill="none" stroke="#FF3B30" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>
+<circle cx="302.0" cy="454.8" r="6" fill="#FF3B30" stroke="#FFFFFF" stroke-width="1.4"/>
+<circle cx="162.0" cy="172.0" r="6" fill="#28CD41"/>
+<text x="176.0" y="177.0" font-size="15" fill="#1D1D1F">true law = p₁</text>
+<circle cx="162.0" cy="196.0" r="6" fill="#FF3B30"/>
+<text x="176.0" y="201.0" font-size="15" fill="#1D1D1F">true law = p₀</text>
+</svg>

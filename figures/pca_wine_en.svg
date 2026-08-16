@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="580" viewBox="0 0 1000 580" font-family="Roboto, system-ui, sans-serif" role="img" aria-labelledby="ew-title ew-desc">
+<title id="ew-title">Wine, without a known truth: the real scree plot</title>
+<desc id="ew-desc">Wine, without a known truth: the real scree plot. same 178 wines, covariance eigenvalues of the 13 real measurements; robust_elbow called for real</desc>
+<rect width="1000" height="580" fill="#FFFFFF"/>
+<text x="130" y="52" font-size="23" font-weight="700" fill="#1D1D1F">Wine, without a known truth: the real scree plot</text>
+<text x="130" y="82" font-size="15" fill="#6E6E73">same 178 wines, covariance eigenvalues of the 13 real measurements; robust_elbow called for real</text>
+<line x1="130.0" y1="470.0" x2="940.0" y2="470.0" stroke="#EEEEEE" stroke-width="1.2"/>
+<text x="116.0" y="475.0" font-size="14" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">0</text>
+<line x1="130.0" y1="390.0" x2="940.0" y2="390.0" stroke="#EEEEEE" stroke-width="1.2"/>
+<text x="116.0" y="395.0" font-size="14" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">1</text>
+<line x1="130.0" y1="310.0" x2="940.0" y2="310.0" stroke="#EEEEEE" stroke-width="1.2"/>
+<text x="116.0" y="315.0" font-size="14" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">3</text>
+<line x1="130.0" y1="230.0" x2="940.0" y2="230.0" stroke="#EEEEEE" stroke-width="1.2"/>
+<text x="116.0" y="235.0" font-size="14" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">4</text>
+<line x1="130.0" y1="150.0" x2="940.0" y2="150.0" stroke="#EEEEEE" stroke-width="1.2"/>
+<text x="116.0" y="155.0" font-size="14" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">5</text>
+<line x1="130.0" y1="470.0" x2="940.0" y2="470.0" stroke="#1D1D1F" stroke-width="1.6"/>
+<line x1="130.0" y1="150.0" x2="130.0" y2="470.0" stroke="#1D1D1F" stroke-width="1.6"/>
+<line x1="155.3" y1="470.0" x2="155.3" y2="475.0" stroke="#1D1D1F" stroke-width="1.2"/>
+<text x="155.3" y="496.0" font-size="13" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">1</text>
+<line x1="218.6" y1="470.0" x2="218.6" y2="475.0" stroke="#1D1D1F" stroke-width="1.2"/>
+<text x="218.6" y="496.0" font-size="13" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">2</text>
+<line x1="281.9" y1="470.0" x2="281.9" y2="475.0" stroke="#1D1D1F" stroke-width="1.2"/>
+<text x="281.9" y="496.0" font-size="13" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">3</text>
+<line x1="345.2" y1="470.0" x2="345.2" y2="475.0" stroke="#1D1D1F" stroke-width="1.2"/>
+<text x="345.2" y="496.0" font-size="13" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">4</text>
+<line x1="408.4" y1="470.0" x2="408.4" y2="475.0" stroke="#1D1D1F" stroke-width="1.2"/>
+<text x="408.4" y="496.0" font-size="13" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">5</text>
+<line x1="471.7" y1="470.0" x2="471.7" y2="475.0" stroke="#1D1D1F" stroke-width="1.2"/>
+<text x="471.7" y="496.0" font-size="13" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">6</text>
+<line x1="535.0" y1="470.0" x2="535.0" y2="475.0" stroke="#1D1D1F" stroke-width="1.2"/>
+<text x="535.0" y="496.0" font-size="13" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">7</text>
+<line x1="598.3" y1="470.0" x2="598.3" y2="475.0" stroke="#1D1D1F" stroke-width="1.2"/>
+<text x="598.3" y="496.0" font-size="13" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">8</text>
+<line x1="661.6" y1="470.0" x2="661.6" y2="475.0" stroke="#1D1D1F" stroke-width="1.2"/>
+<text x="661.6" y="496.0" font-size="13" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">9</text>
+<line x1="724.8" y1="470.0" x2="724.8" y2="475.0" stroke="#1D1D1F" stroke-width="1.2"/>
+<text x="724.8" y="496.0" font-size="13" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">10</text>
+<line x1="788.1" y1="470.0" x2="788.1" y2="475.0" stroke="#1D1D1F" stroke-width="1.2"/>
+<text x="788.1" y="496.0" font-size="13" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">11</text>
+<line x1="851.4" y1="470.0" x2="851.4" y2="475.0" stroke="#1D1D1F" stroke-width="1.2"/>
+<text x="851.4" y="496.0" font-size="13" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">12</text>
+<line x1="914.7" y1="470.0" x2="914.7" y2="475.0" stroke="#1D1D1F" stroke-width="1.2"/>
+<text x="914.7" y="496.0" font-size="13" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">13</text>
+<text x="535.0" y="528.0" font-size="16" fill="#1D1D1F" text-anchor="middle">component</text>
+<text x="40" y="310.0" font-size="15" fill="#1D1D1F" text-anchor="middle" transform="rotate(-90 40 310.0)">eigenvalue</text>
+<path d="M 155.3 173.7 L 218.6 312.8 L 281.9 379.0 L 345.2 412.1 L 408.4 416.3 L 471.7 429.6 L 535.0 435.3 L 598.3 448.1 L 661.6 451.8 L 724.8 454.2 L 788.1 455.8 L 851.4 459.4 L 914.7 463.5" fill="none" stroke="#007AFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="155.3" cy="173.7" r="5.5" fill="#007AFF" stroke="#FFFFFF" stroke-width="1.2"/>
+<circle cx="218.6" cy="312.8" r="5.5" fill="#007AFF" stroke="#FFFFFF" stroke-width="1.2"/>
+<circle cx="281.9" cy="379.0" r="5.5" fill="#007AFF" stroke="#FFFFFF" stroke-width="1.2"/>
+<circle cx="345.2" cy="412.1" r="5.5" fill="#007AFF" stroke="#FFFFFF" stroke-width="1.2"/>
+<circle cx="408.4" cy="416.3" r="5.5" fill="#007AFF" stroke="#FFFFFF" stroke-width="1.2"/>
+<circle cx="471.7" cy="429.6" r="5.5" fill="#007AFF" stroke="#FFFFFF" stroke-width="1.2"/>
+<circle cx="535.0" cy="435.3" r="5.5" fill="#007AFF" stroke="#FFFFFF" stroke-width="1.2"/>
+<circle cx="598.3" cy="448.1" r="5.5" fill="#007AFF" stroke="#FFFFFF" stroke-width="1.2"/>
+<circle cx="661.6" cy="451.8" r="5.5" fill="#007AFF" stroke="#FFFFFF" stroke-width="1.2"/>
+<circle cx="724.8" cy="454.2" r="5.5" fill="#007AFF" stroke="#FFFFFF" stroke-width="1.2"/>
+<circle cx="788.1" cy="455.8" r="5.5" fill="#007AFF" stroke="#FFFFFF" stroke-width="1.2"/>
+<circle cx="851.4" cy="459.4" r="5.5" fill="#007AFF" stroke="#FFFFFF" stroke-width="1.2"/>
+<circle cx="914.7" cy="463.5" r="5.5" fill="#007AFF" stroke="#FFFFFF" stroke-width="1.2"/>
+<text x="930.0" y="172.0" font-size="13.5" fill="#6E6E73" text-anchor="end" font-family="Roboto Mono, monospace">NoClearKnee: WEAK_SLOPE_CHANGE</text>
+</svg>

@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1150" height="600" viewBox="0 0 1150 600" font-family="Roboto, system-ui, sans-serif" role="img" aria-labelledby="cr-title cr-desc">
+<title id="cr-title">Cramer's decay: the average tightens exponentially fast</title>
+<desc id="cr-desc">Cramer's decay: the average tightens exponentially fast. p=(0.5, 0.3, 0.15, 0.05), tolerance 0.1, 20,000 replicates per size</desc>
+<rect width="1150" height="600" fill="#FFFFFF"/>
+<text x="60" y="52" font-size="24" font-weight="700" fill="#1D1D1F">Cramer's decay: the average tightens exponentially fast</text>
+<text x="60" y="82" font-size="16" fill="#6E6E73">p=(0.5, 0.3, 0.15, 0.05), tolerance 0.1, 20,000 replicates per size</text>
+<text x="190.0" y="132.0" font-size="16" font-weight="700" fill="#1D1D1F">simulated decay, 7 sizes, 20,000 replicates</text>
+<line x1="190.0" y1="470.0" x2="590.0" y2="470.0" stroke="#EEEEEE" stroke-width="1.2"/>
+<text x="178.0" y="475.0" font-size="13.5" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">10⁻⁵</text>
+<line x1="190.0" y1="406.0" x2="590.0" y2="406.0" stroke="#EEEEEE" stroke-width="1.2"/>
+<text x="178.0" y="411.0" font-size="13.5" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">10⁻⁴</text>
+<line x1="190.0" y1="342.0" x2="590.0" y2="342.0" stroke="#EEEEEE" stroke-width="1.2"/>
+<text x="178.0" y="347.0" font-size="13.5" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">10⁻³</text>
+<line x1="190.0" y1="278.0" x2="590.0" y2="278.0" stroke="#EEEEEE" stroke-width="1.2"/>
+<text x="178.0" y="283.0" font-size="13.5" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">10⁻²</text>
+<line x1="190.0" y1="214.0" x2="590.0" y2="214.0" stroke="#EEEEEE" stroke-width="1.2"/>
+<text x="178.0" y="219.0" font-size="13.5" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">10⁻¹</text>
+<line x1="190.0" y1="150.0" x2="590.0" y2="150.0" stroke="#EEEEEE" stroke-width="1.2"/>
+<text x="178.0" y="155.0" font-size="13.5" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">1</text>
+<line x1="190.0" y1="470.0" x2="590.0" y2="470.0" stroke="#1D1D1F" stroke-width="1.5"/>
+<line x1="190.0" y1="150.0" x2="190.0" y2="470.0" stroke="#1D1D1F" stroke-width="1.5"/>
+<line x1="202.2" y1="470.0" x2="202.2" y2="475.0" stroke="#1D1D1F" stroke-width="1.2"/>
+<text x="202.2" y="494.0" font-size="12.5" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">10</text>
+<line x1="262.3" y1="470.0" x2="262.3" y2="475.0" stroke="#1D1D1F" stroke-width="1.2"/>
+<text x="262.3" y="494.0" font-size="12.5" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">30</text>
+<line x1="328.1" y1="470.0" x2="328.1" y2="475.0" stroke="#1D1D1F" stroke-width="1.2"/>
+<text x="328.1" y="494.0" font-size="12.5" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">100</text>
+<line x1="388.2" y1="470.0" x2="388.2" y2="475.0" stroke="#1D1D1F" stroke-width="1.2"/>
+<text x="388.2" y="494.0" font-size="12.5" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">300</text>
+<line x1="454.1" y1="470.0" x2="454.1" y2="475.0" stroke="#1D1D1F" stroke-width="1.2"/>
+<text x="454.1" y="494.0" font-size="12.5" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">1000</text>
+<line x1="514.2" y1="470.0" x2="514.2" y2="475.0" stroke="#1D1D1F" stroke-width="1.2"/>
+<text x="514.2" y="494.0" font-size="12.5" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">3000</text>
+<line x1="580.0" y1="470.0" x2="580.0" y2="475.0" stroke="#1D1D1F" stroke-width="1.2"/>
+<text x="580.0" y="494.0" font-size="12.5" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">10000</text>
+<text x="390.0" y="520.0" font-size="14.5" fill="#1D1D1F" text-anchor="middle">sample size n</text>
+<text x="112.0" y="310.0" font-size="14" fill="#1D1D1F" text-anchor="middle" transform="rotate(-90 112.0 310.0)">Pr(|average − target| &gt; 0.1)</text>
+<path d="M 202.2 162.8 L 262.3 178.3 L 328.1 215.9 L 388.2 300.5 L 454.1 425.3 L 514.2 425.3 L 580.0 425.3" fill="none" stroke="#007AFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="202.2" cy="162.8" r="5.5" fill="#007AFF" stroke="#FFFFFF" stroke-width="1.2"/>
+<circle cx="262.3" cy="178.3" r="5.5" fill="#007AFF" stroke="#FFFFFF" stroke-width="1.2"/>
+<circle cx="328.1" cy="215.9" r="5.5" fill="#007AFF" stroke="#FFFFFF" stroke-width="1.2"/>
+<circle cx="388.2" cy="300.5" r="5.5" fill="#007AFF" stroke="#FFFFFF" stroke-width="1.2"/>
+<circle cx="454.1" cy="425.3" r="6" fill="#FFFFFF" stroke="#007AFF" stroke-width="2.2"/>
+<circle cx="514.2" cy="425.3" r="6" fill="#FFFFFF" stroke="#007AFF" stroke-width="2.2"/>
+<circle cx="580.0" cy="425.3" r="6" fill="#FFFFFF" stroke="#007AFF" stroke-width="2.2"/>
+<text x="582.0" y="168.0" font-size="11.5" fill="#6E6E73" text-anchor="end">○ below the detectable floor</text>
+<text x="720.0" y="132.0" font-size="16" font-weight="700" fill="#1D1D1F">convergence to the exact rate I(z), 50,000 replicates</text>
+<line x1="720.0" y1="470.0" x2="1120.0" y2="470.0" stroke="#EEEEEE" stroke-width="1.2"/>
+<text x="708.0" y="475.0" font-size="12.5" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">0.000</text>
+<line x1="720.0" y1="392.5" x2="1120.0" y2="392.5" stroke="#EEEEEE" stroke-width="1.2"/>
+<text x="708.0" y="397.5" font-size="12.5" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">0.012</text>
+<line x1="720.0" y1="308.5" x2="1120.0" y2="308.5" stroke="#EEEEEE" stroke-width="1.2"/>
+<text x="708.0" y="313.5" font-size="12.5" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">0.025</text>
+<line x1="720.0" y1="230.9" x2="1120.0" y2="230.9" stroke="#EEEEEE" stroke-width="1.2"/>
+<text x="708.0" y="235.9" font-size="12.5" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">0.037</text>
+<line x1="720.0" y1="146.9" x2="1120.0" y2="146.9" stroke="#EEEEEE" stroke-width="1.2"/>
+<text x="708.0" y="151.9" font-size="12.5" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">0.050</text>
+<line x1="720.0" y1="470.0" x2="1120.0" y2="470.0" stroke="#1D1D1F" stroke-width="1.5"/>
+<line x1="720.0" y1="150.0" x2="720.0" y2="470.0" stroke="#1D1D1F" stroke-width="1.5"/>
+<line x1="740.3" y1="470.0" x2="740.3" y2="475.0" stroke="#1D1D1F" stroke-width="1.2"/>
+<text x="740.3" y="494.0" font-size="12.5" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">10</text>
+<line x1="840.2" y1="470.0" x2="840.2" y2="475.0" stroke="#1D1D1F" stroke-width="1.2"/>
+<text x="840.2" y="494.0" font-size="12.5" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">30</text>
+<line x1="949.7" y1="470.0" x2="949.7" y2="475.0" stroke="#1D1D1F" stroke-width="1.2"/>
+<text x="949.7" y="494.0" font-size="12.5" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">100</text>
+<line x1="1049.7" y1="470.0" x2="1049.7" y2="475.0" stroke="#1D1D1F" stroke-width="1.2"/>
+<text x="1049.7" y="494.0" font-size="12.5" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">300</text>
+<line x1="1096.1" y1="470.0" x2="1096.1" y2="475.0" stroke="#1D1D1F" stroke-width="1.2"/>
+<text x="1096.1" y="494.0" font-size="12.5" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">500</text>
+<text x="920.0" y="520.0" font-size="14.5" fill="#1D1D1F" text-anchor="middle">sample size n</text>
+<text x="642.0" y="310.0" font-size="14" fill="#1D1D1F" text-anchor="middle" transform="rotate(-90 642.0 310.0)">empirical rate −ln(P̂)/n</text>
+<line x1="720.0" y1="387.0" x2="1120.0" y2="387.0" stroke="#FF3B30" stroke-width="1.8" stroke-dasharray="6 4"/>
+<text x="1114.0" y="379.0" font-size="13" fill="#FF3B30" text-anchor="end">I(z) = 0.0129</text>
+<path d="M 740.3 173.7 L 803.3 214.5 L 840.2 251.8 L 886.7 283.4 L 949.7 317.1 L 986.6 331.7 L 1012.8 339.3 L 1049.7 349.7 L 1075.8 354.8 L 1096.1 358.6" fill="none" stroke="#FF9500" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="740.3" cy="173.7" r="5.5" fill="#FF9500" stroke="#FFFFFF" stroke-width="1.2"/>
+<circle cx="803.3" cy="214.5" r="5.5" fill="#FF9500" stroke="#FFFFFF" stroke-width="1.2"/>
+<circle cx="840.2" cy="251.8" r="5.5" fill="#FF9500" stroke="#FFFFFF" stroke-width="1.2"/>
+<circle cx="886.7" cy="283.4" r="5.5" fill="#FF9500" stroke="#FFFFFF" stroke-width="1.2"/>
+<circle cx="949.7" cy="317.1" r="5.5" fill="#FF9500" stroke="#FFFFFF" stroke-width="1.2"/>
+<circle cx="986.6" cy="331.7" r="5.5" fill="#FF9500" stroke="#FFFFFF" stroke-width="1.2"/>
+<circle cx="1012.8" cy="339.3" r="5.5" fill="#FF9500" stroke="#FFFFFF" stroke-width="1.2"/>
+<circle cx="1049.7" cy="349.7" r="5.5" fill="#FF9500" stroke="#FFFFFF" stroke-width="1.2"/>
+<circle cx="1075.8" cy="354.8" r="5.5" fill="#FF9500" stroke="#FFFFFF" stroke-width="1.2"/>
+<circle cx="1096.1" cy="358.6" r="5.5" fill="#FF9500" stroke="#FFFFFF" stroke-width="1.2"/>
+</svg>
