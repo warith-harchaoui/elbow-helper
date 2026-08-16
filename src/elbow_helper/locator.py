@@ -172,9 +172,13 @@ class KneeLocator:
         self.y_difference_minima = self.y_difference[self.minima_indices]
 
         # Step 5: sensitivity thresholds.
-        self.Tmx = self.y_difference_maxima - (
-            self.S * np.abs(np.diff(self.x_normalized).mean())
-        )
+        # A single point has no step to average (np.diff of a length-1 array
+        # is empty, and .mean() of that warns "Mean of empty slice" and
+        # returns NaN); a single-point curve can never actually reach the
+        # comparison that uses Tmx (find_knee breaks out on its first loop
+        # iteration), so 0.0 is a safe, warning-free stand-in.
+        mean_step = np.abs(np.diff(self.x_normalized).mean()) if self.N > 1 else 0.0
+        self.Tmx = self.y_difference_maxima - (self.S * mean_step)
 
         # Step 6: find the knee.
         self.knee, self.norm_knee = self.find_knee()
@@ -198,8 +202,17 @@ class KneeLocator:
         -------
         numpy.ndarray
             ``a`` linearly rescaled so its minimum is ``0`` and maximum ``1``.
+            A constant (or single-point) ``a`` has zero range: every entry
+            becomes ``0/0``, i.e. NaN. That NaN is intentional, not a bug to
+            paper over — every later comparison against a NaN evaluates to
+            ``False``, so :func:`_argrelextrema` finds no local extrema and
+            :meth:`find_knee` abstains (``knee=None``), the correct answer
+            for a curve with no discernible shape. Only the noisy raw NumPy
+            "invalid value encountered in divide" warning is suppressed;
+            the NaN itself, and the abstention it produces, are unchanged.
         """
-        return (a - a.min()) / (a.max() - a.min())
+        with np.errstate(invalid="ignore"):
+            return (a - a.min()) / (a.max() - a.min())
 
     @staticmethod
     def transform_y(y: np.ndarray, direction: str, curve: str) -> np.ndarray:

@@ -7,6 +7,8 @@ Warith Harchaoui, <warith.harchaoui@deraison.ai>
 
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 
 from elbow_helper.locator import KneeLocator, _argrelextrema
@@ -78,3 +80,28 @@ def test_empty_input_raises_clear_value_error_not_a_reduction_crash():
         assert "empty" in str(exc)
     else:  # pragma: no cover
         raise AssertionError("expected ValueError for empty input")
+
+
+def test_degenerate_curves_abstain_without_a_numpy_warning():
+    # A constant y (or a single (x, y) point) makes __normalize's min/max
+    # span zero, i.e. a 0/0 divide -- used to leak a raw NumPy
+    # "invalid value encountered in divide" (and, for a single point,
+    # "Mean of empty slice") RuntimeWarning to stderr on every call,
+    # even though the actual answer (abstain, knee=None) was already
+    # correct. The NaN this produces is intentional: it propagates through
+    # every later comparison as False, so find_knee finds no extrema and
+    # abstains -- only the noisy warning needed suppressing, not the NaN
+    # itself (see __normalize's docstring).
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", RuntimeWarning)
+
+        single = KneeLocator([1.0], [5.0], curve="concave", direction="increasing")
+        assert single.knee is None
+
+        constant_y = KneeLocator(
+            [1.0, 2.0, 3.0, 4.0],
+            [5.0, 5.0, 5.0, 5.0],
+            curve="concave",
+            direction="increasing",
+        )
+        assert constant_y.knee is None
