@@ -298,7 +298,8 @@ ClearKnee(knee_x=10.75, ci90=(10.75, 11.6), detection_rate=0.98, null_p=0.00498)
 
 Le coude repéré se situe environ un jour après la vraie rupture, le même
 petit décalage systématique « un à deux pas au-delà du vrai plissement » que
-montre l'exemple du graphe d'éboulis de l'ACP dans `doc/ELBOW-fr.tex`. Lire
+montre l'exemple du graphe d'éboulis de l'ACP dans `doc/ELBOW-en.tex`
+(les notes mathématiques sont uniquement en anglais). Lire
 `knee_x` comme « arrêter les tests exactement ici » plutôt que « le taux de
 découverte s'est désormais vraiment aplati, à un jour ou deux près » accorde
 à l'estimation ponctuelle plus de crédit qu'elle n'en revendique.
@@ -333,8 +334,8 @@ pas d'échelle naturelle à laquelle se comparer, ainsi qu'un score de qualité
 d'ajustement normalisé contre un pire cas délibérément pessimiste (le point
 observé le plus difficile à prédire à partir de tous les autres) plutôt que
 contre la moyenne de l'échantillon, qu'un ajustement réel peut trop
-facilement dépasser en médiocrité. Voir `doc/ELBOW-en.tex` /
-`doc/ELBOW-fr.tex` pour la dérivation des deux normalisations.
+facilement dépasser en médiocrité. Voir `doc/ELBOW-en.tex` pour la
+dérivation des deux normalisations.
 
 Script complet : [`examples/diagnostic_plot.py`](examples/diagnostic_plot.py).
 

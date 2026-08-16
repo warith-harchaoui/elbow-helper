@@ -5,6 +5,8 @@ __pycache__/
 build/
 dist/
 .pytest_cache/
+.ruff_cache/
+.coverage
 .DS_Store
 diagnostics.png
 diagnostics.svg

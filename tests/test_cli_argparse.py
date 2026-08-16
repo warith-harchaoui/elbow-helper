@@ -67,6 +67,53 @@ def test_knee_y_only_shorthand(capsys) -> None:
     assert "is_clear" in payload
 
 
+def test_knee_x_only_shorthand(capsys) -> None:
+    """A bare ``--x-values`` triggers the same ``robust_knee(y)`` shorthand,
+    entered through the x-side flags (``_xy_from_args``'s other branch)."""
+    _, y = clear_knee_curve(seed=1, noise=0.0, n=60)
+    out = _run(capsys, ["knee", "--x-values", _values_flag(y)])
+    payload = json.loads(out)
+    assert "is_clear" in payload
+
+
+def test_load_series_from_npy(capsys, tmp_path) -> None:
+    """``--y-npy`` loads a 1-D ``.npy`` array (never exercised before)."""
+    _, y = clear_knee_curve(seed=1, noise=0.0, n=60)
+    npy_path = tmp_path / "y.npy"
+    np.save(npy_path, y)
+    out = _run(capsys, ["knee", "--y-npy", str(npy_path)])
+    payload = json.loads(out)
+    assert "is_clear" in payload
+
+
+def test_load_series_from_csv_with_header(capsys, tmp_path) -> None:
+    """``--y-csv PATH:COLUMN`` skips a non-numeric header row automatically."""
+    _, y = clear_knee_curve(seed=1, noise=0.0, n=60)
+    csv_path = tmp_path / "y.csv"
+    csv_path.write_text("value\n" + "\n".join(f"{v:.6g}" for v in y), encoding="utf-8")
+    out = _run(capsys, ["knee", "--y-csv", f"{csv_path}:0"])
+    payload = json.loads(out)
+    assert "is_clear" in payload
+
+
+def test_load_series_from_csv_without_header(capsys, tmp_path) -> None:
+    """``--y-csv PATH:COLUMN`` reads every row when the first one is already numeric."""
+    _, y = clear_knee_curve(seed=1, noise=0.0, n=60)
+    csv_path = tmp_path / "y.csv"
+    csv_path.write_text("\n".join(f"{v:.6g}" for v in y), encoding="utf-8")
+    out = _run(capsys, ["knee", "--y-csv", f"{csv_path}:0"])
+    payload = json.loads(out)
+    assert "is_clear" in payload
+
+
+def test_load_series_csv_malformed_spec_raises(capsys) -> None:
+    """``--y-csv`` without a ``:COLUMN_INDEX`` suffix is a clear error, exit 1."""
+    code = cli_argparse.main(["knee", "--y-csv", "data.csv"])
+    assert code == 1
+    err = capsys.readouterr().err
+    assert "Error:" in err and "PATH:COLUMN_INDEX" in err
+
+
 def test_knee_json_output_is_valid(capsys) -> None:
     """A clear-knee curve prints a JSON object with the expected fields."""
     x, y = clear_knee_curve(seed=2, noise=0.02)
@@ -177,3 +224,39 @@ def test_parser_import_has_no_side_effects() -> None:
     parser = cli_argparse.build_parser()
     ns = parser.parse_args(["knee", "--y-values", "1,2,3"])
     assert ns.command == "knee"
+
+
+def test_locator_online_flag_can_be_disabled() -> None:
+    """``--online`` defaults to True and ``--no-online`` actually clears it.
+
+    Regression test: ``--online`` used to be declared with
+    ``action="store_true", default=True``, which can only ever leave the
+    value True; there was no way to pass ``online=False`` through this CLI,
+    unlike the click twin's ``--online/--no-online`` pair.
+    """
+    parser = cli_argparse.build_parser()
+    default_ns = parser.parse_args(["locator", "--x-values", "1,2", "--y-values", "1,2"])
+    assert default_ns.online is True
+    off_ns = parser.parse_args(
+        ["locator", "--x-values", "1,2", "--y-values", "1,2", "--no-online"]
+    )
+    assert off_ns.online is False
+
+
+def test_locator_no_online_flag_runs(capsys) -> None:
+    """``locator --no-online`` dispatches successfully with ``online=False``."""
+    x, y = clear_knee_curve(seed=1, noise=0.0, n=60)
+    out = _run(
+        capsys,
+        [
+            "locator",
+            "--x-values",
+            _values_flag(x),
+            "--y-values",
+            _values_flag(y),
+            "--no-online",
+        ],
+    )
+    payload = json.loads(out)
+    assert "knee" in payload
+    assert "all_knees" in payload

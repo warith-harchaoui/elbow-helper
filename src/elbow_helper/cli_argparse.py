@@ -217,7 +217,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_data_flags(p_loc)
     p_loc.add_argument("--sensitivity", type=float, default=1.0)
-    p_loc.add_argument("--online", action="store_true", default=True)
+    p_loc.add_argument("--online", action=argparse.BooleanOptionalAction, default=True)
 
     return parser
 

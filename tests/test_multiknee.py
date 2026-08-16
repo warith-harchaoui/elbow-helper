@@ -58,7 +58,7 @@ def sigmoid_staircase_curve(seed, n=200, n_steps=3, steepness=40.0, noise=0.02):
     rise), so a clean ``n_steps``-step staircase is expected to yield
     ``2 * n_steps`` breakpoints once the rises are steep enough to look
     locally linear against the flats on either side. Shared with
-    ``ELBOW-en.tex`` / ``ELBOW-fr.tex``'s multi-knee figure, which runs
+    ``ELBOW-en.tex``'s multi-knee figure, which runs
     ``robust_knees`` on this exact curve.
     """
     rng = np.random.default_rng(seed)
@@ -109,8 +109,8 @@ def alternating_slope_curve(seed, n=150, noise=0.02):
     Unlike :func:`robust_knee`, which needs an explicit ``curve``/
     ``direction`` naming one of four fixed shapes, :func:`robust_knees`
     fits each segment its own independent slope, so a sign change (up then
-    down) needs no special handling. Shared with ``ELBOW-en.tex`` /
-    ``ELBOW-fr.tex``'s alternating-slope figure.
+    down) needs no special handling. Shared with ``ELBOW-en.tex``'s
+    alternating-slope figure.
     """
     rng = np.random.default_rng(seed)
     x = np.linspace(0, 1, n)
@@ -134,7 +134,7 @@ def subtle_knee_curve(seed, n=150, noise=0.05):
     Used to demonstrate the conservative philosophy directly: at low noise
     the same shape is reliably detected, at high noise ``robust_knees``
     mostly abstains rather than force an answer. Shared with the
-    detection-boundary figure in ``ELBOW-en.tex`` / ``ELBOW-fr.tex``.
+    detection-boundary figure in ``ELBOW-en.tex``.
     """
     rng = np.random.default_rng(seed)
     x = np.linspace(0, 1, n)

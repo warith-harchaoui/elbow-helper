@@ -4,6 +4,54 @@ All notable changes to `elbow-helper` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.4] - 2026-08-16
+
+### Fixed
+- **`elbow_helper.plotting.render_svg_multi`** (and `plot_multi_diagnostics`):
+  an empty `(x, y)` crashed with `"zero-size array to reduction operation
+  minimum which has no identity"` on `x.min()`; a length-mismatched
+  `(x, y)` crashed with `IndexError` while sorting `y` by `x`'s own index
+  order. Both failures hit before `robust_knees` ever got a chance to
+  abstain with a clean reason code, the same failure mode CHANGELOG 0.1.3
+  already fixed once for `KneeLocator`. Both inputs now render the abstain
+  card instead.
+- **argparse CLI**: `elbow-helper locator --online` was declared with
+  `action="store_true", default=True`, so the flag could only ever leave
+  `online` at its default `True`; there was no way to pass `online=False`
+  through this CLI, unlike the click twin's `--online/--no-online` pair.
+  Now uses `argparse.BooleanOptionalAction`, so `--online`/`--no-online`
+  both work and match the click twin.
+- **Docs**: `README.md`, `LISEZ-MOI.md`, `EXAMPLES.md`, `EXEMPLES.md`, and
+  `PAYSAGE.md` still linked to `doc/ELBOW-fr.tex` / `doc/LIKELIHOOD-fr.tex`
+  and their compiled PDFs, removed from `doc/` earlier this session when
+  the math notes' scope narrowed to English only. Updated every reference
+  to point at the English notes, with `LISEZ-MOI.md`/`EXEMPLES.md`/
+  `PAYSAGE.md` now stating plainly that the math notes are English-only
+  while the rest of the docs keep their French twin. Also cleaned the same
+  dangling `ELBOW-fr.tex` mentions out of code comments/docstrings in
+  `src/elbow_helper/plotting.py`, `tests/test_multiknee.py`, and
+  `tests/test_real_world_examples.py`.
+
+### Added
+- **`tests/test_cli_argparse.py`**: `_load_series`'s `--*-npy`/`--*-csv`
+  loading paths (shared by both CLI doors) and the x-only shorthand
+  branch of `_xy_from_args` had no test in either CLI's test file.
+  `cli_argparse.py` is now at 100% line coverage (was 77%).
+- **`tests/test_plotting.py`**: `elbow_helper.plotting` (334 statements, the
+  package's largest module) had no dedicated test file, only indirect
+  coverage through the CLI's `diagnostics` subcommand and its own module
+  doctests. Added direct tests for `render_svg`'s clear/abstain/
+  `raw_axis`+`log_y` paths, `render_svg_multi`'s valid/invalid paths (the
+  two crashes above were both found writing these), and the `out=`
+  file-writing branches of `plot_multi_diagnostics`/
+  `plot_diagnostics_panels`.
+- **`tests/test_doctests.py`**: the `>>> ...` examples embedded in
+  `_core_cli.py`, `cli_argparse.py`, `plotting.py`, `api.py`, and
+  `mcp_server.py` were never actually executed by `pytest -q`
+  (`pyproject.toml` scopes `testpaths` to `tests/` with no
+  `--doctest-modules`), so they could drift from real behaviour
+  unnoticed. Now run via `doctest.testmod` as part of the regular suite.
+
 ## [0.1.3] - 2026-08-15
 
 ### Fixed

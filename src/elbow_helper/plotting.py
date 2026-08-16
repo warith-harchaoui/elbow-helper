@@ -237,8 +237,8 @@ def _bic_posterior_probability(bic_improvement: float) -> float:
     What does have a natural ceiling is the quantity ΔBIC approximates: twice
     the log Bayes factor between the broken-line and single-line models
     (Kass & Raftery, 1995, eq. 4 — the same approximation this project's
-    ``min_bic_improvement`` gate is calibrated against, see ``ELBOW-en.tex``
-    / ``ELBOW-fr.tex``, "Related Work"). That gives an approximate Bayes
+    ``min_bic_improvement`` gate is calibrated against, see ``ELBOW-en.tex``,
+    "Related Work"). That gives an approximate Bayes
     factor ``BF ≈ exp(bic_improvement / 2)`` — literally a likelihood ratio,
     since BIC is built from ``-2 ln(L)`` (see ``ELBOW-en.tex``'s "From raw
     likelihood to a bounded score" for the full derivation, natural log
@@ -291,8 +291,8 @@ def _fit_quality_score(y_eval: np.ndarray, fit_eval: np.ndarray) -> float:
     *unique* MSE-minimizing constant and so is the easiest baseline to
     beat, letting ``R²`` swing negative for an otherwise reasonable fit.
     Instead the baseline is the single *observed* ``y_eval`` value that is
-    hardest to predict everything else from (see ``ELBOW-en.tex`` /
-    ``ELBOW-fr.tex``, "From raw likelihood to a bounded score"), a strictly
+    hardest to predict everything else from (see ``ELBOW-en.tex``,
+    "From raw likelihood to a bounded score"), a strictly
     higher and harder-to-beat MSE than the mean's, ``MSE_worst >
     Var(y_eval)`` always.
 
@@ -781,8 +781,15 @@ def render_svg_multi(
         x = np.arange(len(np.asarray(y).ravel()), dtype=float)
     x = np.asarray(x, dtype=float).ravel()
     y = np.asarray(y, dtype=float).ravel()
-    order = np.argsort(x)
-    x, y = x[order], y[order]
+    # x/y may be empty or mismatched in length here: robust_knees() below
+    # validates that (and every other input shape) internally and abstains
+    # with a reason code rather than raising, but sorting/indexing x by y's
+    # own length (or reducing an empty array's min/max) would crash first,
+    # so this figure's own display prep needs the same "usable" guard.
+    usable = x.size > 0 and x.size == y.size
+    if usable:
+        order = np.argsort(x)
+        x, y = x[order], y[order]
 
     result = robust_knees(x, y, config=config)
     is_valid = isinstance(result, Knees)
@@ -801,10 +808,13 @@ def render_svg_multi(
         subtitle_txt = f"{strings['reason']}: {getattr(result, 'reason', 'unknown')}"
     desc_txt = f"{title_txt}. {subtitle_txt}"
 
-    x_lo, x_hi = float(x.min()), float(x.max())
-    y_lo, y_hi = float(y.min()), float(y.max())
-    pad = (y_hi - y_lo) * 0.08 or 1.0
-    y_lo, y_hi = y_lo - pad, y_hi + pad
+    if usable:
+        x_lo, x_hi = float(x.min()), float(x.max())
+        y_lo, y_hi = float(y.min()), float(y.max())
+        pad = (y_hi - y_lo) * 0.08 or 1.0
+        y_lo, y_hi = y_lo - pad, y_hi + pad
+    else:
+        x_lo, x_hi, y_lo, y_hi = 0.0, 1.0, 0.0, 1.0
 
     def sx(v: float) -> float:
         return _PL + (v - x_lo) / (x_hi - x_lo) * _PLOT_W

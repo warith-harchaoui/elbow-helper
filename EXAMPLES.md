@@ -324,8 +324,8 @@ returns, since a raw log-likelihood difference has no natural scale to
 compare against), and a fit-quality score normalized against a
 deliberately pessimistic worst case (the hardest single observed point to
 predict everything else from) rather than the sample mean, which a real
-fit can too easily do worse than. See `doc/ELBOW-en.tex` /
-`doc/ELBOW-fr.tex` for the derivation of both normalizations.
+fit can too easily do worse than. See `doc/ELBOW-en.tex` for the
+derivation of both normalizations.
 
 Full script: [`examples/diagnostic_plot.py`](examples/diagnostic_plot.py).
 
