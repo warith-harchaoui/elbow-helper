@@ -32,7 +32,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Sequence, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 
@@ -50,14 +50,24 @@ try:
     from _style import load_palette  # type: ignore
     from _svg import svg_open, xml_escape  # type: ignore
 except ImportError:
+
     def load_palette(accessibility: str = "universal") -> Dict[str, str]:
         return {
-            "Blue": "#007AFF", "Red": "#FF3B30", "Green": "#34C759",
-            "Orange": "#FF9500", "Gray": "#8E8E93",
+            "Blue": "#007AFF",
+            "Red": "#FF3B30",
+            "Green": "#34C759",
+            "Orange": "#FF9500",
+            "Gray": "#8E8E93",
         }
 
-    def svg_open(width: object, height: object, title_id: str, desc_id: str,
-                 *, font_family: str = "Roboto, system-ui, sans-serif") -> str:
+    def svg_open(
+        width: object,
+        height: object,
+        title_id: str,
+        desc_id: str,
+        *,
+        font_family: str = "Roboto, system-ui, sans-serif",
+    ) -> str:
         return (
             f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" '
             f'height="{height}" viewBox="0 0 {width} {height}" '
@@ -67,6 +77,7 @@ except ImportError:
 
     def xml_escape(text: str) -> str:
         return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
 
 PALETTE = load_palette()
 BLUE = PALETTE.get("Blue", "#007AFF")
@@ -78,8 +89,19 @@ SUBTLE = "#6E6E73"
 GRID = "#EEEEEE"
 RULE = "#8E8E93"
 
-_SUP = {"-": "⁻", "0": "⁰", "1": "¹", "2": "²", "3": "³",
-        "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹"}
+_SUP = {
+    "-": "⁻",
+    "0": "⁰",
+    "1": "¹",
+    "2": "²",
+    "3": "³",
+    "4": "⁴",
+    "5": "⁵",
+    "6": "⁶",
+    "7": "⁷",
+    "8": "⁸",
+    "9": "⁹",
+}
 
 
 def pow10_label(k: int) -> str:
@@ -155,12 +177,22 @@ def _write_and_rasterize(svg: str, name: str, out_width_px: int) -> None:
     svg_path.write_text(svg, encoding="utf-8")
     if shutil.which("rsvg-convert"):
         subprocess.run(
-            ["rsvg-convert", "-w", str(out_width_px * 2), "--keep-aspect-ratio",
-             "-o", str(png_path), str(svg_path)],
+            [
+                "rsvg-convert",
+                "-w",
+                str(out_width_px * 2),
+                "--keep-aspect-ratio",
+                "-o",
+                str(png_path),
+                str(svg_path),
+            ],
             check=True,
         )
     else:
-        print(f"WARNING: rsvg-convert not found; {png_path.name} not written", file=sys.stderr)
+        print(
+            f"WARNING: rsvg-convert not found; {png_path.name} not written",
+            file=sys.stderr,
+        )
         return
     print(f"wrote {svg_path.name} + {png_path.name}")
 
@@ -175,6 +207,7 @@ _CAT_MU = float((_CAT_P * _CAT_LOGP).sum())
 
 def rate_function(a: float, iters: int = 200) -> Tuple[float, float]:
     """I(a) = sup_theta [theta*a - Lambda(theta)] via ternary search (Lambda convex)."""
+
     def obj(theta: float) -> float:
         Lambda = math.log(float(np.sum(_CAT_P * np.exp(theta * _CAT_LOGP))))
         return theta * a - Lambda
@@ -203,7 +236,9 @@ def simulate_cramer(rng: np.random.Generator) -> Tuple[np.ndarray, np.ndarray, f
     return ns, fracs, 1.0 / reps
 
 
-def simulate_rate_convergence(rng: np.random.Generator) -> Tuple[np.ndarray, np.ndarray, float]:
+def simulate_rate_convergence(
+    rng: np.random.Generator,
+) -> Tuple[np.ndarray, np.ndarray, float]:
     """Empirical -ln(P_hat)/n at growing n, next to the exact Legendre-transform rate."""
     eps = 0.1
     i_hi, _ = rate_function(_CAT_MU + eps)
@@ -238,13 +273,19 @@ def build_cramer_svg(lang: str, rng: np.random.Generator) -> str:
 
     parts: List[str] = []
     parts.append(svg_open(width, height, "cr-title", "cr-desc"))
-    parts.append(f"<title id=\"cr-title\">{xml_escape(t['cramer_title'])}</title>")
-    parts.append(f"<desc id=\"cr-desc\">{xml_escape(t['cramer_title'] + '. ' + t['cramer_sub'])}</desc>")
+    parts.append(f'<title id="cr-title">{xml_escape(t["cramer_title"])}</title>')
+    parts.append(
+        f'<desc id="cr-desc">{xml_escape(t["cramer_title"] + ". " + t["cramer_sub"])}</desc>'
+    )
     parts.append(f'<rect width="{width}" height="{height}" fill="#FFFFFF"/>')
-    parts.append(f'<text x="60" y="52" font-size="24" font-weight="700" fill="{INK}">'
-                 f'{xml_escape(t["cramer_title"])}</text>')
-    parts.append(f'<text x="60" y="82" font-size="16" fill="{SUBTLE}">'
-                 f'{xml_escape(t["cramer_sub"])}</text>')
+    parts.append(
+        f'<text x="60" y="52" font-size="24" font-weight="700" fill="{INK}">'
+        f"{xml_escape(t['cramer_title'])}</text>"
+    )
+    parts.append(
+        f'<text x="60" y="82" font-size="16" fill="{SUBTLE}">'
+        f"{xml_escape(t['cramer_sub'])}</text>"
+    )
 
     # ---- left panel: P(|mean - target| > 0.1) vs n, log-log --------
     log_n_min, log_n_max = math.log10(8), math.log10(12000)
@@ -257,45 +298,71 @@ def build_cramer_svg(lang: str, rng: np.random.Generator) -> str:
         k = math.log10(v)
         return py + (y_top_k - k) / (y_top_k - y_bot_k) * ph
 
-    parts.append(f'<text x="{px_left:.1f}" y="{py-18:.1f}" font-size="16" font-weight="700" fill="{INK}">'
-                 f'{xml_escape(t["cramer_panel_a"])}</text>')
+    parts.append(
+        f'<text x="{px_left:.1f}" y="{py - 18:.1f}" font-size="16" font-weight="700" fill="{INK}">'
+        f"{xml_escape(t['cramer_panel_a'])}</text>"
+    )
     for k in range(y_bot_k, y_top_k + 1):
         gy = sy_l(10.0**k)
-        parts.append(f'<line x1="{px_left:.1f}" y1="{gy:.1f}" x2="{px_left+panel_w:.1f}" y2="{gy:.1f}" '
-                     f'stroke="{GRID}" stroke-width="1.2"/>')
-        parts.append(f'<text x="{px_left-12:.1f}" y="{gy+5:.1f}" font-size="13.5" '
-                     f'font-family="Roboto Mono, monospace" fill="{INK}" text-anchor="end">'
-                     f'{pow10_label(k)}</text>')
+        parts.append(
+            f'<line x1="{px_left:.1f}" y1="{gy:.1f}" x2="{px_left + panel_w:.1f}" y2="{gy:.1f}" '
+            f'stroke="{GRID}" stroke-width="1.2"/>'
+        )
+        parts.append(
+            f'<text x="{px_left - 12:.1f}" y="{gy + 5:.1f}" font-size="13.5" '
+            f'font-family="Roboto Mono, monospace" fill="{INK}" text-anchor="end">'
+            f"{pow10_label(k)}</text>"
+        )
     ax_bottom_l = py + ph
-    parts.append(f'<line x1="{px_left:.1f}" y1="{ax_bottom_l:.1f}" x2="{px_left+panel_w:.1f}" y2="{ax_bottom_l:.1f}" '
-                 f'stroke="{INK}" stroke-width="1.5"/>')
-    parts.append(f'<line x1="{px_left:.1f}" y1="{py:.1f}" x2="{px_left:.1f}" y2="{ax_bottom_l:.1f}" '
-                 f'stroke="{INK}" stroke-width="1.5"/>')
+    parts.append(
+        f'<line x1="{px_left:.1f}" y1="{ax_bottom_l:.1f}" x2="{px_left + panel_w:.1f}" y2="{ax_bottom_l:.1f}" '
+        f'stroke="{INK}" stroke-width="1.5"/>'
+    )
+    parts.append(
+        f'<line x1="{px_left:.1f}" y1="{py:.1f}" x2="{px_left:.1f}" y2="{ax_bottom_l:.1f}" '
+        f'stroke="{INK}" stroke-width="1.5"/>'
+    )
     for n in ns:
         gx = sx_l(float(n))
-        parts.append(f'<line x1="{gx:.1f}" y1="{ax_bottom_l:.1f}" x2="{gx:.1f}" y2="{ax_bottom_l+5:.1f}" '
-                     f'stroke="{INK}" stroke-width="1.2"/>')
-        parts.append(f'<text x="{gx:.1f}" y="{ax_bottom_l+24:.1f}" font-size="12.5" '
-                     f'font-family="Roboto Mono, monospace" fill="{INK}" text-anchor="middle">{n}</text>')
-    parts.append(f'<text x="{px_left+panel_w/2:.1f}" y="{ax_bottom_l+50:.1f}" font-size="14.5" fill="{INK}" '
-                 f'text-anchor="middle">{xml_escape(t["cramer_x"])}</text>')
+        parts.append(
+            f'<line x1="{gx:.1f}" y1="{ax_bottom_l:.1f}" x2="{gx:.1f}" y2="{ax_bottom_l + 5:.1f}" '
+            f'stroke="{INK}" stroke-width="1.2"/>'
+        )
+        parts.append(
+            f'<text x="{gx:.1f}" y="{ax_bottom_l + 24:.1f}" font-size="12.5" '
+            f'font-family="Roboto Mono, monospace" fill="{INK}" text-anchor="middle">{n}</text>'
+        )
+    parts.append(
+        f'<text x="{px_left + panel_w / 2:.1f}" y="{ax_bottom_l + 50:.1f}" font-size="14.5" fill="{INK}" '
+        f'text-anchor="middle">{xml_escape(t["cramer_x"])}</text>'
+    )
     ytx, yty = px_left - 78, py + ph / 2
-    parts.append(f'<text x="{ytx:.1f}" y="{yty:.1f}" font-size="14" fill="{INK}" text-anchor="middle" '
-                 f'transform="rotate(-90 {ytx:.1f} {yty:.1f})">{xml_escape(t["cramer_y"])}</text>')
+    parts.append(
+        f'<text x="{ytx:.1f}" y="{yty:.1f}" font-size="14" fill="{INK}" text-anchor="middle" '
+        f'transform="rotate(-90 {ytx:.1f} {yty:.1f})">{xml_escape(t["cramer_y"])}</text>'
+    )
     pts = [(sx_l(float(n)), sy_l(v)) for n, v in zip(ns, fracs_plot)]
     d = "M " + " L ".join(f"{x:.1f} {y:.1f}" for x, y in pts)
-    parts.append(f'<path d="{d}" fill="none" stroke="{BLUE}" stroke-width="2.6" '
-                 f'stroke-linecap="round" stroke-linejoin="round"/>')
+    parts.append(
+        f'<path d="{d}" fill="none" stroke="{BLUE}" stroke-width="2.6" '
+        f'stroke-linecap="round" stroke-linejoin="round"/>'
+    )
     for (x, y), raw in zip(pts, fracs):
         if raw < floor:
-            parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="6" fill="#FFFFFF" '
-                         f'stroke="{BLUE}" stroke-width="2.2"/>')
+            parts.append(
+                f'<circle cx="{x:.1f}" cy="{y:.1f}" r="6" fill="#FFFFFF" '
+                f'stroke="{BLUE}" stroke-width="2.2"/>'
+            )
         else:
-            parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="5.5" fill="{BLUE}" '
-                         f'stroke="#FFFFFF" stroke-width="1.2"/>')
+            parts.append(
+                f'<circle cx="{x:.1f}" cy="{y:.1f}" r="5.5" fill="{BLUE}" '
+                f'stroke="#FFFFFF" stroke-width="1.2"/>'
+            )
     if (fracs < floor).any():
-        parts.append(f'<text x="{px_left+panel_w-8:.1f}" y="{py+18:.1f}" font-size="11.5" fill="{SUBTLE}" '
-                     f'text-anchor="end">○ {xml_escape(t["cramer_floor"])}</text>')
+        parts.append(
+            f'<text x="{px_left + panel_w - 8:.1f}" y="{py + 18:.1f}" font-size="11.5" fill="{SUBTLE}" '
+            f'text-anchor="end">○ {xml_escape(t["cramer_floor"])}</text>'
+        )
 
     # ---- right panel: empirical rate -ln(P_hat)/n vs n, converging to I_min ----
     log_nr_min, log_nr_max = math.log10(8), math.log10(650)
@@ -303,51 +370,80 @@ def build_cramer_svg(lang: str, rng: np.random.Generator) -> str:
     r_min = 0.0
 
     def sx_r(n: float) -> float:
-        return px_right + (math.log10(n) - log_nr_min) / (log_nr_max - log_nr_min) * panel_w
+        return (
+            px_right
+            + (math.log10(n) - log_nr_min) / (log_nr_max - log_nr_min) * panel_w
+        )
 
     def sy_r(v: float) -> float:
         return py + (r_max - v) / (r_max - r_min) * ph
 
-    parts.append(f'<text x="{px_right:.1f}" y="{py-18:.1f}" font-size="16" font-weight="700" fill="{INK}">'
-                 f'{xml_escape(t["cramer_panel_b"])}</text>')
+    parts.append(
+        f'<text x="{px_right:.1f}" y="{py - 18:.1f}" font-size="16" font-weight="700" fill="{INK}">'
+        f"{xml_escape(t['cramer_panel_b'])}</text>"
+    )
     r_ticks = [round(x, 3) for x in np.linspace(0, r_max, 5)]
     for v in r_ticks:
         gy = sy_r(v)
-        parts.append(f'<line x1="{px_right:.1f}" y1="{gy:.1f}" x2="{px_right+panel_w:.1f}" y2="{gy:.1f}" '
-                     f'stroke="{GRID}" stroke-width="1.2"/>')
-        parts.append(f'<text x="{px_right-12:.1f}" y="{gy+5:.1f}" font-size="12.5" '
-                     f'font-family="Roboto Mono, monospace" fill="{INK}" text-anchor="end">{v:.3f}</text>')
+        parts.append(
+            f'<line x1="{px_right:.1f}" y1="{gy:.1f}" x2="{px_right + panel_w:.1f}" y2="{gy:.1f}" '
+            f'stroke="{GRID}" stroke-width="1.2"/>'
+        )
+        parts.append(
+            f'<text x="{px_right - 12:.1f}" y="{gy + 5:.1f}" font-size="12.5" '
+            f'font-family="Roboto Mono, monospace" fill="{INK}" text-anchor="end">{v:.3f}</text>'
+        )
     ax_bottom_r = py + ph
-    parts.append(f'<line x1="{px_right:.1f}" y1="{ax_bottom_r:.1f}" x2="{px_right+panel_w:.1f}" y2="{ax_bottom_r:.1f}" '
-                 f'stroke="{INK}" stroke-width="1.5"/>')
-    parts.append(f'<line x1="{px_right:.1f}" y1="{py:.1f}" x2="{px_right:.1f}" y2="{ax_bottom_r:.1f}" '
-                 f'stroke="{INK}" stroke-width="1.5"/>')
+    parts.append(
+        f'<line x1="{px_right:.1f}" y1="{ax_bottom_r:.1f}" x2="{px_right + panel_w:.1f}" y2="{ax_bottom_r:.1f}" '
+        f'stroke="{INK}" stroke-width="1.5"/>'
+    )
+    parts.append(
+        f'<line x1="{px_right:.1f}" y1="{py:.1f}" x2="{px_right:.1f}" y2="{ax_bottom_r:.1f}" '
+        f'stroke="{INK}" stroke-width="1.5"/>'
+    )
     for n in [10, 30, 100, 300, 500]:
         gx = sx_r(float(n))
-        parts.append(f'<line x1="{gx:.1f}" y1="{ax_bottom_r:.1f}" x2="{gx:.1f}" y2="{ax_bottom_r+5:.1f}" '
-                     f'stroke="{INK}" stroke-width="1.2"/>')
-        parts.append(f'<text x="{gx:.1f}" y="{ax_bottom_r+24:.1f}" font-size="12.5" '
-                     f'font-family="Roboto Mono, monospace" fill="{INK}" text-anchor="middle">{n}</text>')
-    parts.append(f'<text x="{px_right+panel_w/2:.1f}" y="{ax_bottom_r+50:.1f}" font-size="14.5" fill="{INK}" '
-                 f'text-anchor="middle">{xml_escape(t["cramer_x"])}</text>')
+        parts.append(
+            f'<line x1="{gx:.1f}" y1="{ax_bottom_r:.1f}" x2="{gx:.1f}" y2="{ax_bottom_r + 5:.1f}" '
+            f'stroke="{INK}" stroke-width="1.2"/>'
+        )
+        parts.append(
+            f'<text x="{gx:.1f}" y="{ax_bottom_r + 24:.1f}" font-size="12.5" '
+            f'font-family="Roboto Mono, monospace" fill="{INK}" text-anchor="middle">{n}</text>'
+        )
+    parts.append(
+        f'<text x="{px_right + panel_w / 2:.1f}" y="{ax_bottom_r + 50:.1f}" font-size="14.5" fill="{INK}" '
+        f'text-anchor="middle">{xml_escape(t["cramer_x"])}</text>'
+    )
     ytx2, yty2 = px_right - 78, py + ph / 2
-    parts.append(f'<text x="{ytx2:.1f}" y="{yty2:.1f}" font-size="14" fill="{INK}" text-anchor="middle" '
-                 f'transform="rotate(-90 {ytx2:.1f} {yty2:.1f})">{xml_escape(t["cramer_rate_y"])}</text>')
+    parts.append(
+        f'<text x="{ytx2:.1f}" y="{yty2:.1f}" font-size="14" fill="{INK}" text-anchor="middle" '
+        f'transform="rotate(-90 {ytx2:.1f} {yty2:.1f})">{xml_escape(t["cramer_rate_y"])}</text>'
+    )
 
     i_min_y = sy_r(i_min)
-    parts.append(f'<line x1="{px_right:.1f}" y1="{i_min_y:.1f}" x2="{px_right+panel_w:.1f}" y2="{i_min_y:.1f}" '
-                 f'stroke="{RED}" stroke-width="1.8" stroke-dasharray="6 4"/>')
-    parts.append(f'<text x="{px_right+panel_w-6:.1f}" y="{i_min_y-8:.1f}" font-size="13" fill="{RED}" '
-                 f'text-anchor="end">I(z) = {i_min:.4f}</text>')
+    parts.append(
+        f'<line x1="{px_right:.1f}" y1="{i_min_y:.1f}" x2="{px_right + panel_w:.1f}" y2="{i_min_y:.1f}" '
+        f'stroke="{RED}" stroke-width="1.8" stroke-dasharray="6 4"/>'
+    )
+    parts.append(
+        f'<text x="{px_right + panel_w - 6:.1f}" y="{i_min_y - 8:.1f}" font-size="13" fill="{RED}" '
+        f'text-anchor="end">I(z) = {i_min:.4f}</text>'
+    )
 
     valid = ~np.isnan(rate_hat)
     pts_r = [(sx_r(float(n)), sy_r(v)) for n, v in zip(ns_r[valid], rate_hat[valid])]
     d_r = "M " + " L ".join(f"{x:.1f} {y:.1f}" for x, y in pts_r)
-    parts.append(f'<path d="{d_r}" fill="none" stroke="{ORANGE}" stroke-width="2.6" '
-                 f'stroke-linecap="round" stroke-linejoin="round"/>')
+    parts.append(
+        f'<path d="{d_r}" fill="none" stroke="{ORANGE}" stroke-width="2.6" '
+        f'stroke-linecap="round" stroke-linejoin="round"/>'
+    )
     for x, y in pts_r:
-        parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="5.5" fill="{ORANGE}" '
-                     f'stroke="#FFFFFF" stroke-width="1.2"/>')
+        parts.append(
+            f'<circle cx="{x:.1f}" cy="{y:.1f}" r="5.5" fill="{ORANGE}" '
+            f'stroke="#FFFFFF" stroke-width="1.2"/>'
+        )
 
     parts.append("</svg>")
     return "\n".join(parts)
@@ -356,7 +452,9 @@ def build_cramer_svg(lang: str, rng: np.random.Generator) -> str:
 # ----------------------------------------------------------------------
 # Figure 2 -- Wald's likelihood-ratio martingale / SPRT
 # ----------------------------------------------------------------------
-def simulate_wald(rng: np.random.Generator) -> Tuple[List[np.ndarray], List[np.ndarray], float, float]:
+def simulate_wald(
+    rng: np.random.Generator,
+) -> Tuple[List[np.ndarray], List[np.ndarray], float, float]:
     p0, p1 = 0.3, 0.7
     alpha = beta = 0.05
     a_hi = math.log((1 - beta) / alpha)
@@ -401,72 +499,115 @@ def build_wald_svg(lang: str, rng: np.random.Generator) -> str:
 
     parts: List[str] = []
     parts.append(svg_open(width, height, "wd-title", "wd-desc"))
-    parts.append(f"<title id=\"wd-title\">{xml_escape(t['wald_title'])}</title>")
-    parts.append(f"<desc id=\"wd-desc\">{xml_escape(t['wald_title'] + '. ' + t['wald_sub'])}</desc>")
+    parts.append(f'<title id="wd-title">{xml_escape(t["wald_title"])}</title>')
+    parts.append(
+        f'<desc id="wd-desc">{xml_escape(t["wald_title"] + ". " + t["wald_sub"])}</desc>'
+    )
     parts.append(f'<rect width="{width}" height="{height}" fill="#FFFFFF"/>')
 
-    parts.append(f'<text x="{m_left}" y="52" font-size="24" font-weight="700" fill="{INK}">'
-                 f'{xml_escape(t["wald_title"])}</text>')
-    parts.append(f'<text x="{m_left}" y="82" font-size="16" fill="{SUBTLE}">'
-                 f'{xml_escape(t["wald_sub"])}</text>')
+    parts.append(
+        f'<text x="{m_left}" y="52" font-size="24" font-weight="700" fill="{INK}">'
+        f"{xml_escape(t['wald_title'])}</text>"
+    )
+    parts.append(
+        f'<text x="{m_left}" y="82" font-size="16" fill="{SUBTLE}">'
+        f"{xml_escape(t['wald_sub'])}</text>"
+    )
 
     y_ticks = sorted(set([round(a_lo, 2), 0.0, round(a_hi, 2)]))
     for v in y_ticks:
         gy = sy(v)
-        parts.append(f'<line x1="{plot_x:.1f}" y1="{gy:.1f}" x2="{plot_x+plot_w:.1f}" y2="{gy:.1f}" '
-                     f'stroke="{GRID}" stroke-width="1.2"/>')
-        parts.append(f'<text x="{plot_x-14:.1f}" y="{gy+5:.1f}" font-size="15" '
-                     f'font-family="Roboto Mono, monospace" fill="{INK}" text-anchor="end">{v:g}</text>')
+        parts.append(
+            f'<line x1="{plot_x:.1f}" y1="{gy:.1f}" x2="{plot_x + plot_w:.1f}" y2="{gy:.1f}" '
+            f'stroke="{GRID}" stroke-width="1.2"/>'
+        )
+        parts.append(
+            f'<text x="{plot_x - 14:.1f}" y="{gy + 5:.1f}" font-size="15" '
+            f'font-family="Roboto Mono, monospace" fill="{INK}" text-anchor="end">{v:g}</text>'
+        )
 
     ax_bottom = plot_y + plot_h
-    parts.append(f'<line x1="{plot_x:.1f}" y1="{ax_bottom:.1f}" x2="{plot_x+plot_w:.1f}" y2="{ax_bottom:.1f}" '
-                 f'stroke="{INK}" stroke-width="1.6"/>')
-    parts.append(f'<line x1="{plot_x:.1f}" y1="{plot_y:.1f}" x2="{plot_x:.1f}" y2="{ax_bottom:.1f}" '
-                 f'stroke="{INK}" stroke-width="1.6"/>')
+    parts.append(
+        f'<line x1="{plot_x:.1f}" y1="{ax_bottom:.1f}" x2="{plot_x + plot_w:.1f}" y2="{ax_bottom:.1f}" '
+        f'stroke="{INK}" stroke-width="1.6"/>'
+    )
+    parts.append(
+        f'<line x1="{plot_x:.1f}" y1="{plot_y:.1f}" x2="{plot_x:.1f}" y2="{ax_bottom:.1f}" '
+        f'stroke="{INK}" stroke-width="1.6"/>'
+    )
 
     step = 5 if x_max <= 40 else (10 if x_max <= 80 else 20)
     for xv in range(0, x_max + 1, step):
         gx = sx(float(xv))
-        parts.append(f'<line x1="{gx:.1f}" y1="{ax_bottom:.1f}" x2="{gx:.1f}" y2="{ax_bottom+6:.1f}" '
-                     f'stroke="{INK}" stroke-width="1.4"/>')
-        parts.append(f'<text x="{gx:.1f}" y="{ax_bottom+28:.1f}" font-size="15" '
-                     f'font-family="Roboto Mono, monospace" fill="{INK}" text-anchor="middle">{xv}</text>')
+        parts.append(
+            f'<line x1="{gx:.1f}" y1="{ax_bottom:.1f}" x2="{gx:.1f}" y2="{ax_bottom + 6:.1f}" '
+            f'stroke="{INK}" stroke-width="1.4"/>'
+        )
+        parts.append(
+            f'<text x="{gx:.1f}" y="{ax_bottom + 28:.1f}" font-size="15" '
+            f'font-family="Roboto Mono, monospace" fill="{INK}" text-anchor="middle">{xv}</text>'
+        )
 
-    parts.append(f'<text x="{plot_x+plot_w/2:.1f}" y="{ax_bottom+62:.1f}" font-size="17" fill="{INK}" '
-                 f'text-anchor="middle">{xml_escape(t["wald_x"])}</text>')
+    parts.append(
+        f'<text x="{plot_x + plot_w / 2:.1f}" y="{ax_bottom + 62:.1f}" font-size="17" fill="{INK}" '
+        f'text-anchor="middle">{xml_escape(t["wald_x"])}</text>'
+    )
     ytx, yty = 40, plot_y + plot_h / 2
-    parts.append(f'<text x="{ytx}" y="{yty:.1f}" font-size="16" fill="{INK}" text-anchor="middle" '
-                 f'transform="rotate(-90 {ytx} {yty:.1f})">{xml_escape(t["wald_y"])}</text>')
+    parts.append(
+        f'<text x="{ytx}" y="{yty:.1f}" font-size="16" fill="{INK}" text-anchor="middle" '
+        f'transform="rotate(-90 {ytx} {yty:.1f})">{xml_escape(t["wald_y"])}</text>'
+    )
 
     # threshold rules
-    for v, label, anchor_y in ((a_hi, t["wald_accept1"], "bottom"), (a_lo, t["wald_accept0"], "top")):
+    for v, label, anchor_y in (
+        (a_hi, t["wald_accept1"], "bottom"),
+        (a_lo, t["wald_accept0"], "top"),
+    ):
         gy = sy(v)
-        parts.append(f'<line x1="{plot_x:.1f}" y1="{gy:.1f}" x2="{plot_x+plot_w:.1f}" y2="{gy:.1f}" '
-                     f'stroke="{RULE}" stroke-width="1.6" stroke-dasharray="7 5"/>')
+        parts.append(
+            f'<line x1="{plot_x:.1f}" y1="{gy:.1f}" x2="{plot_x + plot_w:.1f}" y2="{gy:.1f}" '
+            f'stroke="{RULE}" stroke-width="1.6" stroke-dasharray="7 5"/>'
+        )
         dy = -8 if anchor_y == "bottom" else 20
-        parts.append(f'<text x="{plot_x+plot_w-8:.1f}" y="{gy+dy:.1f}" font-size="15" fill="{SUBTLE}" '
-                     f'text-anchor="end">{xml_escape(label)}</text>')
+        parts.append(
+            f'<text x="{plot_x + plot_w - 8:.1f}" y="{gy + dy:.1f}" font-size="15" fill="{SUBTLE}" '
+            f'text-anchor="end">{xml_escape(label)}</text>'
+        )
 
     def draw_path(path: np.ndarray, color: str) -> None:
-        pts = [(sx(0.0), sy(0.0))] + [(sx(float(i + 1)), sy(float(v))) for i, v in enumerate(path)]
+        pts = [(sx(0.0), sy(0.0))] + [
+            (sx(float(i + 1)), sy(float(v))) for i, v in enumerate(path)
+        ]
         d = "M " + " L ".join(f"{x:.1f} {y:.1f}" for x, y in pts)
-        parts.append(f'<path d="{d}" fill="none" stroke="{color}" stroke-width="2.2" '
-                     f'stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>')
+        parts.append(
+            f'<path d="{d}" fill="none" stroke="{color}" stroke-width="2.2" '
+            f'stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>'
+        )
         ex, ey = pts[-1]
-        parts.append(f'<circle cx="{ex:.1f}" cy="{ey:.1f}" r="6" fill="{color}" '
-                     f'stroke="#FFFFFF" stroke-width="1.4"/>')
+        parts.append(
+            f'<circle cx="{ex:.1f}" cy="{ey:.1f}" r="6" fill="{color}" '
+            f'stroke="#FFFFFF" stroke-width="1.4"/>'
+        )
 
     for path in under1:
         draw_path(path, GREEN)
     for path in under0:
         draw_path(path, RED)
 
-    parts.append(f'<circle cx="{plot_x+22:.1f}" cy="{plot_y+22:.1f}" r="6" fill="{GREEN}"/>')
-    parts.append(f'<text x="{plot_x+36:.1f}" y="{plot_y+27:.1f}" font-size="15" fill="{INK}">'
-                 f'{xml_escape(t["wald_under1"])}</text>')
-    parts.append(f'<circle cx="{plot_x+22:.1f}" cy="{plot_y+46:.1f}" r="6" fill="{RED}"/>')
-    parts.append(f'<text x="{plot_x+36:.1f}" y="{plot_y+51:.1f}" font-size="15" fill="{INK}">'
-                 f'{xml_escape(t["wald_under0"])}</text>')
+    parts.append(
+        f'<circle cx="{plot_x + 22:.1f}" cy="{plot_y + 22:.1f}" r="6" fill="{GREEN}"/>'
+    )
+    parts.append(
+        f'<text x="{plot_x + 36:.1f}" y="{plot_y + 27:.1f}" font-size="15" fill="{INK}">'
+        f"{xml_escape(t['wald_under1'])}</text>"
+    )
+    parts.append(
+        f'<circle cx="{plot_x + 22:.1f}" cy="{plot_y + 46:.1f}" r="6" fill="{RED}"/>'
+    )
+    parts.append(
+        f'<text x="{plot_x + 36:.1f}" y="{plot_y + 51:.1f}" font-size="15" fill="{INK}">'
+        f"{xml_escape(t['wald_under0'])}</text>"
+    )
 
     parts.append("</svg>")
     return "\n".join(parts)
@@ -475,7 +616,9 @@ def build_wald_svg(lang: str, rng: np.random.Generator) -> str:
 # ----------------------------------------------------------------------
 # Figure 3 -- bias/variance convergence of L_hat_n
 # ----------------------------------------------------------------------
-def simulate_convergence(rng: np.random.Generator) -> Tuple[np.ndarray, np.ndarray, np.ndarray, float, float]:
+def simulate_convergence(
+    rng: np.random.Generator,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, float, float]:
     l_inf = 1.0 / math.sqrt(2 * math.pi * math.e)
     sigma_z2 = 0.5
     ns = np.array([5, 10, 20, 50, 100, 200, 500, 1000])
@@ -491,10 +634,22 @@ def simulate_convergence(rng: np.random.Generator) -> Tuple[np.ndarray, np.ndarr
     return ns, emp_bias, emp_var, l_inf, sigma_z2
 
 
-def _loglog_panel(parts: List[str], px: float, py: float, pw: float, ph: float,
-                   ns: np.ndarray, emp: np.ndarray, theory: np.ndarray,
-                   title: str, xlabel: str, ylabel: str, sim_label: str, theory_label: str,
-                   color: str) -> None:
+def _loglog_panel(
+    parts: List[str],
+    px: float,
+    py: float,
+    pw: float,
+    ph: float,
+    ns: np.ndarray,
+    emp: np.ndarray,
+    theory: np.ndarray,
+    title: str,
+    xlabel: str,
+    ylabel: str,
+    sim_label: str,
+    theory_label: str,
+    color: str,
+) -> None:
     log_n_min, log_n_max = math.log10(4), math.log10(1300)
     all_vals = np.concatenate([emp, theory])
     y_top_k = int(math.ceil(math.log10(all_vals.max())))
@@ -507,33 +662,51 @@ def _loglog_panel(parts: List[str], px: float, py: float, pw: float, ph: float,
         k = math.log10(v)
         return py + (y_top_k - k) / (y_top_k - y_bot_k) * ph
 
-    parts.append(f'<text x="{px:.1f}" y="{py-18:.1f}" font-size="16" font-weight="700" fill="{INK}">'
-                 f'{xml_escape(title)}</text>')
+    parts.append(
+        f'<text x="{px:.1f}" y="{py - 18:.1f}" font-size="16" font-weight="700" fill="{INK}">'
+        f"{xml_escape(title)}</text>"
+    )
 
     for k in range(y_bot_k, y_top_k + 1):
         gy = sy(10.0**k)
-        parts.append(f'<line x1="{px:.1f}" y1="{gy:.1f}" x2="{px+pw:.1f}" y2="{gy:.1f}" '
-                     f'stroke="{GRID}" stroke-width="1.2"/>')
-        parts.append(f'<text x="{px-12:.1f}" y="{gy+5:.1f}" font-size="13.5" '
-                     f'font-family="Roboto Mono, monospace" fill="{INK}" text-anchor="end">'
-                     f'{pow10_label(k)}</text>')
+        parts.append(
+            f'<line x1="{px:.1f}" y1="{gy:.1f}" x2="{px + pw:.1f}" y2="{gy:.1f}" '
+            f'stroke="{GRID}" stroke-width="1.2"/>'
+        )
+        parts.append(
+            f'<text x="{px - 12:.1f}" y="{gy + 5:.1f}" font-size="13.5" '
+            f'font-family="Roboto Mono, monospace" fill="{INK}" text-anchor="end">'
+            f"{pow10_label(k)}</text>"
+        )
 
     ax_bottom = py + ph
-    parts.append(f'<line x1="{px:.1f}" y1="{ax_bottom:.1f}" x2="{px+pw:.1f}" y2="{ax_bottom:.1f}" '
-                 f'stroke="{INK}" stroke-width="1.5"/>')
-    parts.append(f'<line x1="{px:.1f}" y1="{py:.1f}" x2="{px:.1f}" y2="{ax_bottom:.1f}" '
-                 f'stroke="{INK}" stroke-width="1.5"/>')
+    parts.append(
+        f'<line x1="{px:.1f}" y1="{ax_bottom:.1f}" x2="{px + pw:.1f}" y2="{ax_bottom:.1f}" '
+        f'stroke="{INK}" stroke-width="1.5"/>'
+    )
+    parts.append(
+        f'<line x1="{px:.1f}" y1="{py:.1f}" x2="{px:.1f}" y2="{ax_bottom:.1f}" '
+        f'stroke="{INK}" stroke-width="1.5"/>'
+    )
     for n in ns:
         gx = sx(float(n))
-        parts.append(f'<line x1="{gx:.1f}" y1="{ax_bottom:.1f}" x2="{gx:.1f}" y2="{ax_bottom+5:.1f}" '
-                     f'stroke="{INK}" stroke-width="1.2"/>')
-        parts.append(f'<text x="{gx:.1f}" y="{ax_bottom+24:.1f}" font-size="12.5" '
-                     f'font-family="Roboto Mono, monospace" fill="{INK}" text-anchor="middle">{n}</text>')
-    parts.append(f'<text x="{px+pw/2:.1f}" y="{ax_bottom+50:.1f}" font-size="14.5" fill="{INK}" '
-                 f'text-anchor="middle">{xml_escape(xlabel)}</text>')
+        parts.append(
+            f'<line x1="{gx:.1f}" y1="{ax_bottom:.1f}" x2="{gx:.1f}" y2="{ax_bottom + 5:.1f}" '
+            f'stroke="{INK}" stroke-width="1.2"/>'
+        )
+        parts.append(
+            f'<text x="{gx:.1f}" y="{ax_bottom + 24:.1f}" font-size="12.5" '
+            f'font-family="Roboto Mono, monospace" fill="{INK}" text-anchor="middle">{n}</text>'
+        )
+    parts.append(
+        f'<text x="{px + pw / 2:.1f}" y="{ax_bottom + 50:.1f}" font-size="14.5" fill="{INK}" '
+        f'text-anchor="middle">{xml_escape(xlabel)}</text>'
+    )
     ytx, yty = px - 78, py + ph / 2
-    parts.append(f'<text x="{ytx:.1f}" y="{yty:.1f}" font-size="14" fill="{INK}" text-anchor="middle" '
-                 f'transform="rotate(-90 {ytx:.1f} {yty:.1f})">{xml_escape(ylabel)}</text>')
+    parts.append(
+        f'<text x="{ytx:.1f}" y="{yty:.1f}" font-size="14" fill="{INK}" text-anchor="middle" '
+        f'transform="rotate(-90 {ytx:.1f} {yty:.1f})">{xml_escape(ylabel)}</text>'
+    )
 
     tpts = [(sx(float(n)), sy(v)) for n, v in zip(ns, theory)]
     d = "M " + " L ".join(f"{x:.1f} {y:.1f}" for x, y in tpts)
@@ -541,17 +714,27 @@ def _loglog_panel(parts: List[str], px: float, py: float, pw: float, ph: float,
 
     for n, v in zip(ns, emp):
         x, y = sx(float(n)), sy(v)
-        parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="5.5" fill="{color}" '
-                     f'stroke="#FFFFFF" stroke-width="1.2"/>')
+        parts.append(
+            f'<circle cx="{x:.1f}" cy="{y:.1f}" r="5.5" fill="{color}" '
+            f'stroke="#FFFFFF" stroke-width="1.2"/>'
+        )
 
     # Bottom-left corner is always empty for a decreasing log-log curve (low n
     # never lands at a low value), unlike top-left where the highest points sit.
     lx, ly = px + 14, ax_bottom - 46
-    parts.append(f'<line x1="{lx:.1f}" y1="{ly:.1f}" x2="{lx+22:.1f}" y2="{ly:.1f}" '
-                 f'stroke="{SUBTLE}" stroke-width="2.4"/>')
-    parts.append(f'<text x="{lx+30:.1f}" y="{ly+4:.1f}" font-size="13" fill="{INK}">{xml_escape(theory_label)}</text>')
-    parts.append(f'<circle cx="{lx+11:.1f}" cy="{ly+22:.1f}" r="5.5" fill="{color}"/>')
-    parts.append(f'<text x="{lx+30:.1f}" y="{ly+26:.1f}" font-size="13" fill="{INK}">{xml_escape(sim_label)}</text>')
+    parts.append(
+        f'<line x1="{lx:.1f}" y1="{ly:.1f}" x2="{lx + 22:.1f}" y2="{ly:.1f}" '
+        f'stroke="{SUBTLE}" stroke-width="2.4"/>'
+    )
+    parts.append(
+        f'<text x="{lx + 30:.1f}" y="{ly + 4:.1f}" font-size="13" fill="{INK}">{xml_escape(theory_label)}</text>'
+    )
+    parts.append(
+        f'<circle cx="{lx + 11:.1f}" cy="{ly + 22:.1f}" r="5.5" fill="{color}"/>'
+    )
+    parts.append(
+        f'<text x="{lx + 30:.1f}" y="{ly + 26:.1f}" font-size="13" fill="{INK}">{xml_escape(sim_label)}</text>'
+    )
 
 
 def build_convergence_svg(lang: str, rng: np.random.Generator) -> str:
@@ -571,16 +754,46 @@ def build_convergence_svg(lang: str, rng: np.random.Generator) -> str:
 
     parts: List[str] = []
     parts.append(svg_open(width, height, "cv-title", "cv-desc"))
-    parts.append(f"<title id=\"cv-title\">{xml_escape(t['conv_title'])}</title>")
-    parts.append(f"<desc id=\"cv-desc\">{xml_escape(t['conv_title'])}</desc>")
+    parts.append(f'<title id="cv-title">{xml_escape(t["conv_title"])}</title>')
+    parts.append(f'<desc id="cv-desc">{xml_escape(t["conv_title"])}</desc>')
     parts.append(f'<rect width="{width}" height="{height}" fill="#FFFFFF"/>')
-    parts.append(f'<text x="60" y="52" font-size="24" font-weight="700" fill="{INK}">'
-                 f'{xml_escape(t["conv_title"])}</text>')
+    parts.append(
+        f'<text x="60" y="52" font-size="24" font-weight="700" fill="{INK}">'
+        f"{xml_escape(t['conv_title'])}</text>"
+    )
 
-    _loglog_panel(parts, px_left, py, panel_w, ph, ns, np.abs(emp_bias), theory_bias,
-                  t["conv_sub_l"], t["conv_x"], t["conv_y_l"], t["conv_sim"], t["conv_theory"], BLUE)
-    _loglog_panel(parts, px_right, py, panel_w, ph, ns, emp_var, theory_var,
-                  t["conv_sub_r"], t["conv_x"], t["conv_y_r"], t["conv_sim"], t["conv_theory"], ORANGE)
+    _loglog_panel(
+        parts,
+        px_left,
+        py,
+        panel_w,
+        ph,
+        ns,
+        np.abs(emp_bias),
+        theory_bias,
+        t["conv_sub_l"],
+        t["conv_x"],
+        t["conv_y_l"],
+        t["conv_sim"],
+        t["conv_theory"],
+        BLUE,
+    )
+    _loglog_panel(
+        parts,
+        px_right,
+        py,
+        panel_w,
+        ph,
+        ns,
+        emp_var,
+        theory_var,
+        t["conv_sub_r"],
+        t["conv_x"],
+        t["conv_y_r"],
+        t["conv_sim"],
+        t["conv_theory"],
+        ORANGE,
+    )
 
     parts.append("</svg>")
     return "\n".join(parts)
@@ -589,11 +802,15 @@ def build_convergence_svg(lang: str, rng: np.random.Generator) -> str:
 def main() -> None:
     for lang in ("fr", "en"):
         rng = np.random.default_rng(20260815)
-        _write_and_rasterize(build_cramer_svg(lang, rng), f"largedev_cramer_{lang}", 1000)
+        _write_and_rasterize(
+            build_cramer_svg(lang, rng), f"largedev_cramer_{lang}", 1000
+        )
         rng = np.random.default_rng(20260815)
         _write_and_rasterize(build_wald_svg(lang, rng), f"martingale_wald_{lang}", 1000)
         rng = np.random.default_rng(20260815)
-        _write_and_rasterize(build_convergence_svg(lang, rng), f"estimator_convergence_{lang}", 1150)
+        _write_and_rasterize(
+            build_convergence_svg(lang, rng), f"estimator_convergence_{lang}", 1150
+        )
 
 
 if __name__ == "__main__":

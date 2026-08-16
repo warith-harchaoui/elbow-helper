@@ -84,7 +84,11 @@ def test_render_svg_multi_valid_marks_every_breakpoint() -> None:
     y = np.piecewise(
         x,
         [x < 0.3, (x >= 0.3) & (x < 0.65), x >= 0.65],
-        [lambda t: 3 * t, lambda t: 0.9 + 0.2 * (t - 0.3), lambda t: 0.97 + 2.2 * (t - 0.65)],
+        [
+            lambda t: 3 * t,
+            lambda t: 0.9 + 0.2 * (t - 0.3),
+            lambda t: 0.97 + 2.2 * (t - 0.65),
+        ],
     ) + rng.normal(0, 0.02, x.size)
     svg = render_svg_multi(
         x, y, config=RobustKneesConfig(random_seed=0, fwer_permutations=200)

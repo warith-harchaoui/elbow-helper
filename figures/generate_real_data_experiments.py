@@ -47,11 +47,19 @@ import pandas as pd
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from generate_experiment_figures import (  # noqa: E402
-    BLUE, RED, GREEN, ORANGE, INK, SUBTLE, GRID,
-    svg_open, xml_escape, _write_and_rasterize,
+    BLUE,
+    ORANGE,
+    INK,
+    SUBTLE,
+    GRID,
+    svg_open,
+    xml_escape,
+    _write_and_rasterize,
 )
 
-PENGUINS_URL = "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/penguins.csv"
+PENGUINS_URL = (
+    "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/penguins.csv"
+)
 
 LANG = {
     "fr": {
@@ -108,7 +116,9 @@ def train_penguins() -> Dict[str, object]:
     y = df["species"].map({s: i for i, s in enumerate(species)}).to_numpy()
     K = len(species)
 
-    Xtr, Xval, ytr, yval = train_test_split(X, y, test_size=0.3, stratify=y, random_state=42)
+    Xtr, Xval, ytr, yval = train_test_split(
+        X, y, test_size=0.3, stratify=y, random_state=42
+    )
     mu, sd = Xtr.mean(0), Xtr.std(0)
     Xtr_s, Xval_s = (Xtr - mu) / sd, (Xval - mu) / sd
     n_tr, d = Xtr_s.shape
@@ -118,7 +128,9 @@ def train_penguins() -> Dict[str, object]:
         E = np.exp(Z)
         return E / E.sum(axis=1, keepdims=True)
 
-    def cross_entropy(Xs: np.ndarray, ys: np.ndarray, W: np.ndarray, b: np.ndarray) -> float:
+    def cross_entropy(
+        Xs: np.ndarray, ys: np.ndarray, W: np.ndarray, b: np.ndarray
+    ) -> float:
         P = softmax(Xs @ W + b)
         return float(-np.mean(np.log(P[np.arange(len(ys)), ys] + 1e-12)))
 
@@ -192,7 +204,9 @@ def train_housing() -> Dict[str, object]:
     }
 
 
-def train_housing_mlp(hidden: int = 30, lr: float = 0.1, n_iters: int = 3000) -> Dict[str, object]:
+def train_housing_mlp(
+    hidden: int = 30, lr: float = 0.1, n_iters: int = 3000
+) -> Dict[str, object]:
     """One hidden ReLU layer (He init) plus a linear output unit, the
     architecture Geron (2019) uses for this exact dataset, trained here by
     hand-written forward and backward passes rather than a Keras call, on
@@ -212,7 +226,9 @@ def train_housing_mlp(hidden: int = 30, lr: float = 0.1, n_iters: int = 3000) ->
     mse_worst = float(np.mean((np.full_like(yval, ytr.mean()) - yval) ** 2))
 
     rng = np.random.default_rng(0)
-    W1 = rng.standard_normal((d, hidden)) * np.sqrt(2.0 / d)  # He init (He et al., 2015)
+    W1 = rng.standard_normal((d, hidden)) * np.sqrt(
+        2.0 / d
+    )  # He init (He et al., 2015)
     b1 = np.zeros(hidden)
     W2 = rng.standard_normal((hidden, 1)) * np.sqrt(2.0 / hidden)
     b2 = np.array([float(ytr.mean())])
@@ -231,7 +247,9 @@ def train_housing_mlp(hidden: int = 30, lr: float = 0.1, n_iters: int = 3000) ->
         dW2 = A1.T @ dpred.reshape(-1, 1)
         db2 = np.array([dpred.sum()])
         dA1 = dpred.reshape(-1, 1) @ W2.T
-        dZ1 = dA1 * (Z1 > 0)  # ReLU gradient: 1 where the pre-activation fired, 0 where it didn't
+        dZ1 = dA1 * (
+            Z1 > 0
+        )  # ReLU gradient: 1 where the pre-activation fired, 0 where it didn't
         dW1 = Xtr_s.T @ dZ1
         db1 = dZ1.sum(0)
 
@@ -265,10 +283,22 @@ def train_housing_mlp(hidden: int = 30, lr: float = 0.1, n_iters: int = 3000) ->
 # Shared two-panel training-curve figure
 # ----------------------------------------------------------------------
 def _curve_panel(
-    parts: List[str], px: float, py: float, pw: float, ph: float,
-    n_iters: int, train_y: np.ndarray, val_y: np.ndarray,
-    title: str, ylabel: str, xlabel: str, train_label: str, val_label: str,
-    *, log_y: bool, y_range: Tuple[float, float] = None,
+    parts: List[str],
+    px: float,
+    py: float,
+    pw: float,
+    ph: float,
+    n_iters: int,
+    train_y: np.ndarray,
+    val_y: np.ndarray,
+    title: str,
+    ylabel: str,
+    xlabel: str,
+    train_label: str,
+    val_label: str,
+    *,
+    log_y: bool,
+    y_range: Tuple[float, float] = None,
 ) -> None:
     xs = np.arange(1, n_iters + 1)
 
@@ -287,55 +317,85 @@ def _curve_panel(
         y_labels = [f"{v:g}" for v in y_ticks_vals]
     else:
         y_min, y_max = y_range
+
         def sy(v: float) -> float:
             return py + (y_max - v) / (y_max - y_min) * ph
+
         y_ticks_vals = list(np.linspace(y_min, y_max, 5))
         y_labels = [f"{v:.2f}" for v in y_ticks_vals]
 
-    parts.append(f'<text x="{px:.1f}" y="{py-18:.1f}" font-size="16" font-weight="700" fill="{INK}">'
-                 f'{xml_escape(title)}</text>')
+    parts.append(
+        f'<text x="{px:.1f}" y="{py - 18:.1f}" font-size="16" font-weight="700" fill="{INK}">'
+        f"{xml_escape(title)}</text>"
+    )
     for v, lab in zip(y_ticks_vals, y_labels):
         gy = sy(v)
-        parts.append(f'<line x1="{px:.1f}" y1="{gy:.1f}" x2="{px+pw:.1f}" y2="{gy:.1f}" '
-                     f'stroke="{GRID}" stroke-width="1.2"/>')
-        parts.append(f'<text x="{px-12:.1f}" y="{gy+5:.1f}" font-size="12.5" '
-                     f'font-family="Roboto Mono, monospace" fill="{INK}" text-anchor="end">{lab}</text>')
+        parts.append(
+            f'<line x1="{px:.1f}" y1="{gy:.1f}" x2="{px + pw:.1f}" y2="{gy:.1f}" '
+            f'stroke="{GRID}" stroke-width="1.2"/>'
+        )
+        parts.append(
+            f'<text x="{px - 12:.1f}" y="{gy + 5:.1f}" font-size="12.5" '
+            f'font-family="Roboto Mono, monospace" fill="{INK}" text-anchor="end">{lab}</text>'
+        )
 
     ax_bottom = py + ph
-    parts.append(f'<line x1="{px:.1f}" y1="{ax_bottom:.1f}" x2="{px+pw:.1f}" y2="{ax_bottom:.1f}" '
-                 f'stroke="{INK}" stroke-width="1.5"/>')
-    parts.append(f'<line x1="{px:.1f}" y1="{py:.1f}" x2="{px:.1f}" y2="{ax_bottom:.1f}" '
-                 f'stroke="{INK}" stroke-width="1.5"/>')
+    parts.append(
+        f'<line x1="{px:.1f}" y1="{ax_bottom:.1f}" x2="{px + pw:.1f}" y2="{ax_bottom:.1f}" '
+        f'stroke="{INK}" stroke-width="1.5"/>'
+    )
+    parts.append(
+        f'<line x1="{px:.1f}" y1="{py:.1f}" x2="{px:.1f}" y2="{ax_bottom:.1f}" '
+        f'stroke="{INK}" stroke-width="1.5"/>'
+    )
     x_ticks = [1] + [t for t in (n_iters // 4, n_iters // 2, 3 * n_iters // 4, n_iters)]
     for xv in x_ticks:
         gx = sx(float(xv))
-        parts.append(f'<line x1="{gx:.1f}" y1="{ax_bottom:.1f}" x2="{gx:.1f}" y2="{ax_bottom+5:.1f}" '
-                     f'stroke="{INK}" stroke-width="1.2"/>')
-        parts.append(f'<text x="{gx:.1f}" y="{ax_bottom+24:.1f}" font-size="12.5" '
-                     f'font-family="Roboto Mono, monospace" fill="{INK}" text-anchor="middle">{xv}</text>')
-    parts.append(f'<text x="{px+pw/2:.1f}" y="{ax_bottom+50:.1f}" font-size="14.5" fill="{INK}" '
-                 f'text-anchor="middle">{xml_escape(xlabel)}</text>')
+        parts.append(
+            f'<line x1="{gx:.1f}" y1="{ax_bottom:.1f}" x2="{gx:.1f}" y2="{ax_bottom + 5:.1f}" '
+            f'stroke="{INK}" stroke-width="1.2"/>'
+        )
+        parts.append(
+            f'<text x="{gx:.1f}" y="{ax_bottom + 24:.1f}" font-size="12.5" '
+            f'font-family="Roboto Mono, monospace" fill="{INK}" text-anchor="middle">{xv}</text>'
+        )
+    parts.append(
+        f'<text x="{px + pw / 2:.1f}" y="{ax_bottom + 50:.1f}" font-size="14.5" fill="{INK}" '
+        f'text-anchor="middle">{xml_escape(xlabel)}</text>'
+    )
     ytx, yty = px - 78, py + ph / 2
-    parts.append(f'<text x="{ytx:.1f}" y="{yty:.1f}" font-size="13.5" fill="{INK}" text-anchor="middle" '
-                 f'transform="rotate(-90 {ytx:.1f} {yty:.1f})">{xml_escape(ylabel)}</text>')
+    parts.append(
+        f'<text x="{ytx:.1f}" y="{yty:.1f}" font-size="13.5" fill="{INK}" text-anchor="middle" '
+        f'transform="rotate(-90 {ytx:.1f} {yty:.1f})">{xml_escape(ylabel)}</text>'
+    )
 
-    for series, color, label, dash in ((train_y, BLUE, train_label, ""), (val_y, ORANGE, val_label, "6 4")):
+    for series, color, label, dash in (
+        (train_y, BLUE, train_label, ""),
+        (val_y, ORANGE, val_label, "6 4"),
+    ):
         pts = [(sx(float(i)), sy(v)) for i, v in zip(xs, series)]
         d = "M " + " L ".join(f"{x:.1f} {y:.1f}" for x, y in pts)
         dash_attr = f' stroke-dasharray="{dash}"' if dash else ""
-        parts.append(f'<path d="{d}" fill="none" stroke="{color}" stroke-width="2.4"{dash_attr}/>')
+        parts.append(
+            f'<path d="{d}" fill="none" stroke="{color}" stroke-width="2.4"{dash_attr}/>'
+        )
 
     lx, ly = px + 14, py + 20
     for color, label, dash in ((BLUE, train_label, ""), (ORANGE, val_label, "6 4")):
         dash_attr = f' stroke-dasharray="{dash}"' if dash else ""
-        parts.append(f'<line x1="{lx:.1f}" y1="{ly:.1f}" x2="{lx+22:.1f}" y2="{ly:.1f}" '
-                     f'stroke="{color}" stroke-width="2.6"{dash_attr}/>')
-        parts.append(f'<text x="{lx+30:.1f}" y="{ly+4:.1f}" font-size="12.5" fill="{INK}">{xml_escape(label)}</text>')
+        parts.append(
+            f'<line x1="{lx:.1f}" y1="{ly:.1f}" x2="{lx + 22:.1f}" y2="{ly:.1f}" '
+            f'stroke="{color}" stroke-width="2.6"{dash_attr}/>'
+        )
+        parts.append(
+            f'<text x="{lx + 30:.1f}" y="{ly + 4:.1f}" font-size="12.5" fill="{INK}">{xml_escape(label)}</text>'
+        )
         ly += 20
 
 
-def _two_panel_figure(lang: str, title: str, sub: str, n_iters: int,
-                       left_kwargs: dict, right_kwargs: dict) -> str:
+def _two_panel_figure(
+    lang: str, title: str, sub: str, n_iters: int, left_kwargs: dict, right_kwargs: dict
+) -> str:
     width, height = 1150, 600
     m_top, m_bottom = 150, 130
     panel_w = 400
@@ -347,12 +407,16 @@ def _two_panel_figure(lang: str, title: str, sub: str, n_iters: int,
 
     parts: List[str] = []
     parts.append(svg_open(width, height, "rd-title", "rd-desc"))
-    parts.append(f"<title id=\"rd-title\">{xml_escape(title)}</title>")
-    parts.append(f"<desc id=\"rd-desc\">{xml_escape(title + '. ' + sub)}</desc>")
+    parts.append(f'<title id="rd-title">{xml_escape(title)}</title>')
+    parts.append(f'<desc id="rd-desc">{xml_escape(title + ". " + sub)}</desc>')
     parts.append(f'<rect width="{width}" height="{height}" fill="#FFFFFF"/>')
-    parts.append(f'<text x="60" y="52" font-size="22" font-weight="700" fill="{INK}">'
-                 f'{xml_escape(title)}</text>')
-    parts.append(f'<text x="60" y="82" font-size="15" fill="{SUBTLE}">{xml_escape(sub)}</text>')
+    parts.append(
+        f'<text x="60" y="52" font-size="22" font-weight="700" fill="{INK}">'
+        f"{xml_escape(title)}</text>"
+    )
+    parts.append(
+        f'<text x="60" y="82" font-size="15" fill="{SUBTLE}">{xml_escape(sub)}</text>'
+    )
 
     _curve_panel(parts, px_left, py, panel_w, ph, n_iters, **left_kwargs)
     _curve_panel(parts, px_right, py, panel_w, ph, n_iters, **right_kwargs)
@@ -367,13 +431,31 @@ def build_classification_svg(lang: str, res: Dict[str, object]) -> str:
     q_train = 1 - res["train_ce"] / res["ln_k"]
     q_val = 1 - res["val_ce"] / res["ln_k"]
     return _two_panel_figure(
-        lang, t["clf_title"], t["clf_sub"], n_iters,
-        left_kwargs=dict(train_y=res["train_ce"], val_y=res["val_ce"], title=t["clf_panel_a_title"],
-                         ylabel=t["clf_panel_a_y"], xlabel=t["x_iter"], train_label=t["train"],
-                         val_label=t["val"], log_y=True),
-        right_kwargs=dict(train_y=q_train, val_y=q_val, title=t["clf_panel_b_title"],
-                          ylabel=t["clf_panel_b_y"], xlabel=t["x_iter"], train_label=t["train"],
-                          val_label=t["val"], log_y=False, y_range=(0.0, 1.0)),
+        lang,
+        t["clf_title"],
+        t["clf_sub"],
+        n_iters,
+        left_kwargs=dict(
+            train_y=res["train_ce"],
+            val_y=res["val_ce"],
+            title=t["clf_panel_a_title"],
+            ylabel=t["clf_panel_a_y"],
+            xlabel=t["x_iter"],
+            train_label=t["train"],
+            val_label=t["val"],
+            log_y=True,
+        ),
+        right_kwargs=dict(
+            train_y=q_train,
+            val_y=q_val,
+            title=t["clf_panel_b_title"],
+            ylabel=t["clf_panel_b_y"],
+            xlabel=t["x_iter"],
+            train_label=t["train"],
+            val_label=t["val"],
+            log_y=False,
+            y_range=(0.0, 1.0),
+        ),
     )
 
 
@@ -385,13 +467,32 @@ def build_regression_svg(lang: str, res: Dict[str, object]) -> str:
     q_val = 1 - res["val_mse"] / mse_worst
     mse_hi = float(max(res["train_mse"].max(), res["val_mse"].max())) * 1.05
     return _two_panel_figure(
-        lang, t["reg_title"], t["reg_sub"], n_iters,
-        left_kwargs=dict(train_y=res["train_mse"], val_y=res["val_mse"], title=t["reg_panel_a_title"],
-                         ylabel=t["reg_panel_a_y"], xlabel=t["x_iter"], train_label=t["train"],
-                         val_label=t["val"], log_y=False, y_range=(0.0, mse_hi)),
-        right_kwargs=dict(train_y=q_train, val_y=q_val, title=t["reg_panel_b_title"],
-                          ylabel=t["reg_panel_b_y"], xlabel=t["x_iter"], train_label=t["train"],
-                          val_label=t["val"], log_y=False, y_range=(0.0, 1.0)),
+        lang,
+        t["reg_title"],
+        t["reg_sub"],
+        n_iters,
+        left_kwargs=dict(
+            train_y=res["train_mse"],
+            val_y=res["val_mse"],
+            title=t["reg_panel_a_title"],
+            ylabel=t["reg_panel_a_y"],
+            xlabel=t["x_iter"],
+            train_label=t["train"],
+            val_label=t["val"],
+            log_y=False,
+            y_range=(0.0, mse_hi),
+        ),
+        right_kwargs=dict(
+            train_y=q_train,
+            val_y=q_val,
+            title=t["reg_panel_b_title"],
+            ylabel=t["reg_panel_b_y"],
+            xlabel=t["x_iter"],
+            train_label=t["train"],
+            val_label=t["val"],
+            log_y=False,
+            y_range=(0.0, 1.0),
+        ),
     )
 
 
@@ -406,39 +507,75 @@ def build_regression_mlp_svg(lang: str, res: Dict[str, object]) -> str:
     # same wide-dynamic-range shape build_classification_svg's cross-entropy
     # panel already handles with log_y rather than a clipped linear axis.
     return _two_panel_figure(
-        lang, t["mlp_title"], t["mlp_sub"], n_iters,
-        left_kwargs=dict(train_y=res["train_mse"], val_y=res["val_mse"], title=t["reg_panel_a_title"],
-                         ylabel=t["reg_panel_a_y"], xlabel=t["x_iter"], train_label=t["train"],
-                         val_label=t["val"], log_y=True),
-        right_kwargs=dict(train_y=q_train, val_y=q_val, title=t["reg_panel_b_title"],
-                          ylabel=t["reg_panel_b_y"], xlabel=t["x_iter"], train_label=t["train"],
-                          val_label=t["val"], log_y=False, y_range=(0.0, 1.0)),
+        lang,
+        t["mlp_title"],
+        t["mlp_sub"],
+        n_iters,
+        left_kwargs=dict(
+            train_y=res["train_mse"],
+            val_y=res["val_mse"],
+            title=t["reg_panel_a_title"],
+            ylabel=t["reg_panel_a_y"],
+            xlabel=t["x_iter"],
+            train_label=t["train"],
+            val_label=t["val"],
+            log_y=True,
+        ),
+        right_kwargs=dict(
+            train_y=q_train,
+            val_y=q_val,
+            title=t["reg_panel_b_title"],
+            ylabel=t["reg_panel_b_y"],
+            xlabel=t["x_iter"],
+            train_label=t["train"],
+            val_label=t["val"],
+            log_y=False,
+            y_range=(0.0, 1.0),
+        ),
     )
 
 
 def main() -> None:
     print("training penguins classifier...")
     clf_res = train_penguins()
-    print(f"  n={clf_res['n_total']} train={clf_res['n_train']} val={clf_res['n_val']} "
-          f"val_acc={clf_res['val_accuracy']:.4f} val_CE={clf_res['final_val_ce']:.4f} "
-          f"val_PPL={clf_res['final_val_ppl']:.4f}")
+    print(
+        f"  n={clf_res['n_total']} train={clf_res['n_train']} val={clf_res['n_val']} "
+        f"val_acc={clf_res['val_accuracy']:.4f} val_CE={clf_res['final_val_ce']:.4f} "
+        f"val_PPL={clf_res['final_val_ppl']:.4f}"
+    )
 
     print("training housing regressor (linear)...")
     reg_res = train_housing()
-    print(f"  n={reg_res['n_total']} train={reg_res['n_train']} val={reg_res['n_val']} "
-          f"val_RMSE={reg_res['final_val_rmse']:.4f} MSE_worst={reg_res['mse_worst']:.4f} "
-          f"Q_reg={reg_res['final_q_reg']:.4f}")
+    print(
+        f"  n={reg_res['n_total']} train={reg_res['n_train']} val={reg_res['n_val']} "
+        f"val_RMSE={reg_res['final_val_rmse']:.4f} MSE_worst={reg_res['mse_worst']:.4f} "
+        f"Q_reg={reg_res['final_q_reg']:.4f}"
+    )
 
     print("training housing regressor (MLP, 30 ReLU units)...")
     mlp_res = train_housing_mlp()
-    print(f"  n={mlp_res['n_total']} train={mlp_res['n_train']} val={mlp_res['n_val']} "
-          f"val_RMSE={mlp_res['final_val_rmse']:.4f} MSE_worst={mlp_res['mse_worst']:.4f} "
-          f"Q_reg={mlp_res['final_q_reg']:.4f}")
+    print(
+        f"  n={mlp_res['n_total']} train={mlp_res['n_train']} val={mlp_res['n_val']} "
+        f"val_RMSE={mlp_res['final_val_rmse']:.4f} MSE_worst={mlp_res['mse_worst']:.4f} "
+        f"Q_reg={mlp_res['final_q_reg']:.4f}"
+    )
 
     for lang in ("fr", "en"):
-        _write_and_rasterize(build_classification_svg(lang, clf_res), f"classification_training_penguins_{lang}", 1150)
-        _write_and_rasterize(build_regression_svg(lang, reg_res), f"regression_training_housing_{lang}", 1150)
-        _write_and_rasterize(build_regression_mlp_svg(lang, mlp_res), f"regression_training_housing_mlp_{lang}", 1150)
+        _write_and_rasterize(
+            build_classification_svg(lang, clf_res),
+            f"classification_training_penguins_{lang}",
+            1150,
+        )
+        _write_and_rasterize(
+            build_regression_svg(lang, reg_res),
+            f"regression_training_housing_{lang}",
+            1150,
+        )
+        _write_and_rasterize(
+            build_regression_mlp_svg(lang, mlp_res),
+            f"regression_training_housing_mlp_{lang}",
+            1150,
+        )
 
 
 if __name__ == "__main__":

@@ -235,7 +235,9 @@ def test_locator_online_flag_can_be_disabled() -> None:
     unlike the click twin's ``--online/--no-online`` pair.
     """
     parser = cli_argparse.build_parser()
-    default_ns = parser.parse_args(["locator", "--x-values", "1,2", "--y-values", "1,2"])
+    default_ns = parser.parse_args(
+        ["locator", "--x-values", "1,2", "--y-values", "1,2"]
+    )
     assert default_ns.online is True
     off_ns = parser.parse_args(
         ["locator", "--x-values", "1,2", "--y-values", "1,2", "--no-online"]
