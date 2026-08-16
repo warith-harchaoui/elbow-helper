@@ -1,8 +1,8 @@
 """Shared business logic — one core behind every delivery surface.
 
 The suite convention (see this repo's `CODING.md` reference, `~/ai-helpers/
-.private/CODING.md` §19) is that every surface — the argparse CLI, the click
-twin, the FastAPI app, the MCP server — must call the *same* library
+.private/CODING.md` §19) is that every surface (the argparse CLI, the click
+twin, the FastAPI app, the MCP server) must call the *same* library
 functions, never re-implement the decision logic. This module is that
 shared core: thin functions that take already-parsed, primitive arguments
 and return JSON-ready dicts (or a raw SVG string for diagnostics), so each

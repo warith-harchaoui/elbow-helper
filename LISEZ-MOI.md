@@ -85,7 +85,7 @@ L'abstention doit être traitée explicitement : il n'existe aucun repli silenci
 2. **Recherche en espace d'échelles.** Le repéreur balaie une grille de fenêtres de lissage gaussien et de sensibilités et retient chaque candidat proposé.
 3. **Filtres de base.** Les coudes en bordure, ceux de faible proéminence et ceux dont le rapport proéminence sur bruit est trop bas sont écartés.
 4. **Regroupement par persistance.** Seuls survivent les coudes qui réapparaissent à un emplacement stable sur plusieurs échelles de lissage consécutives et sur la plupart des sensibilités testées. Le pipeline s'abstient si deux coudes paraissent également plausibles (`MULTIPLE_PLAUSIBLE_KNEES`).
-5. **Confirmation par un modèle.** Un changement de pente robuste est exigé, mesuré par un estimateur de Theil-Sen (une régression qui reste fiable même en présence de valeurs aberrantes) et confirmé par un ajustement en ligne brisée continue qui doit surpasser une simple droite, à la fois en validation croisée par blocs et selon le critère d'information bayésien (BIC), un score qui récompense la qualité de l'ajustement tout en pénalisant les paramètres superflus.
+5. **Confirmation par un modèle.** Un changement de pente robuste est exigé, mesuré par un estimateur de Theil-Sen (une régression qui reste fiable même en présence de valeurs aberrantes) et confirmé par un ajustement en ligne brisée continue qui doit surpasser une simple droite, à la fois en validation croisée par blocs (on retire des tronçons entiers et contigus de la courbe plutôt que des points isolés, pour qu'un tronçon retiré ne se déduise pas de ses voisins immédiats et lisses, comme le ferait un simple point isolé) et selon le critère d'information bayésien (BIC), un score qui récompense la qualité de l'ajustement tout en pénalisant les paramètres superflus.
 6. **Bootstrap.** Toute la recherche est rejouée sur un bootstrap des résidus supposés i.i.d. (indépendants et identiquement distribués). Le coude doit être redétecté dans au moins 90 % des tirages, avec un intervalle resserré et unimodal.
 7. **Test nul « sans coude ».** Un test de Monte-Carlo confronte le résultat à un modèle nul en ligne droite reprenant l'échelle de bruit du modèle accepté. Le coude observé doit rester significatif au seuil p ≤ 0,01.
 
@@ -150,8 +150,15 @@ comporte-t-elle réellement et où ? C'est à cela que répond `robust_knees`
 programmation dynamique, note chaque candidat avec un BIC modifié (un score
 de qualité d'ajustement qui pénalise chaque rupture supplémentaire, donc
 en ajouter une doit se justifier), puis confirme le nombre gagnant par un
-test de permutation à seuil ajusté (Bonferroni) pour maîtriser le taux de
-faux positifs à mesure que l'espace de recherche grandit.
+test de permutation : les données sont mélangées au hasard des milliers de
+fois ; l'ajustement réel doit se démarquer de presque tous ces mélanges,
+qui eux ne comportent aucune vraie rupture. Tester plus de nombres de
+ruptures revient à faire tourner plus de ces tests ; chaque test
+supplémentaire augmente le risque qu'un résultat paraisse significatif par
+pur hasard. Une correction de Bonferroni compense en durcissant le seuil
+de signification que chaque test individuel doit franchir, à peu près en
+proportion du nombre de tests, ce qui maîtrise le taux de faux positifs
+global à mesure que l'espace de recherche grandit.
 
 ```python
 import numpy as np
@@ -189,7 +196,7 @@ pour la validation derrière ce choix.
 
 ## Paysage
 
-[🗺️ Paysage](https://github.com/warith-harchaoui/elbow-helper/blob/main/PAYSAGE.md) ([🇬🇧 LANDSCAPE.md](https://github.com/warith-harchaoui/elbow-helper/blob/main/LANDSCAPE.md)) : comment `elbow-helper` se positionne face à `kneed`, `ruptures`, `kneebow`, au `KElbowVisualizer` de Yellowbrick, au paquet R `segmented`, à l'estimation à l'œil et au réflexe de demander à un LLM, noté sur 11 critères et placé sur une carte ACP.
+[🗺️ Paysage](https://github.com/warith-harchaoui/elbow-helper/blob/main/PAYSAGE.md) ([🇬🇧 LANDSCAPE.md](https://github.com/warith-harchaoui/elbow-helper/blob/main/LANDSCAPE.md)) : comment `elbow-helper` se positionne face à `kneed`, `ruptures`, `kneebow`, au `KElbowVisualizer` de Yellowbrick, au paquet R `segmented`, à l'estimation à l'œil et au réflexe de demander à un LLM, noté sur 11 critères et placé sur une carte construite par analyse en composantes principales (ACP), une méthode qui trouve les quelques directions selon lesquelles les outils diffèrent le plus et ramène les 11 critères sur ces deux axes.
 
 ## CLI / API / MCP
 

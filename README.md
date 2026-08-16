@@ -85,7 +85,7 @@ You are forced to handle abstention explicitly: there is no silent fallback to a
 2. **Scale-space search.** Run the from-scratch locator across a grid of Gaussian smoothing windows and sensitivities; collect every candidate it proposes.
 3. **Basic filters.** Reject boundary knees, weak prominence, and a low prominence-to-noise ratio.
 4. **Persistence clustering.** Keep only knees that recur at a stable location across consecutive smoothing scales and most sensitivities. Abstain if two knees look equally plausible (`MULTIPLE_PLAUSIBLE_KNEES`).
-5. **Model confirmation.** Require a robust slope change, via a Theil-Sen estimator (a regression method that stays accurate even with outliers), plus a continuous broken-line fit that beats a single straight line on blocked cross-validation and on the BIC (Bayesian Information Criterion, a score that rewards fit while penalising extra parameters).
+5. **Model confirmation.** Require a robust slope change, via a Theil-Sen estimator (a regression method that stays accurate even with outliers), plus a continuous broken-line fit that beats a single straight line on blocked cross-validation (holding out whole contiguous chunks of the curve rather than scattered points, so a held-out stretch cannot leak information from the smooth neighbours right next to it, the way a single held-out point could) and on the BIC (Bayesian Information Criterion, a score that rewards fit while penalising extra parameters).
 6. **Bootstrap.** Re-run the whole search on an IID residual bootstrap (independent, identically distributed resampling of the leftover noise). The knee must be redetected at least 90% of the time, with a tight, unimodal interval.
 7. **No-knee null test.** Run a Monte Carlo test against a straight-line null model that carries the accepted model's noise scale. The observed knee must be significant at p ≤ 0.01.
 
@@ -149,8 +149,14 @@ where are they? `robust_knees` (plural) answers that one. It searches over every
 possible number of segments with a dynamic program, scores each candidate
 with a modified BIC (a fit-quality score that penalises extra breakpoints,
 so adding one has to earn its keep), then confirms the winning count with a
-Bonferroni-gated permutation test to hold the false-positive rate down as
-the search space grows.
+permutation test: reshuffling the data thousands of times and checking that
+the real fit stands out from nearly all of those random reshuffles, none of
+which have any true breakpoint structure. Trying more breakpoint counts
+means running more such tests; running more tests raises the odds that
+one looks significant by pure chance. A Bonferroni correction counters this
+by tightening the significance bar each individual test must clear, roughly
+in proportion to how many are run, holding the overall false-positive rate
+down as the search space grows.
 
 ```python
 import numpy as np
@@ -187,7 +193,7 @@ the validation behind this design.
 
 ## Landscape
 
-[🗺️ Landscape](https://github.com/warith-harchaoui/elbow-helper/blob/main/LANDSCAPE.md) ([🇫🇷 PAYSAGE.md](https://github.com/warith-harchaoui/elbow-helper/blob/main/PAYSAGE.md)): how `elbow-helper` compares to `kneed`, `ruptures`, `kneebow`, Yellowbrick's `KElbowVisualizer`, R's `segmented` package, manual eyeballing and asking an LLM, rated on 11 criteria and positioned on a PCA map.
+[🗺️ Landscape](https://github.com/warith-harchaoui/elbow-helper/blob/main/LANDSCAPE.md) ([🇫🇷 PAYSAGE.md](https://github.com/warith-harchaoui/elbow-helper/blob/main/PAYSAGE.md)): how `elbow-helper` compares to `kneed`, `ruptures`, `kneebow`, Yellowbrick's `KElbowVisualizer`, R's `segmented` package, manual eyeballing and asking an LLM, rated on 11 criteria and positioned on a map built with principal component analysis (PCA), a method that finds the few directions along which the tools differ the most and collapses the 11 criteria down onto those two axes.
 
 ## CLI / API / MCP
 

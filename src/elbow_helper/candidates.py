@@ -2,7 +2,7 @@
 
 Sweeps every (smoothing window, sensitivity) setting, runs
 :class:`~elbow_helper.locator.KneeLocator` in online mode, and collects every
-returned knee as a :class:`~elbow_helper.types.KneeCandidate` — annotated with
+returned knee as a :class:`~elbow_helper.types.KneeCandidate`, annotated with
 metrics but *not* yet accepted.
 
 Author

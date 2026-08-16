@@ -1,7 +1,7 @@
 """Diagnostic figure for a :func:`~elbow_helper.pipeline.robust_knee` run.
 
-Renders a self-contained SVG — no matplotlib, no Vega, no runtime image
-library — so this stays a **core** feature (no ``[plot]`` extra to install)
+Renders a self-contained SVG (no matplotlib, no Vega, no runtime image
+library) so this stays a **core** feature (no ``[plot]`` extra to install)
 rather than a lazy opt-in. The SVG-writing code below (the Catmull-Rom
 spline helper, the responsive ``<svg>`` header, the additive dark-mode
 block) is adapted from this project's sibling ``sprezzature-figures``
@@ -9,15 +9,15 @@ package (``scripts/make_elbow.py`` / ``_svg.py`` / ``_style.py``) and
 copy-pasted in rather than taken as a dependency, then cut down and
 re-specialised for this module's own data shapes (normalized ``x``/``y``
 arrays and the :class:`~elbow_helper.pipeline.ClearKnee` /
-:class:`~elbow_helper.pipeline.NoClearKnee` result types) — elbow-helper's
+:class:`~elbow_helper.pipeline.NoClearKnee` result types): elbow-helper's
 only runtime dependencies stay ``numpy`` and ``os-helper``.
 
 The figure never shows a bare point estimate: the knee is paired with its
 90% bootstrap interval and the supporting evidence (detection probability,
 null-model p-value, slope contrast, a BIC-derived posterior model
 probability, and a worst-case-normalized fit-quality score) in a compact
-legend. When the evidence is too weak, the figure says so plainly
-— a greyed, dashed curve and a reason — instead of drawing a marker that
+legend. When the evidence is too weak, the figure says so plainly, with
+a greyed, dashed curve and a reason, instead of drawing a marker that
 implies more confidence than the data supports.
 
 Author

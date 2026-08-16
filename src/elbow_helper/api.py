@@ -3,14 +3,14 @@
 The third of elbow-helper's surfaces exposes the pipeline over HTTP so a
 service can ask "where's the knee in this curve?" without a Python import.
 FastAPI + uvicorn live behind the ``[api]`` extra, imported lazily here so
-the core package never pays for a web stack it does not use — the whole
+the core package never pays for a web stack it does not use: the whole
 point of the package staying at ``numpy`` + ``os-helper`` for everyone who
 just wants the library. Every endpoint delegates to
 :mod:`elbow_helper._core_cli`, so the HTTP behaviour matches the CLI and
 library exactly.
 
 Each route carries an explicit ``operation_id`` (``knee``/``elbow``/
-``diagnostics``/``locator``) — not just OpenAPI hygiene:
+``diagnostics``/``locator``), which matters beyond OpenAPI hygiene:
 :mod:`elbow_helper.mcp_server` mounts ``fastapi-mcp`` on a copy of this same
 app and selects exactly these operation ids as the exposed MCP tools, so the
 id *is* the tool name an agent calls. Rename a route here and the MCP door

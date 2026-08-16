@@ -6,11 +6,11 @@ Model-Context-Protocol tools by mounting ``fastapi-mcp`` on a copy of
 tagged with an explicit ``operation_id`` there (``knee``/``elbow``/
 ``diagnostics``/``locator``) become the four MCP tools here, automatically,
 with the same request/response schema. Rename or extend a route in
-``api.py`` and this door follows without a second edit — MCP must never be
+``api.py`` and this door follows without a second edit: MCP must never be
 a standalone, hand-written tool server that could drift from the REST API.
 
 MCP is served over **Streamable HTTP** (mounted at ``/mcp`` on a running
-app), not stdio — an HTTP-based MCP client pointed at the running server's
+app), not stdio: an HTTP-based MCP client pointed at the running server's
 ``/mcp`` endpoint is what ``fastapi-mcp`` offers. The same four tools are
 also just REST endpoints an agent (or a human with curl) can hit directly.
 
