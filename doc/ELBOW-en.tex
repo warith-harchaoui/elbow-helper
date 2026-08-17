@@ -114,17 +114,24 @@ from the outset, an exponentiated \emph{average} log-density rather than
 a raw product,
 $$L(\theta,\sigma^2) := \exp\!\big(\mathbb E[\ln p]\big) = L_{\text{raw}}^{\,1/n},$$
 the geometric mean of the $n$ individual densities, exactly the $n$-th
-root of $L_{\text{raw}}$. That departure from the textbook definition,
-and why it is principled rather than a convenient rescaling, is the
-subject of a companion note, \code{LIKELIHOOD-en.tex}, factored out
-because that foundation is general and does not depend on curve-fitting
-at all: Jensen's inequality and a temperature-indexed refinement borrowed
-from equilibrium statistical mechanics, Cram\'er's large deviations and
-Wald's martingale, a precise account of $L$ as a statistical estimator
-with its bias and variance derived and verified by simulation, and how
-the same construction reads on a categorical classification model
-(with its own worked simulation) as well as the Gaussian regression model
-derived below. This note builds directly on top of it: every
+root of $L_{\text{raw}}$. That departure from the textbook definition, and why it is principled,
+not merely a convenient rescaling, is the subject of a companion note,
+\code{LIKELIHOOD-en.tex}, factored out because that foundation is
+general and does not depend on curve-fitting at all. It covers four
+things:
+
+\begin{itemize}[noitemsep]
+\item Jensen's inequality and a temperature-indexed refinement borrowed
+from equilibrium statistical mechanics;
+\item Cram\'er's large deviations and Wald's martingale;
+\item a precise account of $L$ as a statistical estimator, with its bias
+and variance derived and verified by simulation;
+\item how the same construction reads on a categorical classification
+model (with its own worked simulation) as well as the Gaussian
+regression model derived below.
+\end{itemize}
+
+This note builds directly on top of it: every
 $\mathrm{BIC}$-family criterion below inherits $L$'s Gaussian
 instantiation. Section~\ref{sec:fwer}'s permutation-based sequential
 test is exactly the case \code{LIKELIHOOD-en.tex} identifies where
@@ -245,7 +252,7 @@ the same $n\ln(RSS/n)$ term every $\mathrm{BIC}$-family formula in this
 note opens with.
 
 \textbf{Extreme cases.} $\mathrm{PPL}$ is a genuine
-improvement over the raw $\mathrm{NLL}$ it is built from at exactly one
+improvement over the raw $\mathrm{NLL}$ it is built from at just one
 end: $\mathrm{NLL}$ runs over $(-\infty, +\infty)$, but exponentiating
 automatically fixes the lower tail, $\mathrm{PPL} = 2\pi e \cdot
 \mathrm{MSE}(\theta) \ge 0$ always, with $\mathrm{PPL} = 0$ at a perfect
@@ -258,7 +265,7 @@ sit near. The sample
 mean $\bar y$ is not a good worst-case reference either: it is the
 \emph{unique} constant that \emph{minimizes} $\mathrm{MSE}$ among all
 constants, the best trivial predictor there is, not a bad one. That is
-exactly why normalizing against it (the textbook $R^2$) can still go
+precisely why normalizing against it (the textbook $R^2$) can still go
 negative: a real fit is easy to make worse than the one constant nothing
 else can beat. A genuinely pessimistic, finite worst case instead picks
 the single \emph{observed} point that is hardest to predict everything
@@ -285,13 +292,14 @@ into negative territory than the mean-based $R^2$ ever offers, since
 $\mathrm{MSE}_{\text{worst}} > \mathrm{Var}(y)$ by construction, built
 entirely from $\mathrm{MSE}$ against a real, deliberately pessimistic
 reference point, with no Bayes factor or posterior probability anywhere
-in the derivation. This is a stricter cousin of $R^2$, not $R^2$ itself,
-$R^2$ keeps $\bar y$ as its baseline and accepts the occasional negative
-score in exchange. \code{elbow\_helper.plotting}'s diagnostic legend takes
+in the derivation. This is a stricter cousin of $R^2$, not $R^2$ itself: $R^2$ keeps
+$\bar y$ as its baseline and accepts the occasional negative score in
+exchange. \code{elbow\_helper.plotting}'s diagnostic legend takes
 a different route again, converting $\Delta\mathrm{BIC}$ directly into a
-posterior probability via a Bayes factor \citep{kassraftery1995}, a valid
-alternative normalization built on the same $\mathrm{NLL}$ but not the one
-derived here.
+posterior probability via a Bayes factor \citep{kassraftery1995}, a ratio
+of how much more likely the data is under one model than another, a
+valid alternative normalization built on the same $\mathrm{NLL}$ but not
+the one derived here.
 
 Every $\mathrm{BIC}$-family quantity in this note inherits this same
 natural-log base by construction: each is $\mathrm{NLL}$ plus a complexity
@@ -304,21 +312,21 @@ that base, not rescaling a finished number.
 
 \textbf{Knee and elbow heuristics.} Knee detection has one dominant
 reference point: Satopaa, Albrecht, Irwin and Raghavan's Kneedle
-\citep{satopaa2011}, built for exactly the setting this note opens
+\citep{satopaa2011}, built for the very setting this note opens
 with, a system operator facing a curve that needs an automatic answer
 to ``where does this bend''. Kneedle's mechanism is the same
 difference-from-chord geometry Section~\ref{sec:diff-curve} builds:
 normalize the curve into the unit square, subtract the line joining its
 two endpoints, call the knee the point of maximum vertical distance from
 that chord. It is fast, lightly parameterized, and, on a clean curve,
-usually right. What it does not do is say how right~: Kneedle returns a
+usually right. What it does not do is say how right: Kneedle returns a
 single index whether the curve holds a genuine hand-built knee or three
 points of pure noise that happen to wiggle the right way, with no notion
 of how that answer would move under resampling, under a different
 smoothing scale, or against a null model with no knee at all. That gap,
 a point estimate with no confidence attached, is precisely what this
 whole note exists to close. \code{elbow-helper}'s locator keeps
-Kneedle's geometric intuition at its core, the normalized
+Kneedle's geometric intuition at its core: the normalized
 difference-curve stays the origin of every candidate knee, but treats
 that candidate as a hypothesis to be tested
 (Sections~\ref{sec:multiscale}--\ref{sec:null-test}) rather than an
@@ -330,26 +338,27 @@ detection and becomes changepoint detection. It splits along a
 cost-versus-flexibility line this note has to settle: an exact search
 that only earns its cost up to a bounded $k_{\max}$ or a greedy
 approximation that scales better but can lock in an early mistake.
-Killick, Fearnhead and Eckley's pruned dynamic-programming algorithm,
-Pruned Exact Linear Time (PELT) \citep{killick2012}, sits on the exact
-side, a penalized dynamic program pruned so that provably suboptimal
-candidate boundaries are discarded before they are even scored,
-recovering the same optimal segmentation an unpruned search would find
-at linear rather than quadratic cost, with $k$ itself set by the penalty
-rather than fixed in advance. Section~\ref{sec:dp} rests on the same
-optimal-substructure argument, restricted here to a small, explicitly
-bounded $k_{\max}$ (few real curves plausibly hold more than a handful
-of genuine bends) rather than PELT's unbounded, penalty-driven $k$,
-which is exactly what keeps the search small enough to run underneath
-this project's bootstrap and permutation layers, something PELT itself
-has no equivalent of. Fryzlewicz's Wild Binary Segmentation
-\citep{fryzlewicz2014} sits on the other side of that line: a recursive,
-greedy splitting procedure over randomly drawn subintervals, faster than
-exact search but liable to freeze in an early bad cut it can never
-reconsider, exactly the failure mode Section~\ref{sec:greedy}
-demonstrates on a constructed example and the reason this project scores
-greedy segmentation as the faster, worse alternative rather than the
-default choice. Yao \citep{yao1988} was first to tie changepoint counting
+Killick, Fearnhead and Eckley's pruned dynamic-programming algorithm
+(building the best answer for a long stretch by reusing already-solved
+answers for its shorter prefixes), Pruned Exact Linear Time (PELT)
+\citep{killick2012}, sits on the exact side, a penalized dynamic
+program pruned so that provably suboptimal candidate boundaries are
+discarded before they are even scored, recovering the same optimal
+segmentation an unpruned search would find at linear rather than
+quadratic cost, with $k$ itself set by the penalty instead of fixed in
+advance. Section~\ref{sec:dp} rests on the same optimal-substructure
+argument, restricted here to a small, explicitly bounded $k_{\max}$
+(few real curves plausibly hold more than a handful of genuine bends),
+not PELT's unbounded, penalty-driven $k$, which is precisely what keeps
+the search small enough to run underneath this project's bootstrap and
+permutation layers, something PELT itself has no equivalent of.
+Fryzlewicz's Wild Binary Segmentation \citep{fryzlewicz2014} sits on
+the other side of that line: a recursive, greedy splitting procedure
+over randomly drawn subintervals, faster than exact search but liable
+to freeze in an early bad cut it can never reconsider, precisely the
+failure mode Section~\ref{sec:greedy} demonstrates on a constructed
+example and the reason this project scores greedy segmentation as the
+faster, worse alternative, not the default choice. Yao \citep{yao1988} was first to tie changepoint counting
 directly to Schwarz's criterion, the paper the several-knee
 $\mathrm{BIC}(k)$ of Section~\ref{sec:several-bic} traces its ancestry
 to, even though, as that section shows, plain $\mathrm{BIC}$'s
@@ -360,16 +369,19 @@ intact.
 answers the same question, is the added complexity worth it, with
 progressively less naive notions of what ``complexity'' costs. Schwarz
 \citep{schwarz1978} supplies the starting point: a Laplace approximation
-to a model's marginal likelihood that charges a fixed $\frac{1}{2}\ln n$
-per free parameter, correct for regular parametric families but silently
-assuming absent exactly the irregularity a breakpoint's location
-introduces, an assumption Section~\ref{sec:several-bic} shows failing
-concretely rather than just in principle. Zhang and Siegmund
+to a model's marginal likelihood, an otherwise intractable integral over
+every possible parameter value approximated instead by the single peak
+of the likelihood and the curvature around that peak, that charges a
+fixed $\frac{1}{2}\ln n$ per free parameter, correct for regular parametric
+families but silently assuming absent precisely the irregularity a
+breakpoint's location introduces, an assumption
+Section~\ref{sec:several-bic} shows failing concretely rather than just
+in principle. Zhang and Siegmund
 \citep{zhangsiegmund2007} diagnose that same irregularity and correct
 it with a segment-length-sensitive penalty, the $\mathrm{mBIC}$ of
 Section~\ref{sec:mbic}, though their own derivation leaves a genuine
-sign ambiguity this note resolves empirically rather than by assumption
-(again Section~\ref{sec:mbic}). Biernacki, Celeux and Govaert
+sign ambiguity this note resolves empirically, not by assumption (again
+Section~\ref{sec:mbic}). Biernacki, Celeux and Govaert
 \citep{biernacki2000} approach complexity from an entirely different
 angle, originally built to pick the number of components in a mixture
 model, not a changepoint count at all, charging not just for parameters
@@ -378,10 +390,13 @@ separate clusters cost more than two clean ones even at equal fit.
 Rigaill, Lebarbier and Robin \citep{rigaill2012} supply the machinery
 that makes carrying that idea over to changepoints practical, an exact
 posterior distribution via forward-backward passes over the whole
-discrete segmentation space, structurally the same recursion as a
-hidden Markov model's forward-backward algorithm run over segmentations
-rather than hidden states, later accelerated by Cleynen, Luong, Rigaill
-and Nuel \citep{cleynen2013}. Section~\ref{sec:icl}'s account of that
+discrete segmentation space: a two-pass sweep, once left to right and
+once right to left, that combines partial evidence into an exact
+probability for every possible segmentation without enumerating them
+all, structurally the same recursion as a hidden Markov model's
+forward-backward algorithm run over segmentations rather than hidden
+states, later accelerated by Cleynen, Luong, Rigaill and Nuel
+\citep{cleynen2013}. Section~\ref{sec:icl}'s account of that
 adaptation includes a bug this project's own tests caught directly: an
 early version that let the integrated-likelihood term dominate the
 entropy correction and overestimate on pure noise, a failure mode the
@@ -397,16 +412,18 @@ used throughout the rest of this note.
 answers ``is this breakpoint real'' directly, as a hypothesis test
 rather than a complexity-penalized score. Davies \citep{davies1977}
 identifies the central difficulty any such test has to solve: the
-breakpoint's location is a nuisance parameter that exists only under the
-alternative, so the usual likelihood-ratio asymptotics do not apply,
-exactly the pivot problem Section~\ref{sec:fwer}'s sequential test sidesteps
-by using a permutation null instead of an asymptotic one. Frick, Munk
+breakpoint's location is a nuisance parameter, a parameter that has to
+be estimated along the way but is not itself the thing being tested,
+which exists only under the alternative, so the usual likelihood-ratio
+asymptotics do not apply. That is the same pivot problem
+Section~\ref{sec:fwer}'s sequential test sidesteps by using a
+permutation null instead of an asymptotic one. Frick, Munk
 and Sieling's Simultaneous MUlti-scale Change-point Estimator (SMUCE)
 \citep{frick2014} solves a related but more ambitious problem, one
 confidence statement that holds across every smoothing scale at once,
 substantially more machinery than Section~\ref{sec:fwer} needs for a
 sequential, one-breakpoint-at-a-time test whose validity is checked
-directly by simulation rather than by asymptotic theory. Both were
+directly by simulation, not by asymptotic theory. Both were
 considered and then set aside in favor of the permutation-based
 construction actually shipped, a deliberate trade: less theoretical
 generality for a guarantee this project could verify empirically rather
@@ -430,12 +447,12 @@ behind Section~\ref{sec:bic-cv}'s stability check, chosen over a
 closed-form asymptotic confidence interval precisely because this
 pipeline's candidate knee has already survived several nonlinear,
 nonsmooth selection steps by the time a confidence statement is needed,
-exactly the setting where asymptotic normality is hardest to justify
+precisely the setting where asymptotic normality is hardest to justify
 and resampling easiest.
 
 \textbf{Methodology.} L\'opez de Prado \citep{lopezdeprado2018financial}
-argues at length, from financial time series rather than curve fitting,
-for contiguous rather than shuffled cross-validation blocks whenever
+argues at length, from financial time series, not curve fitting, for
+contiguous rather than shuffled cross-validation blocks whenever
 neighboring observations are correlated, since a shuffled split leaks a
 point's own neighbors into its out-of-sample estimate. The same argument
 carries over directly to a curve's $x$-axis: neighboring points on any
@@ -548,7 +565,7 @@ $d=0$, drops below it. The knee is declared one step before that drop,
 at the fourth point, $x_{\text{norm}}=0.75$: not the peak itself, but
 the last point still comfortably above the noise floor $S$ sets. Raise
 $S$ to $2$ and the threshold rises to $0.35 - 2\times 0.25 = -0.15$,
-below zero, so declaring is no longer picky about margin, the sole
+below zero, so declaring is no longer picky about margin: the sole
 requirement is that $d(x)$ stay above the noise floor at all, an
 easy bar even a wiggle can clear.
 
@@ -590,10 +607,14 @@ answers the question ``does a bend here actually help''.
 \label{sec:kmeans-example}
 
 \code{robust\_elbow}'s own docstring names this the flagship
-convex-decreasing case. It is worth seeing end to end: run k-means for
-$k = 1, 2, \dots$, plot the inertia (within-cluster sum of squared
-distances) against $k$, and look for the point past which adding another
-cluster stops paying for itself.
+convex-decreasing case. k-means itself splits the points into $k$
+groups by repeatedly moving each group's center to the average of its
+members and reassigning every point to its nearest center, until
+neither the centers nor the assignments change any further. It is worth
+seeing the resulting curve end to end: run k-means for $k = 1, 2,
+\dots$, plot the inertia (within-cluster sum of squared distances)
+against $k$, and look for the point past which adding another cluster
+stops paying for itself.
 
 \code{tests/test\_real\_world\_examples.py::\allowbreak kmeans\_inertia\_curve} builds
 eight well-separated 2D blobs, each its own mildly elongated ellipse rather
@@ -601,10 +622,10 @@ than a plain isotropic Gaussian and runs Lloyd's algorithm (fifteen random
 restarts per $k$, to avoid a bad local optimum blurring the curve) for $k =
 1, \dots, 24$. Inertia falls by two orders of magnitude at $k = 8$, the true
 cluster count. What happens after $k = 8$ is the point worth looking at
-closely: inertia keeps decaying, gently and a little unevenly, rather than
+closely: inertia keeps decaying, gently and a little unevenly, not
 snapping flat. That leftover slope is real, not noise in the plotting
 sense: each blob's own elongation gives a $k$ past 8 a little genuine
-sub-structure to exploit, exactly as a real dataset's clusters are never
+sub-structure to exploit, just as a real dataset's clusters are never
 perfect circles either. The figure below plots inertia on a logarithmic
 axis for this reason: the drop at $k=8$ is so much larger than the tail's
 own gentle decay that a linear axis would flatten the tail to the eye even
@@ -633,7 +654,7 @@ pessimistic worst case: $100\%$ at a perfect fit. Every one of the five
 is a bounded, justified $[0,1]$ score, not a raw, scale-dependent
 statistic a reader has to calibrate by eye; four read strong evidence as
 a number near $100\%$, only null $p$ runs the other way, small rather
-than large, exactly a $p$-value's usual convention.
+than large, in keeping with a $p$-value's usual convention.
 
 \begin{figure}[h]
 \centering
@@ -653,7 +674,7 @@ for longer, noisier, elbow-anywhere measurement curves:
 left-heavy curve like this one outright.
 \code{tests/test\_real\_world\_examples.py} ships a \code{RobustKneeConfig}
 profile with both of those relaxed, plus several of the persistence and
-bootstrap thresholds loosened to match and states in a comment exactly why:
+bootstrap thresholds loosened to match and states in a comment just why:
 short, clean applied curves are a genuinely different regime from the long,
 noisy time-series-like curves the defaults target, not a bug in either.
 Second: blocked cross-validation (Section~\ref{sec:bic-cv}) splits a curve
@@ -671,9 +692,12 @@ measurements are never that accommodating. The wine recognition
 dataset \citep{aeberhard1992}, shipped with scikit-learn, gives $178$
 real Italian wines, each with thirteen real chemical measurements
 (alcohol, malic acid, ash, magnesium, total phenols, flavanoids, color
-intensity, among others) and a real cultivar out of three, never used
-for fitting, only for comparison after the fact. The thirteen
-measurements are standardized, then exactly the same k-means code as
+intensity, among others) and a real cultivar (grape variety) out of
+three, never used for fitting, only for comparison after the fact. The
+thirteen measurements are standardized (rescaled to mean zero, unit
+variance, the usual preprocessing for a distance-based method like
+k-means, distinct from the $[0,1]$ normalization Part~\ref{part:one}
+opens with for curve fitting itself), then the same k-means code as
 above, with the same relaxed short-curve \code{RobustKneeConfig}
 profile, runs for $k=1,\dots,12$ and calls
 \code{elbow\_helper.robust\_elbow} on the resulting inertia curve.
@@ -681,7 +705,7 @@ profile, runs for $k=1,\dots,12$ and calls
 By eye, the curve bends around $k=3$, which would line up nicely with
 the three real cultivars. \code{robust\_elbow} still declines to
 confirm it: \code{NoClearKnee}, reason \code{NO\_PERSISTENT\_CLUSTER}.
-That is not a bug; it is Section~\ref{sec:persistence} doing exactly
+That is not a bug; it is Section~\ref{sec:persistence} doing just
 what it exists to do. On real chemical measurements, the three
 cultivars' profiles partly overlap, so the $k=3$ candidate does not
 cluster together consistently enough across the smoothing widths and
@@ -784,8 +808,8 @@ segments is, for every possible location of the last cut $s$, the cheapest
 way to explain the first $s$ points with $k-1$ segments, plus the cost of
 one final segment from $s$ to $t$, minimized over all valid $s$. Because the
 best $k$-segment answer depends only on the best $(k-1)$-segment answers,
-each already computed once, no combination is ever recomputed. This is
-Bellman's principle of optimality.
+each already computed once, no combination is ever recomputed: Bellman's
+principle of optimality.
 
 \textbf{Why the shortcut is actually valid.} The claim above is not
 just a convenient assumption: it has a short proof by contradiction,
@@ -842,8 +866,8 @@ step.
 \footnotesize
 Computing $C[2][10]$ from three candidate last cuts, $s \in \{6,7,8\}$:
 each candidate reuses an already-solved $C[1][s]$, an answer computed
-once and looked up here rather than recomputed, adds the cost of one
-final segment, and the cheapest of the three candidates wins. A real
+once and looked up here rather than recomputed, and adds the cost of
+one final segment. The cheapest of the three candidates wins. A real
 run checks every valid $s$, not just three; the picture keeps a small
 slice for legibility.
 \end{center}
@@ -862,7 +886,9 @@ where $s$ ranges over cut points that leave every segment at least
 \code{min\_seg} points long. Solving this for every $k$ up to $k_{\max}$ and
 every $t$ up to $n$ costs $O(k_{\max} \cdot n^2)$, each cell an $O(n)$
 minimization over $O(1)$ segment costs from the previous section.
-Backpointers recover the actual cut positions.
+Backpointers, one stored arrow per cell recording which earlier $s$ won
+the minimization, let the algorithm walk back from $C[k_{\max}][n]$ to
+recover the actual cut positions.
 \code{research/multiknee/tests/test\_segmentation.py::\allowbreak test\_dp\_matches\_brute\_force\_small\_n}
 checks this against literal enumeration of every valid partition on small
 inputs, so its correctness is verified empirically, not just asserted from
@@ -882,9 +908,10 @@ reproduce these numbers exactly.
 \textbf{Intuition.} Instead of solving the whole problem exactly,
 repeatedly make the single best choice available right now: find the one
 split that most reduces the \emph{global} error, commit to it, then repeat
-on the two resulting pieces. This is much faster than the dynamic program,
-but it can only ever produce worse or equal outcomes, never better, because
-it locks in early decisions before later evidence exists to correct them.
+on the two resulting pieces. That shortcut is much faster than the dynamic
+program, but it can only ever produce worse or equal outcomes, never
+better, because it locks in early decisions before later evidence exists
+to correct them.
 
 \textbf{A concrete failure, not a hypothetical one.}
 \code{research/multiknee/tests/test\_segmentation.py::\allowbreak test\_greedy\_can\_strictly[...]noiseless}
@@ -900,7 +927,9 @@ Greedy+BIC's $0.49$. Greedy's early-commitment errors specifically cause
 it to \emph{overselect} the number of breakpoints at low noise, since
 fixing greedy's own placement mistake later looks, to a model-selection
 criterion, like genuine extra structure worth an extra breakpoint. This is
-the textbook motivation for Wild Binary Segmentation \citep{fryzlewicz2014}.
+the textbook motivation for Wild Binary Segmentation
+\citep{fryzlewicz2014}, which reruns the greedy search from many random
+sub-windows instead of once.
 
 \begin{figure}[H]
 \centering
@@ -908,7 +937,7 @@ the textbook motivation for Wild Binary Segmentation \citep{fryzlewicz2014}.
 \caption{Left: exact-$k$ accuracy, ranked, for every dynamic-program
 (blue) and greedy (red) combination with the four several-knee criteria
 this note derives, $\mathrm{BIC}$, $\mathrm{mBIC}$, $\mathrm{ICL}$, and
-the FWER sequential test, measured on the same synthetic benchmark.
+the family-wise error rate (FWER) sequential test, measured on the same synthetic benchmark.
 Every DP-based method outranks its greedy counterpart. Right: the same
 ten methods' false-positive rate on genuinely flat data, plain
 $\mathrm{BIC}$ the clear outlier on both sides regardless of search
@@ -1022,8 +1051,9 @@ up at only one or two settings and vanishes elsewhere. \code{elbow-helper}
 groups the candidate pool by location, within \code{cluster\_tolerance} of
 each other, in normalized $x$ units, then asks of the largest group: does
 it span several \emph{consecutive} smoothing scales, does it show up
-across most sensitivities, is its spread (median absolute deviation)
-tight? If two groups are both large and comparably supported, the pipeline
+across most sensitivities, is its spread (median absolute deviation, how far a typical point in
+the group sits from the group's own median, an outlier-resistant
+stand-in for a standard deviation) tight? If two groups are both large and comparably supported, the pipeline
 explicitly refuses to pick a winner (\code{MULTIPLE\_PLAUSIBLE\_KNEES}),
 rather than guess (\code{src/elbow\_helper/\allowbreak clustering.py}).
 
@@ -1103,8 +1133,8 @@ badly, the honest average comes out lower than the peak alone would
 suggest: an automatic complexity tax a bare best-fit comparison never
 pays.
 
-This integral rarely has a closed form, so it needs an approximation,
-and the \emph{Laplace approximation} is the general recipe for
+This integral rarely has a closed form, so it needs an approximation.
+The \emph{Laplace approximation} is the general recipe for
 integrating any sharply peaked function. Zoom in close enough on any
 smooth curve near its own peak and it looks like a parabola, the same
 idea a tangent line captures one derivative earlier, now one derivative
@@ -1186,7 +1216,9 @@ two extreme cases: total confidence in the single line or in the broken
 one. That requirement is what fixes the log base, not a free
 choice: \citet{kassraftery1995} (eq.~4) show
 $\Delta\mathrm{BIC} \approx 2 \ln(\mathrm{BF})$, where $\mathrm{BF}$ is the
-Bayes factor between the two models; the $\ln$ on the right is the
+Bayes factor between the two models, how many times more likely the
+data are under the broken-line model than the single-line one; the $\ln$
+on the right is the
 \emph{same} natural log already used to build $\mathrm{BIC}$ above,
 inherited from its $-2\ln(\hat L)$ definition. Undoing that $\ln$ therefore
 needs the matching inverse, $\exp$ base $e$, not an arbitrary rescaling by
@@ -1304,8 +1336,10 @@ observed.
 
 \textbf{Formula.} With $B = $ \code{config.null\_replicates} (default
 $200$) Monte Carlo replicates and a lexicographic, search-adjusted test
-statistic, so a null replicate only ``beats'' the observed knee if it
-passes \emph{the same} confirmation gates, not just a raw score:
+statistic, gate-pass status compared first and raw score used only to
+break ties, the way a dictionary orders words letter by letter, so a
+null replicate only ``beats'' the observed knee if it passes
+\emph{the same} confirmation gates, not just a raw score:
 
 \begin{equation}
 p = \frac{1 + \#\{\text{null replicates at least as strong as observed}\}}{B + 1}
@@ -1351,7 +1385,7 @@ location, so the location estimator does not converge at the usual
 $\sqrt n$ rate with a Gaussian limit; it converges faster, at rate $n$, with
 a limiting distribution given by the argmax of a random walk. Charging
 $\frac{1}{2}\ln n$ per parameter, the Laplace-approximation argument behind
-BIC, assumes exactly the regularity that breaks down here.
+BIC, assumes the regularity that breaks down here.
 
 \section{Modified BIC: Zhang and Siegmund's fix and a sign convention resolved by testing}
 \label{sec:mbic}
@@ -1379,7 +1413,7 @@ balanced and most negative when they are very uneven.
 segments. Split evenly, $\ell = (50, 50)$: the second term is
 $\ln(0.5)+\ln(0.5) \approx -1.386$. Split unevenly, $\ell = (10, 90)$:
 it is $\ln(0.1)+\ln(0.9) \approx -2.303-0.105=-2.408$, well past the
-balanced case, exactly the concavity of $\ln$ making a small segment
+balanced case, the concavity of $\ln$ making a small segment
 cost disproportionately more than a large one gains back. Both cases
 share the same $3k\ln n = 3\ln 100 \approx 13.816$. Whether that leaves
 the uneven split more or less penalized than the even one depends
@@ -1398,7 +1432,7 @@ combination \emph{rewards} uneven segments, the opposite of the
 have. Plugging the worked numbers back in: additive contributes
 $13.816 + (-1.386) = 12.430$ for the balanced split but only $13.816 +
 (-2.408) = 11.408$ for the uneven one, a \emph{lower} number on a
-lower-is-better criterion, rewarding exactly the split that should cost
+lower-is-better criterion, rewarding the split that should cost
 more. Subtracting the same term instead,
 
 \begin{equation}
@@ -1420,12 +1454,12 @@ rate. \textbf{The subtractive form is the one shipped.}
 
 \textbf{Intuition.} Biernacki, Celeux and Govaert's Integrated Completed
 Likelihood, developed for choosing the number of clusters in a mixture
-model, adds one more consideration on top of BIC: not just ``does this
-model fit well relative to its complexity'', but ``are the resulting
-groups actually unambiguous''. Two overlapping, hard-to-tell-apart clusters
+model, adds one more question on top of BIC's own ``does this model fit
+well relative to its complexity'': are the resulting groups actually
+unambiguous? Two overlapping, hard-to-tell-apart clusters
 are penalized even if they fit the data about as well as two clean,
 well-separated ones. Gilles Celeux, a co-author of the original ICL paper,
-later co-wrote a book-length treatment of exactly this family of methods
+later co-wrote a book-length treatment of this family of methods
 \citep{bouveyron2021mbc}.
 
 For changepoints, the analogue of ``which cluster does this point belong
@@ -1463,7 +1497,7 @@ $\log Z_K(n)$ rose from 89.8 ($K=1$) to 94.7, 99.0, and 102.8 nats as $K$
 grew to 4, purely from summing over combinatorially more candidate
 segmentations, while entropy only rose from 0 to 3.7, 5.9, and 7.9 nats
 over the same steps, not fast enough to cancel the growth. The resulting
-score kept improving as $K$ grew even on flat noise, exactly the
+score kept improving as $K$ grew even on flat noise, precisely the
 overselection failure this whole exercise exists to avoid.
 
 The fix follows from re-reading the mixture-model form above: ICL is
@@ -1484,11 +1518,11 @@ corrected
 $\ell\ell(i,j)$ above, plain $\mathrm{BIC}(k)$ (Section~\ref{sec:several-bic}),
 $\mathrm{mBIC}_{\text{subtractive}}(k)$, and $\mathrm{ICL}(k) =
 \mathrm{BIC}(k) + 2H(K)$ are all written in \emph{natural} log throughout
-this project's implementation, \code{numerics.py}'s single-knee
+this project's implementation: \code{numerics.py}'s single-knee
 $\mathrm{BIC}$, \code{multi\_criteria.py}'s $\mathrm{mBIC}$, and
 \code{research/multiknee/criteria.py}'s $\ell\ell$ / $\log Z_K$ / ICL all
-call \code{np.log}, never \code{np.log10} or \code{np.log2}. That is not
-an implementation detail to normalize away: it is exactly what makes
+call \code{np.log}, never \code{np.log10} or \code{np.log2}. This shared
+log base is what makes
 Section~\ref{sec:bic-cv}'s $\Delta\mathrm{BIC} \approx 2\ln(\mathrm{BF})$
 argument and the $\exp$-then-sigmoid conversion into a $[0,1]$-bounded
 posterior probability built on it apply unchanged to a difference between
@@ -1523,8 +1557,11 @@ anywhere is computed, giving a null distribution:
 p = \frac{1 + \#\{\text{replicates with null reduction} \ge \text{observed reduction}\}}{B + 1}
 \end{equation}
 
-Breakpoint $k$ is accepted only if $p \le \alpha / k_{\max}$, a Bonferroni
-correction across up to $k_{\max}$ sequential tests. The procedure stops at
+Testing repeatedly creates a familiar risk: run enough tests at the same
+significance threshold and one eventually clears the bar by chance alone,
+so the bar has to rise with the number of tests. Breakpoint $k$ is accepted
+only if $p \le \alpha / k_{\max}$, a Bonferroni correction across up to
+$k_{\max}$ sequential tests. The procedure stops at
 the first breakpoint that fails, so it can never ``skip'' a rejected
 breakpoint and accept a later one. Bonferroni is conservative for
 independent tests; these sequential tests are not independent, each
@@ -1582,7 +1619,7 @@ are the common yardstick.}
 
 \section{Where this leaves the shipped API}
 
-\code{elbow\_helper.robust\_knees} ships exactly the combination validated
+\code{elbow\_helper.robust\_knees} ships the combination validated
 above: dynamic-program search (Section~\ref{sec:dp}), the subtractive-sign
 modified BIC as the primary criterion (Section~\ref{sec:mbic}), and the FWER
 sequential gate (Section~\ref{sec:fwer}) layered on top by default, taking
@@ -1681,7 +1718,8 @@ with six genuine signal dimensions (large variance) buried in nineteen
 noise dimensions, rotated so the signal is not aligned with any one
 measured axis, the setting PCA itself is built to unmix. The noise
 dimensions are not equal-variance: their variance decays geometrically, the
-shape a real Marchenko-Pastur noise spectrum actually takes, not the flat
+shape random-matrix theory predicts for the eigenvalues of pure noise (the
+Marchenko-Pastur spectrum), a smooth geometric decay rather than the flat
 block a first pass at this example produced before that mismatch was
 caught. The resulting eigenvalue curve drops by an order of magnitude
 exactly at the signal/noise boundary, then keeps decaying, slowly and
@@ -1695,7 +1733,7 @@ detected elbow (dashed red line) at the boundary between 6 signal
 components and 19 noise components.}
 \end{figure}
 
-This example shares Section~\ref{sec:kmeans-example}'s practical trap exactly: a scree plot is
+This example shares Section~\ref{sec:kmeans-example}'s practical trap: a scree plot is
 short and left-heavy in precisely the same way an inertia curve is, so it
 needs the same relaxed \code{RobustKneeConfig} profile. It also surfaces
 the convention worth knowing about before reading \code{knee\_x} off any
@@ -1722,7 +1760,7 @@ that are realistically correlated with each other (alcohol and total
 phenols are not independent, for instance) spread variance across more
 components than an idealized signal-plus-noise construction ever
 would. A reader who had only seen this figure would have no way to
-guess a "correct" number of components to keep; that is precisely the
+guess a ``correct'' number of components to keep; that is precisely the
 kind of situation where an unqualified point answer would be most
 dangerous and where elbow-helper's explicit abstention is worth the
 most.
@@ -1763,8 +1801,9 @@ lands consistently around $t/\tau \approx 1.9$--$2.0$, matching
 $1 - e^{-2} \approx 85\%$, the same ``practically settled'' convention used
 informally in RC-circuit and control-theory contexts. A human eye reads the
 curve the same way: at $\tau$ it is still visibly rising, not yet flat.
-This is not a bug to fix: it is what ``last point before the bend'' means
-for a curve that never truly stops bending: the located knee also depends
+This is what ``last point before the bend'' means for a curve that never
+truly stops bending, an artifact of the definition rather than a bug: the
+located knee also depends
 on the observation window, here $t \in [0, 5\tau]$, since the decision is
 about maximum deviation from the chord spanning whatever range the data
 actually covers, not a property of $\tau$ alone.
@@ -1820,7 +1859,7 @@ The knee lands around $3.5K$, not at $K$ itself. $K$ only marks the
 50\%-hit-rate point, a property of the formula's algebra, not of where the
 \emph{marginal} return on cache size actually stops paying off. Buying
 cache up to $K$ leaves a lot of cheap hit-rate on the table; buying past
-roughly $3.5K$ spends real memory for a shrinking sliver of hits, exactly
+roughly $3.5K$ spends real memory for a shrinking sliver of hits, precisely
 the number a capacity-planning conversation needs and rarely has in
 closed form.
 

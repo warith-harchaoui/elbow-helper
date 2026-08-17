@@ -1,21 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1050" height="600" viewBox="0 0 1050 600" font-family="Roboto, system-ui, sans-serif" role="img" aria-labelledby="lml-title lml-desc">
-<title id="lml-title">The marginal likelihood, profiled over the kernel's lengthscale</title>
-<desc id="lml-desc">The marginal likelihood, profiled over the kernel's lengthscale. same 50 blocks; each point profiles out σₙ² at that ℓ by grid search</desc>
+<title id="lml-title">The bounded score Qgp, profiled over the kernel's lengthscale</title>
+<desc id="lml-desc">The bounded score Qgp, profiled over the kernel's lengthscale. same 50 blocks; each point profiles out σₙ² at that ℓ by grid search, then normalizes against this sample's own worst-case PPL</desc>
 <rect width="1050" height="600" fill="#FFFFFF"/>
-<text x="130" y="52" font-size="22" font-weight="700" fill="#1D1D1F">The marginal likelihood, profiled over the kernel's lengthscale</text>
-<text x="130" y="82" font-size="15" fill="#6E6E73">same 50 blocks; each point profiles out σₙ² at that ℓ by grid search</text>
-<line x1="130.0" y1="486.0" x2="980.0" y2="486.0" stroke="#EEEEEE" stroke-width="1.2"/>
-<text x="118.0" y="491.0" font-size="13" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">-110</text>
-<line x1="130.0" y1="424.4" x2="980.0" y2="424.4" stroke="#EEEEEE" stroke-width="1.2"/>
-<text x="118.0" y="429.4" font-size="13" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">-101</text>
-<line x1="130.0" y1="362.8" x2="980.0" y2="362.8" stroke="#EEEEEE" stroke-width="1.2"/>
-<text x="118.0" y="367.8" font-size="13" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">-92</text>
-<line x1="130.0" y1="301.2" x2="980.0" y2="301.2" stroke="#EEEEEE" stroke-width="1.2"/>
-<text x="118.0" y="306.2" font-size="13" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">-83</text>
-<line x1="130.0" y1="239.6" x2="980.0" y2="239.6" stroke="#EEEEEE" stroke-width="1.2"/>
-<text x="118.0" y="244.6" font-size="13" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">-74</text>
-<line x1="130.0" y1="178.0" x2="980.0" y2="178.0" stroke="#EEEEEE" stroke-width="1.2"/>
-<text x="118.0" y="183.0" font-size="13" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">-65</text>
+<text x="130" y="52" font-size="22" font-weight="700" fill="#1D1D1F">The bounded score Qgp, profiled over the kernel's lengthscale</text>
+<text x="130" y="82" font-size="15" fill="#6E6E73">same 50 blocks; each point profiles out σₙ² at that ℓ by grid search, then normalizes against this sample's own worst-case PPL</text>
+<line x1="130.0" y1="490.0" x2="980.0" y2="490.0" stroke="#EEEEEE" stroke-width="1.2"/>
+<text x="118.0" y="495.0" font-size="13" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">0.45</text>
+<line x1="130.0" y1="422.0" x2="980.0" y2="422.0" stroke="#EEEEEE" stroke-width="1.2"/>
+<text x="118.0" y="427.0" font-size="13" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">0.57</text>
+<line x1="130.0" y1="354.0" x2="980.0" y2="354.0" stroke="#EEEEEE" stroke-width="1.2"/>
+<text x="118.0" y="359.0" font-size="13" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">0.69</text>
+<line x1="130.0" y1="286.0" x2="980.0" y2="286.0" stroke="#EEEEEE" stroke-width="1.2"/>
+<text x="118.0" y="291.0" font-size="13" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">0.81</text>
+<line x1="130.0" y1="218.0" x2="980.0" y2="218.0" stroke="#EEEEEE" stroke-width="1.2"/>
+<text x="118.0" y="223.0" font-size="13" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">0.93</text>
+<line x1="130.0" y1="150.0" x2="980.0" y2="150.0" stroke="#EEEEEE" stroke-width="1.2"/>
+<text x="118.0" y="155.0" font-size="13" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="end">1.05</text>
 <line x1="130.0" y1="490.0" x2="980.0" y2="490.0" stroke="#1D1D1F" stroke-width="1.5"/>
 <line x1="130.0" y1="150.0" x2="130.0" y2="490.0" stroke="#1D1D1F" stroke-width="1.5"/>
 <line x1="257.9" y1="490.0" x2="257.9" y2="495.0" stroke="#1D1D1F" stroke-width="1.2"/>
@@ -27,11 +27,11 @@
 <line x1="885.7" y1="490.0" x2="885.7" y2="495.0" stroke="#1D1D1F" stroke-width="1.2"/>
 <text x="885.7" y="514.0" font-size="12.5" font-family="Roboto Mono, monospace" fill="#1D1D1F" text-anchor="middle">3</text>
 <text x="555.0" y="540.0" font-size="14.5" fill="#1D1D1F" text-anchor="middle">lengthscale ℓ (standardized x units, log scale)</text>
-<text x="40.0" y="320.0" font-size="14" fill="#1D1D1F" text-anchor="middle" transform="rotate(-90 40.0 320.0)">log marginal likelihood</text>
-<path d="M 130.0 476.3 L 144.4 471.1 L 158.8 465.8 L 173.2 460.0 L 187.6 453.4 L 202.0 446.2 L 216.4 438.1 L 230.8 429.4 L 245.3 420.0 L 259.7 410.2 L 274.1 400.1 L 288.5 389.8 L 302.9 379.5 L 317.3 369.3 L 331.7 359.4 L 346.1 349.7 L 360.5 340.5 L 374.9 331.9 L 389.3 323.9 L 403.7 316.4 L 418.1 309.2 L 432.5 302.2 L 446.9 295.4 L 461.4 288.8 L 475.8 282.4 L 490.2 276.3 L 504.6 270.4 L 519.0 264.5 L 533.4 258.7 L 547.8 252.9 L 562.2 247.2 L 576.6 241.6 L 591.0 236.3 L 605.4 231.1 L 619.8 225.9 L 634.2 220.7 L 648.6 215.5 L 663.1 210.2 L 677.5 205.0 L 691.9 200.1 L 706.3 195.4 L 720.7 191.1 L 735.1 187.3 L 749.5 183.8 L 763.9 180.6 L 778.3 177.7 L 792.7 175.1 L 807.1 172.6 L 821.5 170.4 L 835.9 168.3 L 850.3 166.6 L 864.7 165.2 L 879.2 164.2 L 893.6 163.7 L 908.0 163.7 L 922.4 164.4 L 936.8 165.7 L 951.2 167.7 L 965.6 170.5 L 980.0 173.9" fill="none" stroke="#FF9500" stroke-width="2.6"/>
+<text x="40.0" y="320.0" font-size="14" fill="#1D1D1F" text-anchor="middle" transform="rotate(-90 40.0 320.0)">Q gp = 1 − PPL / worst-case PPL</text>
+<path d="M 130.0 459.9 L 144.4 451.5 L 158.8 443.2 L 173.2 434.2 L 187.6 424.7 L 202.0 414.4 L 216.4 403.6 L 230.8 392.4 L 245.3 381.0 L 259.7 369.7 L 274.1 358.7 L 288.5 348.1 L 302.9 338.2 L 317.3 329.0 L 331.7 320.5 L 346.1 312.7 L 360.5 305.7 L 374.9 299.4 L 389.3 293.9 L 403.7 288.9 L 418.1 284.4 L 432.5 280.1 L 446.9 276.1 L 461.4 272.4 L 475.8 269.0 L 490.2 265.8 L 504.6 262.8 L 519.0 260.0 L 533.4 257.2 L 547.8 254.6 L 562.2 252.1 L 576.6 249.8 L 591.0 247.6 L 605.4 245.5 L 619.8 243.5 L 634.2 241.5 L 648.6 239.6 L 663.1 237.8 L 677.5 236.0 L 691.9 234.4 L 706.3 232.9 L 720.7 231.5 L 735.1 230.3 L 749.5 229.3 L 763.9 228.3 L 778.3 227.5 L 792.7 226.7 L 807.1 226.1 L 821.5 225.4 L 835.9 224.9 L 850.3 224.4 L 864.7 224.0 L 879.2 223.8 L 893.6 223.6 L 908.0 223.6 L 922.4 223.8 L 936.8 224.2 L 951.2 224.7 L 965.6 225.5 L 980.0 226.4" fill="none" stroke="#FF9500" stroke-width="2.6"/>
 <line x1="893.6" y1="150.0" x2="893.6" y2="490.0" stroke="#FF3B30" stroke-width="1.6" stroke-dasharray="6 4"/>
-<circle cx="893.6" cy="163.7" r="6" fill="#FF3B30" stroke="#FFFFFF" stroke-width="1.4"/>
-<text x="883.6" y="208.7" font-size="13" fill="#FF3B30" text-anchor="end">ℓ* ≈ 3.13</text>
-<text x="238.5" y="451.8" font-size="12.5" fill="#6E6E73" text-anchor="start">too small ℓ: interpolates noise</text>
+<circle cx="893.6" cy="223.6" r="6" fill="#FF3B30" stroke="#FFFFFF" stroke-width="1.4"/>
+<text x="883.6" y="268.6" font-size="13" fill="#FF3B30" text-anchor="end">ℓ* ≈ 3.13, Qgp ≈ 0.92</text>
+<text x="238.5" y="429.2" font-size="12.5" fill="#6E6E73" text-anchor="start">too small ℓ: interpolates noise</text>
 <text x="731.4" y="422.0" font-size="12.5" fill="#6E6E73" text-anchor="middle">too large ℓ: flattens toward a line</text>
 </svg>

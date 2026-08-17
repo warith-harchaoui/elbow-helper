@@ -93,15 +93,35 @@ def log_marginal_likelihood(
     )
 
 
+def worst_case_mse(y: np.ndarray) -> float:
+    """MSE_worst from ELBOW-en.tex: the single *observed* point y_bad
+    hardest to predict everything else from, y_bad := argmax_j (1/n)
+    sum_i (y_i - y_j)^2, MSE_worst := (1/n) sum_i (y_i - y_bad)^2. Recomputed
+    on this experiment's own 50-block subsample rather than reused from a
+    different sample size, per Section sec:conclusion's own recipe."""
+    d2 = (y[:, None] - y[None, :]) ** 2
+    return float(d2.mean(axis=0).max())
+
+
 def fit_gp(x: np.ndarray, y: np.ndarray) -> Dict[str, object]:
     """Type-II maximum likelihood by grid search: sigma_f2 is fixed to the
     sample variance of y (the standard, data-driven default for the signal
     scale), and (ell, sigma_n2) are chosen to maximize the log marginal
     likelihood above, profiling out sigma_n2 at each ell to trace the
-    marginal-likelihood-vs-lengthscale curve the figure below plots."""
+    marginal-likelihood-vs-lengthscale curve the figure below plots.
+
+    The raw log marginal likelihood is an unbounded, sample-size-dependent
+    nats count, exactly what Section sec:conclusion's Q_reg was built to
+    avoid reporting raw. So the profile is also converted to that same
+    bounded, worst-case-anchored scale: average per observation (n copies
+    of Section sec:regression's own ell(theta, sigma^2), summed rather than
+    averaged, as the note's own sec:why identity requires undoing), turned
+    into a perplexity, then normalized against this subsample's own
+    MSE_worst exactly as Q_reg is."""
     mu_x, sd_x = float(x.mean()), float(x.std())
     xs = (x - mu_x) / sd_x
     sigma_f2 = float(np.var(y))
+    n = len(y)
 
     ells = np.geomspace(0.05, 5.0, 60)
     sigma_n2s = np.geomspace(0.01, 2.0, 50)
@@ -118,6 +138,13 @@ def fit_gp(x: np.ndarray, y: np.ndarray) -> Dict[str, object]:
                 best = (lml, ell, sn2)
         profile_lml[i] = best_for_ell
 
+    mse_worst = worst_case_mse(y)
+    ppl_worst = 2 * math.pi * math.e * mse_worst
+    ell_gp = profile_lml / n
+    ppl_gp = np.exp(-2.0 * ell_gp)
+    q_gp = 1.0 - ppl_gp / ppl_worst
+    q_star = float(1.0 - math.exp(-2.0 * best[0] / n) / ppl_worst)
+
     return {
         "mu_x": mu_x,
         "sd_x": sd_x,
@@ -127,6 +154,10 @@ def fit_gp(x: np.ndarray, y: np.ndarray) -> Dict[str, object]:
         "best_lml": best[0],
         "ell_star": best[1],
         "sigma_n2_star": best[2],
+        "mse_worst": mse_worst,
+        "ppl_worst": ppl_worst,
+        "q_gp": q_gp,
+        "q_star": q_star,
     }
 
 
@@ -289,10 +320,10 @@ def build_posterior_svg(x: np.ndarray, y: np.ndarray, fit: Dict[str, object]) ->
 
 
 # ----------------------------------------------------------------------
-# Figure 2 -- log marginal likelihood vs lengthscale
+# Figure 2 -- bounded score Q_gp vs lengthscale
 # ----------------------------------------------------------------------
 def build_lml_svg(fit: Dict[str, object]) -> str:
-    ells, profile = fit["ells"], fit["profile_lml"]
+    ells, q_gp = fit["ells"], fit["q_gp"]
 
     width, height = 1050, 600
     m_left, m_right, m_top, m_bottom = 130, 70, 150, 110
@@ -301,7 +332,8 @@ def build_lml_svg(fit: Dict[str, object]) -> str:
     plot_h = height - m_top - m_bottom
 
     log_x_min, log_x_max = math.log10(float(ells.min())), math.log10(float(ells.max()))
-    y_min, y_max = float(profile.min()) - 2.0, float(profile.max()) + 2.0
+    y_min = math.floor(float(q_gp.min()) * 10) / 10 - 0.05
+    y_max = math.ceil(float(q_gp.max()) * 10) / 10 + 0.05
 
     def sx(v: float) -> float:
         return px + (math.log10(v) - log_x_min) / (log_x_max - log_x_min) * plot_w
@@ -311,8 +343,11 @@ def build_lml_svg(fit: Dict[str, object]) -> str:
 
     parts: List[str] = []
     parts.append(svg_open(width, height, "lml-title", "lml-desc"))
-    title = "The marginal likelihood, profiled over the kernel's lengthscale"
-    sub = "same 50 blocks; each point profiles out σₙ² at that ℓ by grid search"
+    title = "The bounded score Qgp, profiled over the kernel's lengthscale"
+    sub = (
+        "same 50 blocks; each point profiles out σₙ² at that ℓ by grid search, "
+        "then normalizes against this sample's own worst-case PPL"
+    )
     parts.append(f'<title id="lml-title">{xml_escape(title)}</title>')
     parts.append(f'<desc id="lml-desc">{xml_escape(title + ". " + sub)}</desc>')
     parts.append(f'<rect width="{width}" height="{height}" fill="#FFFFFF"/>')
@@ -324,7 +359,7 @@ def build_lml_svg(fit: Dict[str, object]) -> str:
         f'<text x="{m_left}" y="82" font-size="15" fill="{SUBTLE}">{xml_escape(sub)}</text>'
     )
 
-    y_ticks = np.linspace(math.ceil(y_min / 5) * 5, math.floor(y_max / 5) * 5, 6)
+    y_ticks = np.linspace(y_min, y_max, 6)
     for v in y_ticks:
         gy = sy(float(v))
         parts.append(
@@ -333,7 +368,7 @@ def build_lml_svg(fit: Dict[str, object]) -> str:
         )
         parts.append(
             f'<text x="{px - 12:.1f}" y="{gy + 5:.1f}" font-size="13" '
-            f'font-family="Roboto Mono, monospace" fill="{INK}" text-anchor="end">{v:.0f}</text>'
+            f'font-family="Roboto Mono, monospace" fill="{INK}" text-anchor="end">{v:.2f}</text>'
         )
 
     ax_bottom = py + plot_h
@@ -363,10 +398,10 @@ def build_lml_svg(fit: Dict[str, object]) -> str:
     ytx, yty = px - 90, py + plot_h / 2
     parts.append(
         f'<text x="{ytx:.1f}" y="{yty:.1f}" font-size="14" fill="{INK}" text-anchor="middle" '
-        f'transform="rotate(-90 {ytx:.1f} {yty:.1f})">log marginal likelihood</text>'
+        f'transform="rotate(-90 {ytx:.1f} {yty:.1f})">Q gp = 1 − PPL / worst-case PPL</text>'
     )
 
-    pts = [(sx(float(e)), sy(float(p))) for e, p in zip(ells, profile)]
+    pts = [(sx(float(e)), sy(float(q))) for e, q in zip(ells, q_gp)]
     d = "M " + " L ".join(f"{cx:.1f} {cy:.1f}" for cx, cy in pts)
     parts.append(f'<path d="{d}" fill="none" stroke="{ORANGE}" stroke-width="2.6"/>')
 
@@ -376,7 +411,7 @@ def build_lml_svg(fit: Dict[str, object]) -> str:
         f'<line x1="{gx_star:.1f}" y1="{py:.1f}" x2="{gx_star:.1f}" y2="{ax_bottom:.1f}" '
         f'stroke="{RED}" stroke-width="1.6" stroke-dasharray="6 4"/>'
     )
-    gy_star = sy(float(fit["best_lml"]))
+    gy_star = sy(float(fit["q_star"]))
     parts.append(
         f'<circle cx="{gx_star:.1f}" cy="{gy_star:.1f}" r="6" fill="{RED}" '
         f'stroke="#FFFFFF" stroke-width="1.4"/>'
@@ -388,11 +423,11 @@ def build_lml_svg(fit: Dict[str, object]) -> str:
     # margin would.
     parts.append(
         f'<text x="{gx_star - 10:.1f}" y="{gy_star + 45:.1f}" font-size="13" fill="{RED}" '
-        f'text-anchor="end">ℓ* ≈ {ell_star:.2f}</text>'
+        f'text-anchor="end">ℓ* ≈ {ell_star:.2f}, Qgp ≈ {float(fit["q_star"]):.2f}</text>'
     )
 
     parts.append(
-        f'<text x="{sx(0.09):.1f}" y="{sy(float(profile[2])) - 14:.1f}" font-size="12.5" '
+        f'<text x="{sx(0.09):.1f}" y="{sy(float(q_gp[2])) - 14:.1f}" font-size="12.5" '
         f'fill="{SUBTLE}" text-anchor="start">too small ℓ: interpolates noise</text>'
     )
     parts.append(
@@ -409,7 +444,9 @@ def main() -> None:
     fit = fit_gp(x, y)
     print(
         f"n={len(y)} ell*={fit['ell_star']:.4f} sigma_n2*={fit['sigma_n2_star']:.4f} "
-        f"sigma_f2={fit['sigma_f2']:.4f} best_lml={fit['best_lml']:.4f}"
+        f"sigma_f2={fit['sigma_f2']:.4f} best_lml={fit['best_lml']:.4f} "
+        f"mse_worst={fit['mse_worst']:.4f} ppl_worst={fit['ppl_worst']:.4f} "
+        f"q_star={fit['q_star']:.4f}"
     )
 
     _write_and_rasterize(

@@ -48,25 +48,28 @@ loop here, a plain-language intuition first, a worked numeric example,
 then the formula: the geometric mean, Jensen's inequality, Shannon
 entropy, a temperature-indexed refinement borrowed from equilibrium
 statistical mechanics, the Legendre transform, Cram\'er's large
-deviations, Wald's martingale, and a full account of $L$ as a
-statistical estimator, bias and variance included, together with an
-exact link between its maximizer and the Kullback-Leibler divergence,
-Fisher information and the asymptotic efficiency of maximum likelihood
-included. Three new experiment figures make visible results the text
-used to only describe: Cram\'er's decay rate checked against its exact
+deviations, and Wald's martingale. A full account of $L$ as a
+statistical estimator follows, bias and variance included, together
+with an exact link between its maximizer and the Kullback-Leibler
+divergence, Fisher information and the asymptotic efficiency of
+maximum likelihood included. Three new experiment figures make
+visible results the text used to only describe: Cram\'er's decay
+rate checked against its exact
 Legendre-transform rate, one path of Wald's martingale crossing a
 sequential-test threshold, and the Monte Carlo convergence of $L$'s
 bias and variance onto the delta method's formulas. Two worked
 instantiations, a categorical classification model and a regression
 model under Gaussian noise, show the same construction landing on the
-reciprocal of a familiar error measure in both cases, perplexity in
-the first, root-mean-square error in the second, each one extended by
-a real-data experiment, real code and real training curves included: a
-softmax classifier trained on the Palmer Archipelago penguins
-\citep{gorman2014}, a linear regressor and a small MLP both trained on California housing
+reciprocal of a familiar error measure in both cases: perplexity in
+the first, root-mean-square error in the second. Each one is extended
+by a real-data experiment, real code and real training curves
+included: a softmax classifier trained on the Palmer Archipelago
+penguins \citep{gorman2014}, a linear regressor and a small
+multi-layer perceptron (MLP) both trained on California housing
 \citep{pace1997}. \code{elbow-helper}'s own mathematics note,
 \code{ELBOW-en.tex}, builds
-its Gaussian model-selection criteria (BIC, $\mathrm{mBIC}$, ICL) on top
+its Gaussian model-selection criteria (BIC, $\mathrm{mBIC}$, and ICL:
+scores that penalize a likelihood for model complexity) on top
 of the foundation derived here rather than re-deriving it. Citations
 follow the same evidence-marking convention as \code{ELBOW-en.tex}: each
 claim states whether it is a verified citation, a citation reported
@@ -102,8 +105,8 @@ finite list of possible outcomes, like one class out of $K$) that
 weight is an ordinary probability: the weights are positive and add up
 to $1$. In the continuous case (an outcome that can take any real
 value, like a physical measurement) "density" replaces "probability":
-$p(y)$ is no longer itself a probability, only a curve's height, and
-the area under that curve between two bounds is the probability $Y$
+$p(y)$ is no longer itself a probability, only a curve's height; the
+area under that curve between two bounds is the probability $Y$
 lands in that interval. A Gaussian (the bell curve) is the best-known
 example: its height is large near the mean and small far from it,
 without that height ever being a probability above $1$. That
@@ -111,8 +114,8 @@ distinction returns in Section~\ref{sec:conclusion}, where it explains
 why a continuous likelihood behaves differently from a discrete one.
 
 These three pieces assemble into a single diagram, the one every model
-this note uses shares: $\theta$ and $x_i$ set the conditional density,
-and $y_i$ is drawn from it.
+this note uses shares: $\theta$ and $x_i$ set the conditional density;
+$y_i$ is drawn from it.
 
 \begin{center}
 \begin{tikzpicture}[
@@ -170,8 +173,8 @@ pass.}
 \end{table}
 
 With these three pieces in hand, \emph{likelihood} names the joint
-density of the observed outcomes, read as a function of the parameter
-rather than the data: $L_{\text{raw}}(\theta) := \prod_{i=1}^n p(y_i
+density of the observed outcomes, read as a function of the parameter,
+not the data: $L_{\text{raw}}(\theta) := \prod_{i=1}^n p(y_i
 \mid x_i, \theta)$, a plain product of $n$ terms, one per observation.
 This is the definition every standard treatment opens with, Bishop's
 among the clearest \citep{bishop2006prml}. It is also the exact
@@ -223,6 +226,7 @@ same move information theory makes when it works with
 \emph{perplexity}, an exponentiated \emph{average} log-probability
 rather than a raw joint one, made literal in Section~\ref{sec:worked}.
 
+\clearpage
 \section{What the number means}
 \label{sec:meaning}
 
@@ -312,13 +316,15 @@ sits wherever its own shape happens to fall between those two extremes.
 \end{center}
 
 \textbf{A temperature reading.} That bound has a one-parameter
-refinement worth making precise rather than merely evocative. It
+refinement worth making precise, not merely evocative. It
 reaches for an intuition already on hand: heat stirs things up, cold
 locks them down. For $\beta > 0$, define the power-tilted family
 $p_\beta(y) := p(y)^\beta / Z(\beta)$, $Z(\beta) := \int
 p(y)^\beta\,dy$ (or $\sum_y p(y)^\beta$ in the discrete case): a
-genuine exponential family, with $\beta$ playing the role Gibbs
-assigns to inverse temperature against the "energy" $-\ln p(y)$. This
+genuine exponential family (a family whose density is itself an
+exponential of a linear function of a parameter), with $\beta$ playing
+the role Gibbs assigns to inverse temperature against the "energy"
+$-\ln p(y)$. This
 is exactly the object the large-deviations statistical-mechanics
 dictionary describes: $\ln Z(\beta)$ is a scaled free energy, $\beta$
 its inverse temperature. The relationship between them is a Legendre
@@ -331,7 +337,9 @@ $\frac{d}{d\beta} \ln Z(\beta)\big|_{\beta=1} = \mathbb E_p[\ln p] =
 \ln L$, so $L$ is one derivative of a free energy, evaluated at one
 specific temperature. The Shannon entropy above is itself the $\beta
 \to 1$ limit of the R\'enyi entropy $H_\beta(p) := \ln
-Z(\beta)/(1-\beta)$, a fact checked directly from the definitions
+Z(\beta)/(1-\beta)$, the same uncertainty measure read at every
+temperature $\beta$ at once, collapsing to Shannon's own entropy
+exactly at $\beta=1$, a fact checked directly from the definitions
 above.
 
 The two extremes of $\beta$ read exactly like the two extremes of
@@ -372,6 +380,8 @@ marked where it sits along that path.}
 \label{fig:temperature}
 \end{figure}
 
+\clearpage
+
 \section{Why an average, not a sum: large deviations and martingales}
 \label{sec:why}
 
@@ -396,8 +406,8 @@ product is not merely a convenient rescaling.
 \textbf{A necessary detour: what is a Legendre transform?} The result
 that comes next, Cram\'er's, is stated using a geometric tool that
 earns its own loop before being put to work. Start from a convex curve
-(the mirror image of concave: its chords sit above it, never below),
-and ask, for every possible slope $z$, which line of that slope
+(the mirror image of concave: its chords sit above it, never below).
+Then ask, for every possible slope $z$, which line of that slope
 touches the curve without ever rising above it. Exactly one line of
 slope $z$ fits that description: the tangent to the curve at the point
 where its own slope equals $z$. The curve's Legendre transform assigns
@@ -431,14 +441,15 @@ crosses the vertical axis.
 
 \textbf{Cram\'er's theorem.} With that tool in hand the result states
 directly. Cram\'er's theorem \citep{cramer1938}, the founding result of
-large-deviations theory, says an i.i.d.\ sample mean like
+large-deviations theory, says an independent and identically
+distributed (i.i.d.) sample mean like
 $\frac1n\sum_i Z_i$ does more than converge to $\mathbb E[Z]$: the
 probability that it strays from that limit by more than any fixed
 amount decays exponentially in $n$, at a rate set by a convex rate
 function, exactly the Legendre transform introduced above applied to
 $Z$'s cumulant generating function. Working with the average first,
-rather than the raw product $L^n$ it is one root away from, is what
-exposes that exponential structure instead of burying it inside an
+unlike the raw product $L^n$ it is one root away from, is what
+exposes that exponential structure, in place of burying it inside an
 already-multiplied number.
 
 That rate does not have to stay abstract: on the categorical example
@@ -481,7 +492,7 @@ equality at finite $n$.}
 \end{figure}
 
 Chernoff \citep{chernoff1952} specializes exactly this machinery to a
-decision question rather than an estimation one: how should one choose,
+decision question, not an estimation one: how should one choose,
 from $n$ i.i.d.\ draws, between two possible stories for the same data,
 two candidate densities $p_0$ and $p_1$? In the symmetric setting
 where both hypotheses carry a prior and a single test minimizes the
@@ -491,16 +502,22 @@ test can achieve decays as $\exp(-n\,C(p_0,p_1))$, where the
 \emph{Chernoff information} $C(p_0,p_1) := -\min_{\lambda \in [0,1]}
 \ln \int p_0^\lambda p_1^{1-\lambda}$ is, structurally, one more
 exponentiated average of a log, this time an integral over the sample
-space rather than a mean over observations. This is a different
+space, instead of a mean over observations. A number makes the object
+concrete: for the $p_0=0.3$, $p_1=0.7$ Bernoulli pair used below in
+Figure~\ref{fig:wald}, symmetry places the minimizing $\lambda$ at
+$1/2$; this gives $C(p_0,p_1) = -\ln\big(2\sqrt{0.3 \times 0.7}\big)
+\approx 0.0872$, the exponential rate at which the best possible total
+error probability for telling the two coins apart shrinks with every
+extra observation. This is a different
 question from the one the Chernoff-Stein lemma answers, fixing one
 error type's probability and asking how fast the other can be driven
-down, which lands on the Kullback-Leibler divergence rather than the
+down, which lands on the Kullback-Leibler divergence, not the
 Chernoff information; the two results are often confused precisely
 because both carry Chernoff's name.
 
 \textbf{Wald's martingale.} The same running product has a second,
-complementary life as a \emph{process} rather than a single number, and
-that second life answers a different question: not "how much data is
+complementary life as a \emph{process}, not a single number. That
+second life answers a different question: not "how much data is
 needed to decide?" but "can a decision be reached as soon as the data
 allow, without fixing $n$ in advance?" Define the likelihood-ratio
 process $\Lambda_t := \prod_{i=1}^t p_1(y_i)/p_0(y_i) =
@@ -513,7 +530,9 @@ $\mathbb E_{p_0}[\Lambda_t \mid \mathcal F_{t-1}] = \Lambda_{t-1}$, the
 fact Wald \citep{wald1945} built the \emph{Sequential Probability
 Ratio Test} (SPRT) on: a threshold crossed by $\Lambda_t$ at a
 data-dependent stopping time still controls the test's error rate, by
-the optional stopping theorem, the guarantee a fixed-$n$ test gets
+the optional stopping theorem (a martingale stopped at a
+data-dependent but well-behaved stopping time still has the same
+expected value as at the start), the guarantee a fixed-$n$ test gets
 automatically and a naively-stopped one does not.
 
 \begin{figure}[H]
@@ -584,10 +603,14 @@ The variance reads off the same expansion, truncated to first order
 this time: $\hat L_n - L_\infty \approx L_\infty\,\varepsilon_n$, so
 $$\mathrm{Var}[\hat L_n] \approx L_\infty^2\,\mathrm{Var}[\varepsilon_n]
 = L_\infty^2\,\frac{\sigma_Z^2}{n} + O(n^{-2}),$$
-both vanishing as $n \to \infty$: $\hat L_n$ is consistent, in fact
-$\sqrt n$-consistent and asymptotically normal, $\sqrt n(\hat L_n -
-L_\infty) \to \mathcal N(0, L_\infty^2\sigma_Z^2)$ in distribution, its
-bias shrinking at the same $O(1/n)$ rate as its variance.
+both vanishing as $n \to \infty$: $\hat L_n$ is consistent (its error
+shrinks to $0$ as $n$ grows), in fact $\sqrt n$-consistent (that error
+shrinks at the specific rate $1/\sqrt n$) and asymptotically normal
+(its rescaled error settles into a bell-curve shape): $\sqrt n(\hat
+L_n - L_\infty) \to \mathcal N(0, L_\infty^2\sigma_Z^2)$ in
+distribution states that same fact formally, the rescaled error's own
+probability law converging to a bell curve as $n$ grows. Its bias
+shrinks at the same $O(1/n)$ rate as its variance.
 Figure~\ref{fig:convergence} checks those two formulas rather than
 merely asserting them: on the well-specified Gaussian case $q =
 p_\theta = \mathcal N(0,1)$, a Monte Carlo simulation with $100{,}000$
@@ -633,8 +656,8 @@ divergence.} Everything above fixed $p_\theta$ and read $L$ as a
 score. A different, equally natural question asks the reverse: among
 every possible $\theta$, which one makes $L_\infty(\theta) =
 \exp(\mu_Z(\theta))$ largest? The answer is an identity that reuses
-Jensen's inequality already established in Section~\ref{sec:meaning}
-rather than proving a new one. Define the \emph{Kullback-Leibler
+Jensen's inequality already established in Section~\ref{sec:meaning},
+instead of proving a new one. Define the \emph{Kullback-Leibler
 divergence} between the true distribution $q$ and the model
 $p_\theta$, $\mathrm{KL}(q\Vert p_\theta) := \mathbb E_q\big[\ln
 \frac{q(Y\mid X)}{p_\theta(Y\mid X)}\big]$; it is always nonnegative, a
@@ -642,23 +665,23 @@ fact that follows directly from Jensen: $\mathrm{KL}(q\Vert p_\theta) =
 -\mathbb E_q\big[\ln \frac{p_\theta(Y\mid X)}{q(Y\mid X)}\big] \ge -\ln
 \mathbb E_q\big[\frac{p_\theta(Y\mid X)}{q(Y\mid X)}\big] = -\ln 1 =
 0$, with equality exactly when $p_\theta = q$ almost everywhere. A
-little algebra then ties this divergence to the cross-entropy already
-met in Section~\ref{sec:classification}: $-\mu_Z(\theta) =
+little algebra then ties this divergence to the cross-entropy met
+below in Section~\ref{sec:classification}: $-\mu_Z(\theta) =
 \mathrm{CE}(q,p_\theta) = H(q) + \mathrm{KL}(q\Vert p_\theta)$, where
 $H(q)$ does not depend on $\theta$. Maximizing $L_\infty(\theta)$ over
 $\theta$ is therefore exactly the same as minimizing $\mathrm{KL}(q
 \Vert p_\theta)$: if the true distribution sits inside the model
 family, $q = p_{\theta_0}$ for some $\theta_0$, that $\theta_0$ is the
 unique maximizer, since $\mathrm{KL}$ vanishes only there. Maximizing
-$L$ or equivalently the classical $L_{\text{raw}}$ it is one $n$-th
-root away from, is therefore not an arbitrary convention: in this
+$L$, or equivalently the classical $L_{\text{raw}}$, which it is one
+$n$-th root away from, is therefore not an arbitrary convention: in this
 precise sense it pulls the model as close to the truth as the
 available information allows.
 
 \textbf{Fisher information and the asymptotic efficiency of maximum
 likelihood.} One last piece connects this result to the quality of
-$\hat\theta$ itself, the point where $L$ reaches its maximum, rather
-than only to the quality of $L$ as a score. An observation's
+$\hat\theta$ itself, the point where $L$ reaches its maximum, not
+only to the quality of $L$ as a score. An observation's
 \emph{score} is the derivative $s(\theta;y) := \frac{\partial}{\partial
 \theta}\ln p_\theta(y)$, the log-density's sensitivity to $\theta$;
 its expectation under the true $\theta$ is zero by construction. The
@@ -700,7 +723,7 @@ Cram\'er (large deviations) & how fast the sample mean concentrates
   Fig.~\ref{fig:cramer} \\
 Chernoff information & the best total error rate for choosing between
   two densities & $\exp(-n\,C(p_0,p_1))$, $C := -\min_\lambda \ln\int
-  p_0^\lambda p_1^{1-\lambda}$ & --- \\
+  p_0^\lambda p_1^{1-\lambda}$ & None \\
 Wald's martingale (SPRT) & when a sequential test may safely stop &
   a threshold crossing controls the error rate exactly, at any
   data-dependent stopping time & Fig.~\ref{fig:wald} \\
@@ -709,7 +732,7 @@ Delta method & how biased and how noisy $\hat L_n$ is as an estimator
   second-order Taylor expansion & Fig.~\ref{fig:convergence} \\
 Fisher / Cram\'er-Rao & how precisely $L$'s maximizer $\hat\theta$ can
   ever localize $\theta$ & $\mathrm{Var}(\hat\theta) \ge 1/(nI(\theta))$,
-  reached asymptotically by the MLE & --- \\
+  reached asymptotically by the MLE & None \\
 \bottomrule
 \end{tabular}
 \caption{The five asymptotic results Section~\ref{sec:why} derives for
@@ -721,6 +744,9 @@ Cram\'er-Rao row is a statement about $\hat\theta$'s own precision
 rather than a quantity with a natural curve to plot.}
 \label{tab:asymptotics}
 \end{table}
+
+\clearpage
+
 
 \section{Two worked instantiations}
 \label{sec:worked}
@@ -825,8 +851,10 @@ a perplexity, only ever answers "how confident, on average," never
 high probability to an incorrect class. $\mathrm{CE}$ penalizes
 exactly that overconfidence more harshly than a small, honest
 uncertainty would be penalized, the same asymmetry a proper scoring
-rule is built to have: guessing $99\%$ on a class that turns out false
-costs far more in nats than guessing $60\%$ ever would. That asymmetry
+rule is built to have, a rule constructed so that reporting your
+honest belief is always the best strategy: guessing $99\%$ on a class
+that turns out false costs far more in nats than guessing $60\%$ ever
+would. That asymmetry
 is why cross-entropy, rather than raw classification accuracy, is what
 gradient descent fits.
 
@@ -1021,10 +1049,13 @@ gap comes from the eight variables themselves and how much from the
 straight-line shape forced on them? The same likelihood, the same
 standardized split, and the same gradient descent carry over
 unchanged; only $f(x;\theta)$ grows more expressive. A multilayer
-perceptron answers it: one hidden layer of $30$ ReLU units on
-He-initialized weights \citep{he2015}, feeding a single linear output
-unit, the exact architecture G\'eron's textbook \citep{geron2019} uses
-for this dataset. Trained here by hand-written forward and backward
+perceptron answers it: one hidden layer of $30$ ReLU (rectified linear
+unit, the simple $\max(0,x)$ nonlinearity used in most modern hidden
+layers) units on He-initialized weights \citep{he2015}, a random
+initialization scaled to the layer size so signal and gradient neither
+explode nor vanish through the ReLU layers, feeding a single linear
+output unit, the exact architecture G\'eron's textbook
+\citep{geron2019} uses for this dataset. Trained here by hand-written forward and backward
 passes, not a library call, on the identical $16{,}512$/$4{,}128$
 split, it reaches on validation $\mathrm{MSE} \approx 0.343$,
 $\mathrm{RMSE} \approx 0.586$ (about \$$58{,}600$ of typical error,
@@ -1049,7 +1080,10 @@ $0.74$.}
 \label{fig:housing-mlp}
 \end{figure}
 
-\section{A practical conclusion: bounding the likelihood}
+\clearpage
+
+
+\section{Bounding the likelihood: a practical construction}
 \label{sec:conclusion}
 
 Every quantity this note built, $\mathrm{CE}$, $\ell$, $\mathrm{PPL}$,
@@ -1146,13 +1180,15 @@ unrelated coincidences that happen to look similar.}
 \label{tab:parallel}
 \end{table}
 
+\clearpage
+
 \section{Going further: a Gaussian process over functions}
 \label{sec:gp}
 
 \textbf{Intuition.} Every model this note has fit picks one function
 $f(x;\theta)$ and reports how likely the data looks under it. A
 Gaussian process keeps a whole family of plausible functions on hand
-at once, weighted by how well each one fits, and predicts by averaging
+at once, weighted by how well each one fits. It predicts by averaging
 over that family rather than committing to a single curve. That
 sounds like it should need new machinery; it does not. The same
 Gaussian log-likelihood Section~\ref{sec:regression} built reappears
@@ -1221,20 +1257,30 @@ function values at the test points is again Gaussian,
 $$\mu_* = K_*^\top (K+\sigma_n^2 I)^{-1} y, \qquad
 \Sigma_* = K_{**} - K_*^\top (K+\sigma_n^2 I)^{-1} K_*,$$
 mean and covariance both computable from the same Cholesky factor of
-$K+\sigma_n^2 I$ Equation~\eqref{eq:gp-lml} already needs. Intuitively
+$K+\sigma_n^2 I$ that Equation~\eqref{eq:gp-lml} already needs, the
+standard way to factor a covariance matrix into a triangular square
+root so that a linear solve and a log-determinant can both be computed
+stably and cheaply. Intuitively
 $\mu_*$ pulls each test point's prediction toward nearby training
 values, weighted by the kernel. $\Sigma_*$ shrinks near training
 data and grows in gaps the data never covered: the model's own honest
 account of where it is guessing.
 
-\textbf{Choosing the kernel's own hyperparameters.} The same principle
-every earlier section used, maximize the likelihood, applies again,
-except now what is being tuned is not a curve's slope and intercept
-but the \emph{shape} of the covariance itself: how smooth the model is
-even allowed to be before it sees a single data point. Maximizing
-Equation~\eqref{eq:gp-lml} over $\theta = (\ell,\sigma_f^2,\sigma_n^2)$
-is called type-II maximum likelihood, or empirical Bayes: type-I would
-maximize over the function values $f$ themselves at fixed
+\textbf{Choosing the kernel's own hyperparameters.} Hyperparameters
+here means knobs that shape the model before it ever sees data, as
+opposed to the parameters $\theta$ fit directly to it everywhere else
+in this note. The same principle every earlier section used, maximize
+the likelihood, applies again, except now what is being tuned is not
+a curve's slope and intercept but the \emph{shape} of the covariance
+itself: how smooth the model is even allowed to be before it sees a
+single data point. Maximizing Equation~\eqref{eq:gp-lml} over $\theta
+= (\ell,\sigma_f^2,\sigma_n^2)$, the symbol reused here for the
+covariance's own three knobs rather than Section~\ref{sec:regression}'s
+curve parameters, is called type-II maximum likelihood, or empirical
+Bayes, a name that is literal: in a fully Bayesian treatment the
+hyperparameters would themselves carry a prior, but here they are
+simply point-estimated from the very data they will go on to explain.
+Type-I would maximize over the function values $f$ themselves at fixed
 hyperparameters; type-II integrates $f$ out first (Equation
 \eqref{eq:gp-lml} already reflects that integration) and maximizes
 over what is left.
@@ -1251,8 +1297,25 @@ discipline as every other model in this note. $\sigma_f^2$ is fixed to
 the sample variance of $y$, a standard, data-driven default for the
 signal scale; $\ell$ and $\sigma_n^2$ are chosen by a grid search
 maximizing Equation~\eqref{eq:gp-lml}, landing on $\ell^\ast \approx
-3.13$ (standardized income units), $\sigma_n^2 \approx 0.49$, a log
-marginal likelihood of about $-62.90$.
+3.13$ (standardized income units), $\sigma_n^2 \approx 0.49$, a raw log
+marginal likelihood of about $-62.90$ summed over the $n=50$ points:
+exactly the unbounded, sample-size-dependent nats count
+Section~\ref{sec:conclusion} built $Q_{\text{reg}}$ to stop reporting
+raw. The same fix applies here without a single new principle: average
+per observation rather than sum,
+$\ell_{\text{gp}}(\theta) := \frac1n \ln p(y\mid X,\theta)$, exponentiate
+into a perplexity, $\mathrm{PPL}_{\text{gp}}(\theta) :=
+\exp(-2\ell_{\text{gp}}(\theta))$, and normalize against this
+$50$-block sample's own worst case, computed by the identical
+$y_{\text{bad}}$ recipe Section~\ref{sec:conclusion} borrows from
+\code{ELBOW-en.tex},
+$$Q_{\text{gp}}(\theta) := 1 - \frac{\mathrm{PPL}_{\text{gp}}(\theta)}{\mathrm{PPL}_{\text{worst}}}, \qquad \mathrm{PPL}_{\text{worst}} := 2\pi e \cdot \mathrm{MSE}_{\text{worst}},$$
+landing on $\mathrm{MSE}_{\text{worst}} \approx 9.07$,
+$\mathrm{PPL}_{\text{worst}} \approx 154.88$ for this particular $50$
+blocks, and $Q_{\text{gp}}(\theta^\ast) \approx 0.92$ at the chosen
+hyperparameters, a number that means the same thing next to
+$Q_{\text{reg}}$ from Section~\ref{sec:conclusion} rather than only
+next to another lengthscale on the same curve.
 
 \begin{figure}[H]
 \centering
@@ -1269,30 +1332,68 @@ honestly less sure what a plausible house value looks like.}
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{figures/gp_marginal_likelihood_en.png}
-\caption{The same $50$ blocks' log marginal likelihood
-(Equation~\eqref{eq:gp-lml}), profiled over the lengthscale $\ell$: at
+\caption{The same $50$ blocks' bounded score $Q_{\text{gp}}$, not the
+raw log marginal likelihood, profiled over the lengthscale $\ell$: at
 each $\ell$ on the horizontal axis, $\sigma_n^2$ is re-optimized by the
-same grid search, so the curve traces the best score reachable at that
-one choice of smoothness. Too small an $\ell$ lets the process
-interpolate every training point, including its noise; the marginal
-likelihood punishes that. Too large an $\ell$ flattens the fit toward
-a single straight line and loses real signal the data actually
-supports. The interior maximum at $\ell^\ast \approx 3.13$
-is Equation~\eqref{eq:gp-lml} trading those two failure modes off
-against each other automatically, with no held-out validation split
-required to find it \citep{rasmussen2006}.}
+same grid search over Equation~\eqref{eq:gp-lml}, then the resulting
+best score at that $\ell$ is converted to $Q_{\text{gp}}$ exactly as
+defined in the text, so the curve stays on the same $[0,1]$-anchored
+scale as every other bounded score this note plots, comparable across
+runs rather than legible only next to its own neighboring points. Too
+small an $\ell$ lets the process interpolate every training point,
+including its noise; $Q_{\text{gp}}$ punishes that with a low score.
+Too large an $\ell$ flattens the fit toward a single straight line and
+loses real signal the data actually supports. The interior maximum at
+$\ell^\ast \approx 3.13$, $Q_{\text{gp}} \approx 0.92$, is the same
+tradeoff Equation~\eqref{eq:gp-lml} was already resolving; normalizing
+only rescales the vertical axis, it does not move where the maximum
+sits, with no held-out validation split required to find it
+\citep{rasmussen2006}.}
 \label{fig:gp-lml}
 \end{figure}
 
 Two of the $50$ real blocks in this experiment happen to sit at
 $\$500{,}000$, this dataset's own census-reporting cap rather than a
-true ceiling on house values; the Gaussian process was not told this,
-and treats those two points as any other noisy observation. Section
+true ceiling on house values; the Gaussian process was not told this.
+It treats those two points as any other noisy observation. Section
 \ref{sec:conclusion}'s bounded scores were built for exactly this kind
 of imperfection: real data rarely arrives clean; a likelihood-based
 model, whether one straight line, an MLP, or a whole distribution over
 curves, only ever reports how well it explains the data actually
 given to it.
+
+\clearpage
+
+\section{Conclusion}
+\label{sec:closing}
+
+Every quantity this note touched, cross-entropy, perplexity,
+regression log-likelihood, the Gaussian process's marginal likelihood,
+turned out to be one identity wearing a different name:
+$L := \exp(\mathbb E[\ln p])$, an exponentiated average log-density
+rather than the raw product most references open with. Reading
+likelihood this way is what let Section~\ref{sec:worked}'s two
+worked models, a softmax classifier and a Gaussian regressor, land on
+the same construction from opposite sides of the discrete/continuous
+divide. It is what let Section~\ref{sec:conclusion} turn two
+model-specific, unbounded numbers into $Q_{\text{classif}}$ and
+$Q_{\text{reg}}$, comparable across datasets because each is anchored
+to a real worst case rather than an arbitrary one. It is what let
+Section~\ref{sec:gp} extend the whole argument from one predicted
+value to a full distribution over functions without introducing a
+single new principle, only a larger covariance to invert.
+
+None of this note's four experiments, the penguin classifier, the
+housing line, the housing MLP, the housing Gaussian process, needed a
+library built around likelihood to make that identity concrete: numpy,
+one gradient loop or one Cholesky solve, and the formula itself were
+enough in every case. That is the claim this note set out to defend:
+not that likelihood demands separate machinery for classification,
+regression or Gaussian processes, but that it demands none, once
+treated as an average rather than a product. \code{elbow-helper}'s own
+\code{ELBOW-en.tex} takes that foundation as settled and builds its
+Gaussian model-selection criteria directly on top of it; this note's
+job ends where that one begins.
 
 \clearpage
 
