@@ -4,6 +4,23 @@ All notable changes to `elbow-helper` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.5] - 2026-08-17
+
+### Fixed
+- **`KneeLocator`** raised spurious NumPy `RuntimeWarning`s on degenerate
+  curves: a single-point curve triggered `"Mean of empty slice"` computing
+  the sensitivity threshold's mean step (never actually reached by a
+  single-point curve, so `0.0` is a safe stand-in), and a constant or
+  single-point curve's min-max normalization divided by a zero range
+  (`0/0 = NaN` by design, correctly propagating to an abstain, but noisy).
+  Both warnings are now suppressed without changing the abstain behavior;
+  a regression test turns `RuntimeWarning` into an error to prove it.
+
+### Documentation
+- Glossed previously-bare technical terms (blocked cross-validation, the
+  Bonferroni-gated permutation test, PCA) in `README.md`/`LISEZ-MOI.md`,
+  and removed punctuation-dash asides from five module docstrings' prose.
+
 ## [0.1.4] - 2026-08-16
 
 ### Fixed
