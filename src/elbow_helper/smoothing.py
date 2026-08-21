@@ -105,7 +105,20 @@ def smooth_curve(y: np.ndarray, window: int, method: str = "gaussian") -> np.nda
         return np.asarray(y, dtype=float).copy()
 
     if method == "moving_average":
-        kernel = np.ones(min(window, y.size)) / float(min(window, y.size))
+        # Force an odd kernel size so the convolution below is centered on
+        # each sample. An even-sized kernel breaks the "radius = size // 2,
+        # padded length = n + 2*radius, valid convolution yields n samples"
+        # arithmetic that makes the reflect-pad + valid-convolve trick below
+        # centered: with an even kernel, valid convolution over the padded
+        # signal actually yields n+1 samples, and slicing back down to n
+        # silently keeps the first n instead of the centered n, shifting the
+        # whole smoothed curve by half a sample (found by testing: a linear
+        # ramp's moving average, which should reproduce the ramp exactly at
+        # every interior point, came out shifted by +0.5 for even windows).
+        size = min(window, y.size)
+        if size % 2 == 0:
+            size = max(size - 1, 1)
+        kernel = np.ones(size) / float(size)
     else:
         kernel = _gaussian_kernel(window)
 

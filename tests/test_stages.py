@@ -37,6 +37,24 @@ def test_smoothing_preserves_length_and_reduces_variance():
     assert np.var(np.diff(ys)) < np.var(np.diff(y))
 
 
+def test_moving_average_even_window_stays_centered():
+    # Regression test for the half-sample shift an even moving-average
+    # window used to introduce (see CHANGELOG [0.1.6]): a moving average of
+    # a linear ramp must reproduce that same ramp exactly at interior
+    # points, since the slope is constant everywhere. Before the odd-size
+    # fix, an even window (e.g. 4, 6, 8, all requested by
+    # `preprocessing.infer_curve_direction`'s unrounded `max(5, n // 8)`)
+    # made the reflect-pad + valid-convolve arithmetic yield one extra
+    # sample, silently truncated from the wrong end, shifting every
+    # interior point off the ramp by 0.5.
+    y = np.arange(20, dtype=float)
+    for window in (4, 6, 8):
+        smoothed = smooth_curve(y, window, method="moving_average")
+        # Compare interior points only: the reflect boundary still perturbs
+        # the first/last few samples of any short window, on purpose.
+        assert np.allclose(smoothed[3:-3], y[3:-3], atol=1e-8)
+
+
 def test_candidates_cluster_near_true_knee():
     x, y = clear_knee_curve(seed=1, knee_frac=0.3)
     prepared = prepare_curve(x, y, "concave", "increasing", CFG)

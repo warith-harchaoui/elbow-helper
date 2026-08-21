@@ -4,6 +4,21 @@ All notable changes to `elbow-helper` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.6] - 2026-08-21
+
+### Fixed
+- **`elbow_helper.smoothing.smooth_curve`** (`method="moving_average"`): an
+  even smoothing window produced an asymmetric kernel, shifting the whole
+  smoothed curve by half a sample (found by testing: a linear ramp's moving
+  average, which should reproduce the ramp exactly at every interior point,
+  came out shifted by +0.5 for even windows). The window is now forced to
+  the nearest odd size below it, matching the always-odd Gaussian kernel's
+  centering. Affects `preprocessing.infer_curve_direction` and
+  `preprocessing._direction_violation_rate`, both of which call
+  `smooth_curve` with an unrounded, possibly-even window
+  (`max(5, n // 8)`), so this could bias the auto-detected `curve`/
+  `direction` and the direction-violation screen on some curve lengths.
+
 ## [0.1.5] - 2026-08-17
 
 ### Fixed

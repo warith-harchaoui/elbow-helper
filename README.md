@@ -12,6 +12,10 @@ An algorithm can answer the question "where might a knee or an elbow be?" and it
 
 The design priority is to minimise false-positive knees, even at the cost of more abstentions.
 
+## Status
+
+Published on [PyPI](https://pypi.org/project/elbow-helper/), six semantic-versioned releases so far (`v0.1.0` through `v0.1.5`, see `git tag`), with CI green on every commit across Python 3.10 to 3.13 and 114 tests covering the pipeline end to end plus the CLI, HTTP API and MCP surfaces. Still an early release (v0.1.x): treat the calibrated thresholds in `RobustKneeConfig` as a validated starting point, not a universal constant, see Configuration and Limitations below.
+
 ## Documentation
 
 [💻 Documentation](https://harchaoui.org/warith/ai-helpers/docs/elbow-helper-doc/)
