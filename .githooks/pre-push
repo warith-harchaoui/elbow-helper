@@ -13,6 +13,6 @@ echo "[pre-push] ruff format --check..."
 ruff format --check . || { echo "[pre-push] ruff format failed - push aborted."; exit 1; }
 
 echo "[pre-push] full pytest sweep (unit + integration)..."
-pytest -q -m "" || { echo "[pre-push] tests failed - push aborted."; exit 1; }
+python -m pytest -q -m "" || { echo "[pre-push] tests failed - push aborted."; exit 1; }
 
 echo "[pre-push] all green - pushing."
