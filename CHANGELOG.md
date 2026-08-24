@@ -18,6 +18,20 @@ All notable changes to `elbow-helper` are documented here. The format follows
   blocks a push on a lint or test failure locally, running `ruff check`,
   `ruff format --check`, and the full `pytest` suite before CI ever sees
   the commit.
+- Consolidated the test suite from 114 tests to 85, with higher coverage
+  (69 missed lines instead of 76, out of 1793). `test_cli_argparse.py`,
+  `test_cli_click.py`, `test_api.py`, and `test_mcp_server.py` — 45 tests
+  that mostly hand-duplicated the same handful of scenarios (a clear knee
+  accepted, the y-only shorthand, elbow rejecting that shorthand,
+  diagnostics returning an SVG, the locator's raw payload) once per door —
+  are now `test_doors.py`: one behavioral test per scenario that drives
+  every door (argparse CLI, click CLI, HTTP API, MCP) through a small
+  adapter, so each scenario verifies parity across the whole surface
+  instead of whichever doors someone remembered to copy it into.
+  `test_doctests.py`'s five one-per-module tests are now one loop. Two new
+  tests close a real coverage gap in `pipeline.py`'s bootstrap/null-test
+  gate-failure paths and its numerical-safety-net exception handler,
+  previously only 83% covered.
 
 ## [0.1.6] - 2026-08-21
 
