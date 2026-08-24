@@ -4,9 +4,51 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+  schedule:
+    # Weekly compatibility sweep across the full supported Python range
+    # (declared as ">=3.10" in pyproject.toml), catching drift the fast
+    # 3.12-only gate below cannot see. Mondays, 06:00 UTC.
+    - cron: "0 6 * * 1"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   pytest:
+    name: pytest (Python 3.12)
+    runs-on: ubuntu-latest
+    # Fast, fully-blocking gate on every push/PR: one Python version. The
+    # full local pytest run (all markers, whatever interpreter is active)
+    # happens pre-push (git pre-push hook, see CONTRIBUTING.md); the full
+    # 3.10-3.13 compatibility matrix runs in the `compat` job below, on a
+    # weekly schedule and on demand, rather than blocking every push.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[cli,api,mcp,dev]"
+      - run: pytest -v
+
+  lint:
+    name: ruff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install ruff==0.15.21
+      - run: ruff check .
+      - run: ruff format --check .
+
+  compat:
+    name: pytest (Python ${{ matrix.python-version }})
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -17,8 +59,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: pip
       - run: pip install -e ".[cli,api,mcp,dev]"
-      - run: pytest
-      - run: pip install ruff==0.15.21
-      - run: ruff check .
-      - run: ruff format --check .
+      - run: pytest -v

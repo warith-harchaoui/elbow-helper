@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Pre-push gate: block the push entirely on a lint or test failure, so a red
+# local state never even reaches CI. One-time setup per clone:
+#   git config core.hooksPath .githooks
+# Bypass (rare, deliberate only): git push --no-verify
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+echo "[pre-push] ruff check..."
+ruff check . || { echo "[pre-push] ruff check failed - push aborted."; exit 1; }
+
+echo "[pre-push] ruff format --check..."
+ruff format --check . || { echo "[pre-push] ruff format failed - push aborted."; exit 1; }
+
+echo "[pre-push] full pytest sweep (unit + integration)..."
+pytest -q -m "" || { echo "[pre-push] tests failed - push aborted."; exit 1; }
+
+echo "[pre-push] all green - pushing."

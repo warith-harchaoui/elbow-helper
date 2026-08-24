@@ -4,6 +4,21 @@ All notable changes to `elbow-helper` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- CI restructured for speed: `pytest` and `ruff` now run as two separate,
+  fast jobs on Python 3.12 for every push and pull request, instead of one
+  job sweeping four Python versions. The full 3.10-3.13 compatibility
+  matrix still runs, on a weekly schedule and on manual dispatch, so the
+  version guarantee documented in `README.md`/`LISEZ-MOI.md` holds without
+  slowing down the default gate.
+- Added a `pre-push` git hook (`.githooks/pre-push`, opt in via `git config
+  core.hooksPath .githooks`, documented in the new `CONTRIBUTING.md`) that
+  blocks a push on a lint or test failure locally, running `ruff check`,
+  `ruff format --check`, and the full `pytest` suite before CI ever sees
+  the commit.
+
 ## [0.1.6] - 2026-08-21
 
 ### Fixed
