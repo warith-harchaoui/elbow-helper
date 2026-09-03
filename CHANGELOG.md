@@ -4,6 +4,20 @@ All notable changes to `elbow-helper` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- **`candidates.generate_candidates`**: a failed `KneeLocator` construction at
+  a given (smoothing window, sensitivity) grid point was silently swallowed
+  (`except Exception: continue`) with no trace at all, unlike every other
+  numerical-safety-net catch in this codebase (`pipeline.py`,
+  `multi_pipeline.py`), which logs a warning and a diagnostic reason. A
+  degenerate combination failing occasionally is expected and not logged at
+  warning level, but a real regression breaking every grid point at once
+  would have looked identical to "no knee found" with zero diagnostic
+  signal. Now logged at debug level with the window/sensitivity pair and the
+  exception message.
+
 ## [0.1.6] - 2026-08-24
 
 ### Fixed

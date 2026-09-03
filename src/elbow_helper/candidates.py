@@ -15,6 +15,7 @@ from __future__ import annotations
 from typing import List
 
 import numpy as np
+import os_helper as oh
 
 from .config import RobustKneeConfig
 from .locator import KneeLocator
@@ -68,7 +69,17 @@ def generate_candidates(
                     interp_method="interp1d",
                     online=True,
                 )
-            except Exception:
+            except Exception as exc:
+                # Expected sometimes (a degenerate smoothed curve at an
+                # extreme window/sensitivity combo can trip a locator
+                # precondition) — but silent, per the codebase's
+                # numerical-safety-net convention this should still leave a
+                # trace, otherwise every combination failing looks identical
+                # to "no knee found" with zero diagnostic signal.
+                oh.debug(
+                    f"[elbow-helper] candidate generation skipped "
+                    f"window={window} S={s}: {exc}"
+                )
                 continue
 
             for rec in kl.all_knee_records:
