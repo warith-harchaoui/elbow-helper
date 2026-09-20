@@ -1,0 +1,21 @@
+# .htaccess of the deployed elbow-helper bundle (written by build.py from
+# webapp/gate/htaccess.dist). Public surface: the landing page (index.php),
+# static/ (icons, OG card, the STATIC example figures), the SEO/GEO indexes
+# and the Markdown corpus. Everything the interactive app needs is rewritten
+# through gate/serve.php, which requires the signed auth cookie.
+
+DirectoryIndex index.php
+
+RewriteEngine On
+
+# Belt and braces: private/ carries its own "Require all denied", but refuse
+# it here too in case that file is ever lost in an upload.
+RewriteRule ^private(/|$) - [F]
+
+# The shared gate library is an include, never an endpoint.
+RewriteRule ^gate/auth\.php$ - [F]
+
+# The app and its engine files exist only behind the gate.
+RewriteRule ^index\.html$ gate/serve.php [L]
+RewriteRule ^backend-pyodide\.js$ gate/serve.php [L]
+RewriteRule ^(py|wheels|i18n)/ gate/serve.php [L]

@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Noise-robust knee and elbow detection in your browser: a knee with its uncertainty or a frank abstention. Nothing is uploaded." />
+  <title>elbow-helper: is that elbow real?</title>
+<!--SEO_HEAD-->
+  <link rel="icon" href="./static/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="./static/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="./static/favicon-16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./static/apple-touch-icon.png" />
+  <link rel="manifest" href="./static/site.webmanifest" />
+  <meta name="theme-color" content="#0B0B0C" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&family=Roboto+Serif:wght@400;500;600&family=Roboto+Mono&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Pre-paint: apply the persisted theme and language before any CSS
+    // resolves, so there is no flash. Same localStorage keys as the landing.
+    (function () {
+      var theme = localStorage.getItem("eh-theme");
+      var dark = theme ? theme === "dark"
+        : window.matchMedia("(prefers-color-scheme: dark)").matches;
+      if (dark) document.documentElement.classList.add("dark");
+      var lang = localStorage.getItem("eh-lang");
+      if (lang === "fr" || lang === "en") document.documentElement.lang = lang;
+    })();
+  </script>
+  <style>
+    /* Three-Roboto system: Roboto for chrome, Roboto Serif for the headline,
+       Roboto Mono for the eyebrow and numbers. Dark mode is a .dark class on
+       <html> persisted in localStorage (eh-theme), implemented by remapping
+       the handful of neutral utilities rather than sprinkling dark: variants.
+       Colour means data: chrome stays neutral; the only coloured chrome is
+       the example chips' tints, which match the figure gallery. */
+    html.dark { color-scheme: dark; }
+    body { font-family: Roboto, system-ui, -apple-system, Helvetica, Arial, sans-serif; }
+    .headline { font-family: "Roboto Serif", Georgia, serif; }
+    .eyebrow { font-family: "Roboto Mono", ui-monospace, SFMono-Regular, monospace;
+      font-size: .8rem; letter-spacing: .08em; }
+    .mono { font-family: "Roboto Mono", ui-monospace, SFMono-Regular, monospace; }
+    .card { border: 1px solid #e5e5e5; }
+    .dark .card { border-color: #262626; }
+    .dark .bg-white { background-color: #0f0f0f !important; }
+    .dark .bg-neutral-100 { background-color: #171717 !important; }
+    .dark .text-neutral-900 { color: #f5f5f5 !important; }
+    .dark .text-neutral-700 { color: #d4d4d4 !important; }
+    .dark .text-neutral-500 { color: #a3a3a3 !important; }
+    .dark .border-neutral-200 { border-color: #262626 !important; }
+    .dark body { background-color: #0a0a0a; color: #e5e5e5; }
+    body { background-color: #fafafa; color: #171717; }
+    .site-header { position: sticky; top: 0; z-index: 40;
+      -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+      background: rgba(250,250,250,.85); border-bottom: 1px solid #e5e5e5; }
+    .dark .site-header { background: rgba(10,10,10,.8); border-bottom-color: #262626; }
+    .toggle-btn { font-size: 1.15rem; line-height: 1; width: 2.25rem; height: 2.25rem;
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 0; background: transparent; border-radius: .5rem; cursor: pointer; }
+    .toggle-btn:hover { background: #e5e5e5; }
+    .dark .toggle-btn:hover { background: #262626; }
+    .toggle-btn:focus-visible, .gh-link:focus-visible, .chip:focus-visible,
+    button:focus-visible, a:focus-visible { outline: 2px solid #007AFF; outline-offset: 2px; }
+    .gh-link { display: inline-flex; align-items: center; gap: .35rem;
+      font-size: .875rem; color: #404040; text-decoration: none;
+      padding: .35rem .6rem; border-radius: .5rem; }
+    .gh-link:hover { background: #e5e5e5; }
+    .dark .gh-link { color: #d4d4d4; }
+    .dark .gh-link:hover { background: #262626; }
+    .accent { display: inline-block; width: .55rem; height: 1.35rem;
+      border-radius: .2rem; background: #007AFF; vertical-align: -.25rem; }
+    /* Example chips: one Good Colors tint each, as a left bar. */
+    .chip { border: 1px solid #e5e5e5; border-left: 4px solid var(--tint, #007AFF);
+      background: #fff; border-radius: .6rem; padding: .45rem .7rem;
+      font-size: .875rem; cursor: pointer; text-align: left; }
+    .chip:hover { background: #f5f5f5; }
+    .chip[aria-pressed="true"] { background: #eef4ff; border-color: #007AFF; }
+    .dark .chip { background: #171717; border-color: #262626;
+      border-left-color: var(--tint, #007AFF); color: #e5e5e5; }
+    .dark .chip:hover { background: #262626; }
+    .dark .chip[aria-pressed="true"] { background: #16232e; border-color: #3b82f6; }
+    textarea, input[type=text], select { border: 1px solid #d4d4d4; border-radius: .5rem;
+      padding: .5rem .65rem; font-size: .9rem; background: #fff; color: inherit; width: 100%; }
+    textarea { font-family: "Roboto Mono", ui-monospace, monospace; font-size: .8rem; }
+    .dark textarea, .dark input[type=text], .dark select {
+      background: #0a0a0a; border-color: #404040; }
+    .btn-primary { background: #171717; color: #fff; border: 0; border-radius: .6rem;
+      padding: .65rem 1.3rem; font-size: 1rem; font-weight: 600; cursor: pointer; }
+    .btn-primary:hover { background: #262626; }
+    .btn-primary[disabled] { opacity: .5; cursor: wait; }
+    .dark .btn-primary { background: #e5e5e5; color: #171717; }
+    .dark .btn-primary:hover { background: #fff; }
+    .btn-ghost { border: 1px solid #d4d4d4; background: transparent; border-radius: .55rem;
+      padding: .45rem .8rem; font-size: .875rem; cursor: pointer; color: inherit; }
+    .btn-ghost:hover { background: #f0f0f0; }
+    .dark .btn-ghost { border-color: #404040; }
+    .dark .btn-ghost:hover { background: #262626; }
+    .spinner { width: 1.1rem; height: 1.1rem; border-radius: 9999px;
+      border: 2px solid #d4d4d4; border-top-color: #171717;
+      animation: spin .8s linear infinite; }
+    .dark .spinner { border-color: #404040; border-top-color: #e5e5e5; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+    /* The diagnostic figure: scale to the card; its own dark-mode media rule
+       is stripped at injection time (the page theme is a class, not the OS
+       preference) and replaced by these equivalents of the SVG's rules. */
+    #figure svg { width: 100%; height: auto; display: block; }
+    .dark #figure svg [fill="#FFFFFF"] { fill: #0f0f0f; }
+    .dark #figure svg [fill="#1D1D1F"] { fill: #F5F5F7; }
+    .dark #figure svg [fill="#6E6E73"] { fill: #98989D; }
+    .dark #figure svg [stroke="#E5E5EA"] { stroke: #2C2C2E; }
+    details > summary { cursor: pointer; }
+    #evidence pre { max-height: 24rem; overflow: auto; font-size: .75rem; }
+    .site-footer { border-top: 1px solid #e5e5e5; }
+    .dark .site-footer { border-color: #262626; }
+  </style>
+</head>
+<body>
+<header class="site-header">
+  <nav class="max-w-[1100px] mx-auto px-5 py-2 flex items-center justify-between gap-4" aria-label="Primary">
+    <div class="flex items-center gap-2 font-semibold tracking-tight">
+      <img src="./static/logo-header.png" alt="elbow-helper logo" width="28" height="28" class="rounded" />
+      <span>elbow-helper</span>
+      <span id="version" class="mono text-xs text-neutral-500"></span>
+    </div>
+    <div class="flex items-center gap-1">
+      <div id="busy" class="spinner hidden" role="status" aria-label="Working"></div>
+      <a id="ghLink" class="gh-link" href="https://github.com/warith-harchaoui/elbow-helper"
+         target="_blank" rel="noopener" data-i18n="github">⭐️ on GitHub</a>
+      <button id="langToggle" class="toggle-btn" type="button" aria-label="Switch language">🇬🇧</button>
+      <button id="themeToggle" class="toggle-btn" type="button" aria-label="Switch theme">🌛</button>
+    </div>
+  </nav>
+</header>
+
+<main class="max-w-[1100px] mx-auto px-5 pt-10 pb-16">
+  <p class="eyebrow text-neutral-500">elbow-helper</p>
+  <h1 class="headline text-neutral-900 font-semibold" style="font-size: clamp(2.1rem, 5.5vw, 3.2rem);"
+      data-i18n="baseline">Is that elbow real?</h1>
+  <p class="text-neutral-700 max-w-[44rem] mt-3" data-i18n="guide1"></p>
+  <p class="text-neutral-700 max-w-[44rem] mt-1" data-i18n="guide2"></p>
+
+  <!-- 1 · Curve -->
+  <section class="card bg-white rounded-2xl p-6 mt-8" aria-labelledby="data-h">
+    <h2 id="data-h" class="text-lg font-semibold text-neutral-900">
+      <span class="accent" aria-hidden="true"></span>
+      1 · <span data-i18n="step_data">Curve</span>
+    </h2>
+    <p class="text-sm text-neutral-500 mt-2" data-i18n="presets_label"></p>
+    <div id="presets" class="flex flex-wrap gap-2 mt-2">
+      <button type="button" class="chip" data-preset="clear_knee" style="--tint:#007AFF" data-i18n="preset_clear_knee"></button>
+      <button type="button" class="chip" data-preset="kmeans_elbow" style="--tint:#28CD41" data-i18n="preset_kmeans_elbow"></button>
+      <button type="button" class="chip" data-preset="no_knee" style="--tint:#FF3B30" data-i18n="preset_no_knee"></button>
+      <button type="button" class="chip" data-preset="exponential_saturation" style="--tint:#FF9500" data-i18n="preset_exponential_saturation"></button>
+      <button type="button" class="chip" data-preset="queueing_latency" style="--tint:#AF52DE" data-i18n="preset_queueing_latency"></button>
+      <button type="button" class="chip" data-preset="cache_hit_rate" style="--tint:#5AC8FA" data-i18n="preset_cache_hit_rate"></button>
+      <button type="button" class="chip" data-preset="bug_discovery_rate" style="--tint:#FF2D55" data-i18n="preset_bug_discovery_rate"></button>
+    </div>
+    <div class="mt-4">
+      <label for="points" class="font-medium text-sm" data-i18n="paste_label"></label>
+      <textarea id="points" rows="8" class="mt-1" spellcheck="false" data-i18n-ph="paste_placeholder"></textarea>
+      <div class="flex items-center gap-3 mt-2">
+        <button id="upload" type="button" class="btn-ghost" data-i18n="upload" data-i18n-aria="upload_aria"></button>
+        <input id="uploadFile" type="file" accept=".csv,.txt,text/csv,text/plain" class="hidden" />
+        <span id="pointsCount" class="mono text-xs text-neutral-500"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · Options -->
+  <section class="card bg-white rounded-2xl p-6 mt-6" aria-labelledby="options-h">
+    <h2 id="options-h" class="text-lg font-semibold text-neutral-900">
+      <span class="accent" aria-hidden="true"></span>
+      2 · <span data-i18n="step_options">Options</span>
+    </h2>
+    <div class="grid gap-4 mt-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div>
+        <label for="curve" class="font-medium text-sm" data-i18n="curve_label"></label>
+        <select id="curve" class="mt-1">
+          <option value="" data-i18n="curve_auto"></option>
+          <option value="concave" data-i18n="curve_concave"></option>
+          <option value="convex" data-i18n="curve_convex"></option>
+        </select>
+      </div>
+      <div>
+        <label for="direction" class="font-medium text-sm" data-i18n="direction_label"></label>
+        <select id="direction" class="mt-1">
+          <option value="" data-i18n="direction_auto"></option>
+          <option value="increasing" data-i18n="direction_increasing"></option>
+          <option value="decreasing" data-i18n="direction_decreasing"></option>
+        </select>
+      </div>
+      <div>
+        <label for="xLabel" class="font-medium text-sm" data-i18n="x_label_label"></label>
+        <input id="xLabel" type="text" class="mt-1" />
+      </div>
+      <div>
+        <label for="yLabel" class="font-medium text-sm" data-i18n="y_label_label"></label>
+        <input id="yLabel" type="text" class="mt-1" />
+      </div>
+    </div>
+    <div class="flex flex-wrap items-center gap-5 mt-5">
+      <button id="run" type="button" class="btn-primary" data-i18n="run" data-i18n-aria="run_aria"></button>
+      <label class="flex items-center gap-2 text-sm text-neutral-700">
+        <input id="logY" type="checkbox" />
+        <span data-i18n="log_y"></span>
+      </label>
+      <span id="status" class="text-sm text-neutral-500" role="status" aria-live="polite"></span>
+    </div>
+    <p id="error" class="hidden mt-3 text-sm rounded-lg px-3 py-2" role="alert"
+       style="background:#FFD8D6;color:#7f1d1d;"></p>
+  </section>
+
+  <!-- 3 · Verdict -->
+  <section class="card bg-white rounded-2xl p-6 mt-6" aria-labelledby="verdict-h">
+    <h2 id="verdict-h" class="text-lg font-semibold text-neutral-900">
+      <span class="accent" aria-hidden="true"></span>
+      3 · <span data-i18n="step_verdict">Verdict</span>
+    </h2>
+    <p id="verdictPlaceholder" class="text-neutral-500 mt-3" data-i18n="verdict_placeholder"></p>
+    <div id="verdict" class="hidden mt-3">
+      <p id="verdictTitle" class="headline text-xl font-semibold text-neutral-900"></p>
+      <p id="verdictBody" class="text-neutral-700 mt-1 max-w-[46rem]"></p>
+      <div id="figure" class="mt-4 rounded-xl overflow-hidden border-neutral-200" style="border-width:1px;"></div>
+      <div class="flex flex-wrap items-center gap-3 mt-4">
+        <button id="dlSvg" type="button" class="btn-ghost" data-i18n="dl_svg"></button>
+        <button id="dlPng" type="button" class="btn-ghost" data-i18n="dl_png"></button>
+      </div>
+      <details id="evidence" class="mt-4">
+        <summary class="text-sm text-neutral-500" data-i18n="evidence_toggle"></summary>
+        <pre class="mono bg-neutral-100 rounded-lg p-3 mt-2"></pre>
+      </details>
+    </div>
+  </section>
+
+  <footer class="site-footer mt-10 pt-4 text-sm text-neutral-500">
+    <p data-i18n="footer_engine"></p>
+    <p class="mt-1">
+      BSD 3-Clause License ·
+      <a href="https://deraison.ai" rel="author" class="underline">Warith Harchaoui</a> ·
+      <a href="https://harchaoui.org/warith/ai-helpers/docs/elbow-helper-doc/" class="underline" data-i18n="footer_docs"></a> ·
+      <a href="https://pypi.org/project/elbow-helper/" class="underline" data-i18n="footer_pypi"></a> ·
+      <a id="landscapeLink" href="https://github.com/warith-harchaoui/elbow-helper/blob/main/LANDSCAPE.md" class="underline" data-i18n="footer_landscape"></a>
+    </p>
+  </footer>
+</main>
+
+<script src="./gate/track.js" defer></script>
+<script src="./backend-pyodide.js"></script>
+<script>
+// --- tiny state ------------------------------------------------------------
+"use strict";
+let LANG = document.documentElement.lang === "fr" ? "fr" : "en";
+let THEME = document.documentElement.classList.contains("dark") ? "dark" : "light";
+let T = {};                 // gui strings for LANG, from ./i18n/<lang>.json
+let lastSvg = null;         // the untouched SVG string, for downloads
+let lastResult = null;      // the JSON verdict, for language re-renders
+let currentPreset = null;   // preset id, or null for user data
+let presetLabels = null;    // {x_label: {en,fr}, y_label: {en,fr}} of the preset
+
+const $ = (id) => document.getElementById(id);
+
+// --- backend ---------------------------------------------------------------
+// Every data operation goes through this one object. The static build defines
+// window.backend (backend-pyodide.js, loaded just above): an in-browser
+// Python engine. There is no server twin, so a missing backend is an error.
+const backend = window.backend || {
+  i18n: async () => { throw new Error("backend-pyodide.js missing"); },
+  preset: async () => { throw new Error("backend-pyodide.js missing"); },
+  analyze: async () => { throw new Error("backend-pyodide.js missing"); },
+  version: async () => "",
+};
+
+// --- global activity indicator ----------------------------------------------
+let busyCount = 0;
+function busyStart() { busyCount++; $("busy").classList.remove("hidden"); }
+function busyEnd() { busyCount = Math.max(0, busyCount - 1); if (!busyCount) $("busy").classList.add("hidden"); }
+window.ehBusy = { start: busyStart, end: busyEnd };
+for (const key of Object.keys(backend)) {
+  const op = backend[key];
+  backend[key] = async (...args) => { busyStart(); try { return await op(...args); } finally { busyEnd(); } };
+}
+
+// --- i18n --------------------------------------------------------------------
+function t(key, vars) {
+  let s = T[key] != null ? T[key] : key;
+  if (vars) for (const [k, v] of Object.entries(vars)) s = s.replaceAll("{" + k + "}", String(v));
+  return s;
+}
+
+function applyI18n() {
+  document.documentElement.lang = LANG;
+  document.title = t("doc_title");
+  const meta = document.querySelector('meta[name="description"]');
+  if (meta && T.meta_description) meta.setAttribute("content", T.meta_description);
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const k = el.getAttribute("data-i18n");
+    if (T[k] != null) el.textContent = T[k];
+  });
+  document.querySelectorAll("[data-i18n-aria]").forEach((el) => {
+    const k = el.getAttribute("data-i18n-aria");
+    if (T[k] != null) el.setAttribute("aria-label", T[k]);
+  });
+  document.querySelectorAll("[data-i18n-ph]").forEach((el) => {
+    const k = el.getAttribute("data-i18n-ph");
+    if (T[k] != null) el.setAttribute("placeholder", T[k]);
+  });
+  $("landscapeLink").href = LANG === "fr"
+    ? "https://github.com/warith-harchaoui/elbow-helper/blob/main/PAYSAGE.md"
+    : "https://github.com/warith-harchaoui/elbow-helper/blob/main/LANDSCAPE.md";
+  updateToggles();
+  updatePointsCount();
+  if (lastResult) renderVerdictText();
+}
+
+function updateToggles() {
+  const langBtn = $("langToggle");
+  langBtn.textContent = LANG === "fr" ? "🇫🇷" : "🇬🇧";
+  langBtn.setAttribute("aria-label", t("lang_aria"));
+  const dark = document.documentElement.classList.contains("dark");
+  const themeBtn = $("themeToggle");
+  themeBtn.textContent = dark ? "🌞" : "🌛";
+  themeBtn.setAttribute("aria-label", t(dark ? "theme_to_light_aria" : "theme_to_dark_aria"));
+}
+
+async function loadI18n() {
+  try { T = await backend.i18n(LANG); } catch (e) { T = {}; }
+  applyI18n();
+}
+
+// --- data parsing -------------------------------------------------------------
+// One point per line: a single y, or an x,y pair split on comma / semicolon /
+// tab / spaces. A non-numeric first line (a CSV header) is skipped.
+function parsePoints(text) {
+  const rows = [];
+  const lines = text.split(/\r?\n/);
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    const parts = line.split(/[,;\t ]+/).map(Number);
+    if (parts.some((v) => !isFinite(v))) {
+      if (rows.length === 0 && i === 0) continue; // header line
+      return null;
+    }
+    rows.push(parts);
+  }
+  if (!rows.length) return null;
+  const cols = rows[0].length;
+  if (!rows.every((r) => r.length === cols) || cols > 2) return null;
+  if (cols === 1) return { x: null, y: rows.map((r) => r[0]) };
+  return { x: rows.map((r) => r[0]), y: rows.map((r) => r[1]) };
+}
+
+function updatePointsCount() {
+  const parsed = parsePoints($("points").value);
+  $("pointsCount").textContent = parsed ? t("points_count", { n: parsed.y.length }) : t("points_none");
+}
+
+// --- number formatting ---------------------------------------------------------
+function fmt(v) {
+  if (v == null || !isFinite(v)) return String(v);
+  const s = Number(v).toPrecision(4);
+  return String(Number(s)); // drops trailing zeros
+}
+
+// --- presets --------------------------------------------------------------------
+async function loadPreset(id) {
+  hideError();
+  try {
+    const p = await backend.preset(id);
+    currentPreset = id;
+    presetLabels = { x_label: p.x_label, y_label: p.y_label };
+    $("points").value = p.x.map((xv, i) => xv + "," + p.y[i]).join("\n");
+    $("curve").value = p.curve;
+    $("direction").value = p.direction;
+    $("xLabel").value = p.x_label[LANG] || p.x_label.en;
+    $("yLabel").value = p.y_label[LANG] || p.y_label.en;
+    $("logY").checked = false;
+    document.querySelectorAll("[data-preset]").forEach((el) => {
+      el.setAttribute("aria-pressed", el.getAttribute("data-preset") === id ? "true" : "false");
+    });
+    updatePointsCount();
+  } catch (e) {
+    showError(e.message || String(e));
+  }
+}
+
+// --- analyze --------------------------------------------------------------------
+function showError(msg) {
+  const el = $("error");
+  el.textContent = t("error_prefix") + msg;
+  el.classList.remove("hidden");
+}
+function hideError() { $("error").classList.add("hidden"); }
+
+function renderVerdictText() {
+  const r = lastResult;
+  if (!r) return;
+  if (r.is_clear) {
+    $("verdictTitle").textContent = t("verdict_clear_title", { x: fmt(r.knee_x) });
+    $("verdictBody").textContent = t("verdict_clear_body", {
+      lo: fmt(r.ci90[0]),
+      hi: fmt(r.ci90[1]),
+      rate: Math.round(r.detection_rate * 100),
+      p: Number(Number(r.null_p_value).toPrecision(2)),
+    });
+  } else {
+    $("verdictTitle").textContent = t("verdict_abstain_title");
+    $("verdictBody").textContent = t("verdict_abstain_body", {
+      reason_text: t("reason_" + r.reason),
+      code: r.reason,
+    });
+  }
+}
+
+async function analyze() {
+  hideError();
+  const parsed = parsePoints($("points").value);
+  if (!parsed) { showError(t("error_parse")); return; }
+  if (parsed.y.length < 20) { showError(t("error_too_few", { n: parsed.y.length })); return; }
+  const btn = $("run");
+  btn.disabled = true;
+  btn.setAttribute("aria-busy", "true");
+  const runLabel = btn.textContent;
+  btn.textContent = t("running");
+  $("status").textContent = window.__engineReady ? t("status_running") : t("status_booting");
+  try {
+    const out = await backend.analyze({
+      x: parsed.x != null ? parsed.x : parsed.y,
+      y: parsed.x != null ? parsed.y : null,
+      curve: $("curve").value || null,
+      direction: $("direction").value || null,
+      language: LANG,
+      x_label: $("xLabel").value.trim() || null,
+      y_label: $("yLabel").value.trim() || null,
+      log_y: $("logY").checked,
+    });
+    lastSvg = out.svg;
+    lastResult = out.result;
+    renderVerdictText();
+    // The SVG carries its own prefers-color-scheme dark block, meant for the
+    // standalone file. In the page the theme is a class, so strip that block
+    // (the stylesheet above replicates its rules under .dark).
+    $("figure").innerHTML = out.svg.replace(/<style>@media[^<]*<\/style>/, "");
+    $("verdictPlaceholder").classList.add("hidden");
+    $("verdict").classList.remove("hidden");
+    $("evidence").querySelector("pre").textContent = JSON.stringify(lastResult, null, 2);
+    $("status").textContent = t("status_done", { s: out.elapsed_s });
+  } catch (e) {
+    showError(e.message || String(e));
+    $("status").textContent = "";
+  } finally {
+    btn.disabled = false;
+    btn.removeAttribute("aria-busy");
+    btn.textContent = T.run || runLabel;
+  }
+}
+
+// --- downloads --------------------------------------------------------------------
+function downloadBlob(blob, name) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+function slug() { return "elbow-helper-" + (currentPreset || "curve"); }
+
+$("dlSvg").addEventListener("click", () => {
+  if (!lastSvg) return;
+  downloadBlob(new Blob([lastSvg], { type: "image/svg+xml" }), slug() + ".svg");
+});
+$("dlPng").addEventListener("click", () => {
+  if (!lastSvg) return;
+  const img = new Image();
+  const url = URL.createObjectURL(new Blob([lastSvg], { type: "image/svg+xml" }));
+  img.onload = () => {
+    const scale = 2;
+    const canvas = document.createElement("canvas");
+    canvas.width = img.width * scale;
+    canvas.height = img.height * scale;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob((blob) => { if (blob) downloadBlob(blob, slug() + ".png"); URL.revokeObjectURL(url); }, "image/png");
+  };
+  img.src = url;
+});
+
+// --- wiring ---------------------------------------------------------------------
+document.querySelectorAll("[data-preset]").forEach((el) => {
+  el.addEventListener("click", () => loadPreset(el.getAttribute("data-preset")));
+});
+$("points").addEventListener("input", () => {
+  currentPreset = null;
+  presetLabels = null;
+  document.querySelectorAll("[data-preset]").forEach((el) => el.setAttribute("aria-pressed", "false"));
+  updatePointsCount();
+});
+$("upload").addEventListener("click", () => $("uploadFile").click());
+$("uploadFile").addEventListener("change", async (ev) => {
+  const file = ev.target.files && ev.target.files[0];
+  if (!file) return;
+  $("points").value = await file.text();
+  currentPreset = null;
+  updatePointsCount();
+  ev.target.value = "";
+});
+$("run").addEventListener("click", analyze);
+
+$("langToggle").addEventListener("click", () => {
+  const previous = LANG;
+  LANG = LANG === "fr" ? "en" : "fr";
+  localStorage.setItem("eh-lang", LANG);
+  // A preset's axis captions follow the language as long as the visitor has
+  // not edited them by hand.
+  if (presetLabels) {
+    if ($("xLabel").value === presetLabels.x_label[previous]) $("xLabel").value = presetLabels.x_label[LANG];
+    if ($("yLabel").value === presetLabels.y_label[previous]) $("yLabel").value = presetLabels.y_label[LANG];
+  }
+  loadI18n();
+});
+$("themeToggle").addEventListener("click", () => {
+  document.documentElement.classList.toggle("dark");
+  THEME = document.documentElement.classList.contains("dark") ? "dark" : "light";
+  localStorage.setItem("eh-theme", THEME);
+  updateToggles();
+});
+
+// --- boot ------------------------------------------------------------------------
+loadI18n();
+if (backend.version) {
+  backend.version().then((v) => { if (v) $("version").textContent = "v" + v; }).catch(() => {});
+}
+</script>
+</body>
+</html>

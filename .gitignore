@@ -14,6 +14,8 @@ diagnostics.svg
 !figures/*.png
 !assets/*.png
 !assets/*.svg
+!webapp/seo/*.png
+!webapp/seo/icons/*.png
 *.docx
 .venv/
 .private/

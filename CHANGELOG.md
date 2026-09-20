@@ -4,6 +4,26 @@ All notable changes to `elbow-helper` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- **Static web app (`webapp/`)**: the site deployed at
+  https://deraison.ai/elbow-helper, built on the standpoint model.
+  `webapp/build.py` composes a relocatable `webapp/dist/`: the app page
+  (`gui.html`, bilingual EN/FR with language and theme toggles) runs the real
+  pipeline in the visitor's browser via Pyodide (`backend-pyodide.js` +
+  `glue.py`; `os_helper_stub.py` stands in for os-helper, whose psutil
+  dependency has no WebAssembly build). Seven presets reproduce the published
+  examples seed for seed; the verdict, the diagnostic SVG and the evidence
+  trail are computed client-side, with SVG/PNG export. The deployment carries
+  the full SEO/GEO surface (canonical + Open Graph/Twitter head, JSON-LD,
+  1200x630 OG card, favicon/PWA set, robots.txt, sitemap.xml, llms.txt,
+  llms-full.txt, humans.txt plus the raw Markdown corpus) and the same
+  lead-magnet gate as standpoint: a public bilingual landing (`index.php`),
+  professional-email magic links (HMAC-signed, file-based, no database),
+  cookie-gated serving of the app files through `gate/serve.php` and
+  per-user JSONL activity logs. Both READMEs now link the web app.
+
 ## [0.1.7] - 2026-09-03
 
 ### Fixed
