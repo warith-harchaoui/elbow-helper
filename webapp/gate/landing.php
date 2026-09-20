@@ -171,7 +171,7 @@ $flag = (string) ($_GET['link'] ?? ($_GET['login'] ?? ''));
     <div class="controls">
       <a id="ghLink" class="gh-link" href="https://github.com/warith-harchaoui/elbow-helper"
          target="_blank" rel="noopener" data-i18n="github">⭐️ on GitHub</a>
-      <button id="langToggle" class="toggle-btn" type="button" aria-label="Switch language">🇬🇧</button>
+      <button id="langToggle" class="toggle-btn" type="button" aria-label="Switch language">🇫🇷</button>
       <button id="themeToggle" class="toggle-btn" type="button" aria-label="Switch theme">🌛</button>
     </div>
   </nav>
@@ -316,10 +316,10 @@ function apply() {
   document.querySelectorAll("[data-i18n]").forEach(el => {
     el.textContent = t[el.dataset.i18n];
   });
-  // Same convention as the app: the flag shows the CURRENT language, the sun/
-  // moon shows the theme you would switch to, and the aria labels say so.
+  // Same convention as the app: the flag shows the language you would
+  // SWITCH TO, the sun/moon the theme you would switch to.
   const langBtn = document.getElementById("langToggle");
-  langBtn.textContent = lang === "fr" ? "🇫🇷" : "🇬🇧";
+  langBtn.textContent = lang === "fr" ? "🇬🇧" : "🇫🇷";
   langBtn.setAttribute("aria-label", t.lang_aria);
   const themeBtn = document.getElementById("themeToggle");
   themeBtn.textContent = isDark() ? "🌞" : "🌛";

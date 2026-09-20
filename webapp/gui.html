@@ -128,7 +128,7 @@
       <div id="busy" class="spinner hidden" role="status" aria-label="Working"></div>
       <a id="ghLink" class="gh-link" href="https://github.com/warith-harchaoui/elbow-helper"
          target="_blank" rel="noopener" data-i18n="github">⭐️ on GitHub</a>
-      <button id="langToggle" class="toggle-btn" type="button" aria-label="Switch language">🇬🇧</button>
+      <button id="langToggle" class="toggle-btn" type="button" aria-label="Switch language">🇫🇷</button>
       <button id="themeToggle" class="toggle-btn" type="button" aria-label="Switch theme">🌛</button>
     </div>
   </nav>
@@ -316,7 +316,9 @@ function applyI18n() {
 
 function updateToggles() {
   const langBtn = $("langToggle");
-  langBtn.textContent = LANG === "fr" ? "🇫🇷" : "🇬🇧";
+  // The flag shows the language you would SWITCH TO (like the sun/moon
+  // shows the theme you would switch to), not the current one.
+  langBtn.textContent = LANG === "fr" ? "🇬🇧" : "🇫🇷";
   langBtn.setAttribute("aria-label", t("lang_aria"));
   const dark = document.documentElement.classList.contains("dark");
   const themeBtn = $("themeToggle");
