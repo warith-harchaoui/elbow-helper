@@ -179,6 +179,7 @@ $flag = (string) ($_GET['link'] ?? ($_GET['login'] ?? ''));
 <main>
   <p class="eyebrow">elbow-helper</p>
   <h1 class="headline" data-i18n="title"></h1>
+  <p class="guide" data-i18n="tagline"></p>
 
   <section class="card" aria-labelledby="access-h">
     <h2 id="access-h" data-i18n="form_title"></h2>
@@ -234,6 +235,7 @@ const STRINGS = {
     theme_to_dark_aria: "Switch to dark theme",
     theme_to_light_aria: "Switch to light theme",
     title: "Is that elbow real?",
+    tagline: "Detect where the curve bends",
     form_title: "Get access with your work email",
     form_sub: "We send you a sign-in link. One click and the interactive app is yours for 30 days on this device.",
     email_label: "Work email (generic addresses such as gmail.com are not accepted)",
@@ -266,6 +268,7 @@ const STRINGS = {
     theme_to_dark_aria: "Passer au thème sombre",
     theme_to_light_aria: "Passer au thème clair",
     title: "Le coude est-il réel ?",
+    tagline: "Détecter là où la courbe plie",
     form_title: "Accédez avec votre email professionnel",
     form_sub: "Nous vous envoyons un lien de connexion. Un clic et l'application interactive est à vous pour 30 jours sur cet appareil.",
     email_label: "Email professionnel (les adresses génériques type gmail.com sont refusées)",
