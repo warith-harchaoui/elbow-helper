@@ -28,7 +28,7 @@ if ($lang !== 'fr' && $lang !== 'en') {
     $accept = strtolower((string) ($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? ''));
     $lang = str_starts_with($accept, 'fr') ? 'fr' : 'en';
 }
-$title = $lang === 'fr' ? 'elbow-helper : ce coude est-il réel ?' : 'elbow-helper: is that elbow real?';
+$title = $lang === 'fr' ? 'elbow-helper : le coude est-il réel ?' : 'elbow-helper: is that elbow real?';
 $meta = $lang === 'fr'
     ? "Détection de coude robuste au bruit, dans votre navigateur : un coude assorti de son incertitude ou une abstention franche. Rien n'est envoyé."
     : 'Noise-robust knee and elbow detection in your browser: a knee with its uncertainty or a frank abstention. Nothing is uploaded.';
@@ -111,7 +111,15 @@ $flag = (string) ($_GET['link'] ?? ($_GET['login'] ?? ''));
     figure img { display: block; width: 100%; height: auto; }
     figcaption { padding: .5rem .8rem; font-size: .85rem; font-weight: 500;
       border-top: 3px solid var(--tint, var(--accent)); }
-    .note { font-size: .85rem; color: #78716c; margin-top: .8rem; }
+    figure button { display: block; width: 100%; padding: 0; border: 0;
+      background: transparent; cursor: zoom-in; }
+    figure button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    #lightbox[hidden] { display: none; }
+    #lightbox { position: fixed; inset: 0; z-index: 60; cursor: zoom-out;
+      background: rgba(12,10,9,.88); display: flex;
+      align-items: center; justify-content: center; padding: 2rem; }
+    #lightbox img { max-width: 100%; max-height: 100%; background: #fff;
+      border-radius: .75rem; }
     form { display: grid; gap: .9rem; max-width: 30rem; margin-top: 1rem; }
     label { font-weight: 500; }
     input[type=email] { padding: .65rem .8rem; border: 1px solid #d6d3d1;
@@ -171,8 +179,6 @@ $flag = (string) ($_GET['link'] ?? ($_GET['login'] ?? ''));
 <main>
   <p class="eyebrow">elbow-helper</p>
   <h1 class="headline" data-i18n="title"></h1>
-  <p class="guide" data-i18n="guide1"></p>
-  <p class="guide" data-i18n="guide2"></p>
 
   <section class="card" aria-labelledby="access-h">
     <h2 id="access-h" data-i18n="form_title"></h2>
@@ -199,10 +205,15 @@ $flag = (string) ($_GET['link'] ?? ($_GET['login'] ?? ''));
 
   <section class="card" aria-labelledby="examples-h">
     <h2 id="examples-h" data-i18n="examples_title"></h2>
-    <p data-i18n="examples_sub"></p>
     <div class="gallery" id="gallery"></div>
-    <p class="note" data-i18n="examples_note"></p>
   </section>
+
+  <!-- Fullscreen viewer for the example figures: click a card to open, click
+       anywhere / Escape to close. A plain overlay, no dialog element (no
+       focus trap needed for a single close action). -->
+  <div id="lightbox" hidden>
+    <img id="lightboxImg" src="" alt="" />
+  </div>
 
   <footer>
     BSD 3-Clause License ·
@@ -223,16 +234,13 @@ const STRINGS = {
     theme_to_dark_aria: "Switch to dark theme",
     theme_to_light_aria: "Switch to light theme",
     title: "Is that elbow real?",
-    guide1: "An algorithm will always point at a knee, even on pure noise. elbow-helper asks a harder question: is this knee strong, unique, persistent, reproducible and unlikely under a no-knee model?",
-    guide2: "If yes, you get the knee with a confidence interval. If not, it says so instead of guessing. Everything runs in your browser; nothing is uploaded.",
     form_title: "Get access with your work email",
     form_sub: "We send you a sign-in link. One click and the interactive app is yours for 30 days on this device.",
     email_label: "Work email (generic addresses such as gmail.com are not accepted)",
     consent: "I agree that my email address is stored. Removal on request: warith@deraison.ai.",
     submit: "Email me the access link",
     examples_title: "What you will get",
-    examples_sub: "Four curves from the published examples, rendered by the engine. These previews are static; the app makes them yours: paste your own points, get the verdict and export the figure.",
-    examples_note: "Static previews. The interactive version, with your data, is behind the email gate above.",
+    zoom_aria: "View full screen",
     msg_sent: "Link sent. Check your inbox (and spam folder).",
     msg_generic: "Please use your professional email address, not a generic one (gmail, yahoo, orange…).",
     msg_invalid: "That email address does not look valid.",
@@ -251,23 +259,20 @@ const STRINGS = {
     }
   },
   fr: {
-    doc_title: "elbow-helper : ce coude est-il réel ?",
+    doc_title: "elbow-helper : le coude est-il réel ?",
     meta_description: "Détection de coude robuste au bruit, dans votre navigateur : un coude assorti de son incertitude ou une abstention franche. Rien n'est envoyé.",
     github: "⭐️ sur GitHub",
     lang_aria: "Changer de langue",
     theme_to_dark_aria: "Passer au thème sombre",
     theme_to_light_aria: "Passer au thème clair",
-    title: "Ce coude est-il réel ?",
-    guide1: "Un algorithme désigne toujours un coude, même sur du bruit pur. elbow-helper pose une question plus exigeante : ce coude est-il marqué, unique, persistant, reproductible et improbable sous un modèle sans coude ?",
-    guide2: "Si oui, vous obtenez le coude avec son intervalle de confiance. Sinon, le paquet le dit au lieu de deviner. Tout tourne dans votre navigateur ; rien n'est envoyé.",
+    title: "Le coude est-il réel ?",
     form_title: "Accédez avec votre email professionnel",
     form_sub: "Nous vous envoyons un lien de connexion. Un clic et l'application interactive est à vous pour 30 jours sur cet appareil.",
     email_label: "Email professionnel (les adresses génériques type gmail.com sont refusées)",
     consent: "J'accepte que mon adresse email soit enregistrée. Suppression sur demande : warith@deraison.ai.",
     submit: "Recevoir le lien d'accès",
     examples_title: "Ce que vous obtiendrez",
-    examples_sub: "Quatre courbes des exemples publiés, rendues par le moteur. Ces aperçus sont statiques ; l'application les rend vôtres : collez vos propres points, obtenez le verdict, exportez la figure.",
-    examples_note: "Aperçus statiques. La version interactive, avec vos données, est derrière le formulaire ci-dessus.",
+    zoom_aria: "Voir en plein écran",
     msg_sent: "Lien envoyé. Vérifiez votre boîte (et les spams).",
     msg_generic: "Merci d'utiliser votre email professionnel, pas une adresse générique (gmail, yahoo, orange…).",
     msg_invalid: "Cette adresse email ne semble pas valide.",
@@ -327,12 +332,34 @@ function apply() {
     img.loading = "lazy";
     // A missing render hides its card rather than showing a broken image.
     img.onerror = () => fig.remove();
+    const zoom = document.createElement("button");
+    zoom.type = "button";
+    zoom.setAttribute("aria-label", t.examples[id] + " — " + t.zoom_aria);
+    zoom.addEventListener("click", () => openLightbox(img.src, img.alt));
+    zoom.append(img);
     const cap = document.createElement("figcaption");
     cap.textContent = t.examples[id];
-    fig.append(img, cap);
+    fig.append(zoom, cap);
     gallery.append(fig);
   }
 }
+
+// Fullscreen viewer: any click closes it, Escape too.
+const lightbox = document.getElementById("lightbox");
+const lightboxImg = document.getElementById("lightboxImg");
+function openLightbox(src, alt) {
+  lightboxImg.src = src;
+  lightboxImg.alt = alt;
+  lightbox.hidden = false;
+}
+function closeLightbox() {
+  lightbox.hidden = true;
+  lightboxImg.src = "";
+}
+lightbox.addEventListener("click", closeLightbox);
+document.addEventListener("keydown", (ev) => {
+  if (ev.key === "Escape" && !lightbox.hidden) closeLightbox();
+});
 
 function showMsg(kind, text) {
   const box = document.getElementById("formMsg");

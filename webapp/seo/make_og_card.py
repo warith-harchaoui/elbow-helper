@@ -65,13 +65,13 @@ def main() -> None:
         ["RobotoSerif-Clean.ttf", "Georgia Bold.ttf"], 74, "Is that elbow real?"
     )
     serif_small = fit(
-        ["RobotoSerif-Clean.ttf", "Georgia.ttf"], 44, "Ce coude est-il réel ?"
+        ["RobotoSerif-Clean.ttf", "Georgia.ttf"], 44, "Le coude est-il réel ?"
     )
     mono = font(["RobotoMono-Regular.ttf", "Menlo.ttc", "Courier New.ttf"], 30)
     sans = font(["Roboto-Regular.ttf", "Helvetica.ttc"], 32)
     draw.text((x, 150), "elbow-helper", font=mono, fill=MUTED)
     draw.text((x, 205), "Is that elbow real?", font=serif, fill=INK)
-    draw.text((x, 310), "Ce coude est-il réel ?", font=serif_small, fill=MUTED)
+    draw.text((x, 310), "Le coude est-il réel ?", font=serif_small, fill=MUTED)
     draw.text(
         (x, 410),
         "A knee with its uncertainty\nor a frank abstention.\nRuns entirely in your browser.",

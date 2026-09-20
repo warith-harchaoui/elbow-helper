@@ -1,11 +1,11 @@
 {
-  "doc_title": "elbow-helper : ce coude est-il réel ?",
+  "doc_title": "elbow-helper : le coude est-il réel ?",
   "meta_description": "Détection de coude robuste au bruit, dans votre navigateur : un coude assorti de son incertitude ou une abstention franche. Rien n'est envoyé.",
   "github": "⭐️ sur GitHub",
   "lang_aria": "Changer de langue",
   "theme_to_dark_aria": "Passer au thème sombre",
   "theme_to_light_aria": "Passer au thème clair",
-  "baseline": "Ce coude est-il réel ?",
+  "baseline": "Le coude est-il réel ?",
   "guide1": "Choisissez une courbe d'exemple ou collez vos propres points (des y seuls ou des paires x,y).",
   "guide2": "Cliquez sur Analyser. Le verdict, la figure de diagnostic et l'intervalle de confiance sont calculés dans votre navigateur ; rien n'est envoyé.",
   "step_data": "Courbe",
