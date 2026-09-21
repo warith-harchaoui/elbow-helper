@@ -21,6 +21,29 @@ point, e.g. `https://deraison.ai/elbow-helper`. The Pyodide runtime and numpy
 load from the jsDelivr CDN on first visit (browser-cached); everything else
 ships in the folder.
 
+## The open-access mirror (sev7n public SFTP)
+
+A second deployment carries the same app with no gate at all: no email asked,
+no PHP, no activity beacon. One command builds it and ships it:
+
+```bash
+python webapp/deploy_sev7n.py             # build --clean --no-gate, then upload
+python webapp/deploy_sev7n.py --dry-run   # build and report, upload nothing
+```
+
+It lands under sev7n's `demo-client-public/` convention, readable by anyone
+holding the link:
+`https://sftp.s7n.app/private/warith.harchaoui/sev7n-avec-warith/demo-client-public/elbow-helper/`
+
+The host (SFTPGo's HTTPS front) serves static files only, which is exactly
+what `--no-gate` produces. The canonical URL still points at
+`https://deraison.ai/elbow-helper`, so the mirror never competes with the home
+site in a search index. Credentials come from `~/sev7n/settings.yaml` through
+`sftp_helper.credentials`, never from the repo (see `~/sev7n/sftp.md`).
+
+A plain deploy leaves `dist/` in its ungated shape; rebuild with
+`python webapp/build.py --clean` before deploying to deraison.ai again.
+
 ## Files
 
 | File                  | Role                                                                        |
@@ -53,7 +76,8 @@ email form); `.htaccess` routes `index.html`, `backend-pyodide.js`, `py/`,
 `eh_auth` cookie. Runtime data lives in `dist/private/` (secret, leads,
 per-user JSONL logs), web-denied twice over. Served without PHP the same
 `dist/` degrades to an ungated static app, which is how the local smoke tests
-run. Local gated testing:
+run; `build.py --no-gate` makes that shape explicit by omitting the gate files
+outright (that is what the sev7n mirror ships). Local gated testing:
 
 ```bash
 GATE_DEV=1 php -S 127.0.0.1:8323 -t webapp/dist webapp/gate/dev_router.php

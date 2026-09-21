@@ -45,8 +45,15 @@ python -m http.server smoke tests keep passing.
 
 Run from the repo root with the project env active::
 
-    python webapp/build.py          # writes webapp/dist/
-    python webapp/build.py --clean  # rebuild from scratch
+    python webapp/build.py            # writes webapp/dist/
+    python webapp/build.py --clean    # rebuild from scratch
+    python webapp/build.py --no-gate  # open-access build: no PHP, no email
+
+``--no-gate`` skips the whole lead-magnet layer (no ``index.php``, no
+``gate/``, no ``.htaccess``, no ``private/``) and leaves ``index.html`` as the
+entry point: the bundle is then a plain static folder any host serves as is,
+with the app open to every visitor. That is the shape uploaded to the sev7n
+public SFTP (see ``webapp/deploy_sev7n.py``).
 
 The Pyodide runtime itself is loaded from the jsDelivr CDN at page load (see
 ``backend-pyodide.js``): only the wheel built here ships in the folder.
@@ -120,9 +127,18 @@ def build_wheel() -> list[str]:
     return found
 
 
-def compose_index(base_url: str) -> None:
+# The activity beacon gui.html loads; it only exists in a gated deployment,
+# so an open-access build drops the tag rather than shipping a dead <script>.
+TRACK_TAG = '<script src="./gate/track.js" defer></script>\n'
+
+
+def compose_index(base_url: str, gated: bool = True) -> None:
     """Write dist/index.html: gui.html + the deployment SEO head."""
     html = (WEBAPP / "gui.html").read_text(encoding="utf-8")
+    if not gated:
+        if html.count(TRACK_TAG) != 1:
+            raise SystemExit("gui.html activity-beacon tag missing")
+        html = html.replace(TRACK_TAG, "")
     # The SEO/GEO head block (canonical, Open Graph / Twitter card, JSON-LD)
     # is a deployment concern, so it lives in the build, not in gui.html:
     # a local checkout must never claim the deraison.ai canonical.
@@ -314,6 +330,11 @@ def main() -> None:
         default=BASE_URL,
         help="deployment URL for canonical/OG/sitemap (default: %(default)s)",
     )
+    parser.add_argument(
+        "--no-gate",
+        action="store_true",
+        help="open-access build: skip the lead-magnet gate (no PHP, no email)",
+    )
     args = parser.parse_args()
 
     if args.clean and DIST.exists():
@@ -321,9 +342,12 @@ def main() -> None:
     DIST.mkdir(parents=True, exist_ok=True)
 
     wheels = build_wheel()
-    compose_index(args.base_url)
+    compose_index(args.base_url, gated=not args.no_gate)
     copy_assets(wheels)
-    gate_assets(args.base_url)
+    if args.no_gate:
+        print("gate skipped (--no-gate): index.html is the entry point")
+    else:
+        gate_assets(args.base_url)
     site_indexes(args.base_url)
     total = sum(f.stat().st_size for f in DIST.rglob("*") if f.is_file())
     print(
