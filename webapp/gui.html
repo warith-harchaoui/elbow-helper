@@ -294,7 +294,7 @@
     <p class="mt-1">
       BSD 3-Clause License ·
       <a href="https://deraison.ai" rel="author" class="underline">Warith Harchaoui</a> ·
-      <a href="https://deraison.ai/blog/elbow-helper" class="underline" data-i18n="footer_blog"></a> ·
+      <a id="blogLink" href="https://deraison.ai/blog/elbow-helper" class="underline" data-i18n="footer_blog"></a> ·
       <a href="https://pypi.org/project/elbow-helper/" class="underline" data-i18n="footer_pypi"></a> ·
       <a id="landscapeLink" href="https://github.com/warith-harchaoui/elbow-helper/blob/main/LANDSCAPE.md" class="underline" data-i18n="footer_landscape"></a>
     </p>
@@ -393,6 +393,12 @@ function applyI18n() {
   $("landscapeLink").href = LANG === "fr"
     ? "https://github.com/warith-harchaoui/elbow-helper/blob/main/PAYSAGE.md"
     : "https://github.com/warith-harchaoui/elbow-helper/blob/main/LANDSCAPE.md";
+  // deraison.ai serves the post in French at the bare path and in English
+  // under /en/, so the footer link follows the language the visitor is
+  // reading, the same way the Landscape link does.
+  $("blogLink").href = LANG === "fr"
+    ? "https://deraison.ai/blog/elbow-helper"
+    : "https://deraison.ai/en/blog/elbow-helper";
   updateToggles();
   updatePointsCount();
   if (lastResult) renderVerdictText();
