@@ -333,12 +333,14 @@ const backend = window.backend || {
 // backend object covers every data call without per-call wiring; `ehBusy` is
 // the same mechanism exposed to the engine boot, which starts on its own and
 // is the longest wait the visitor ever sees (see backend-pyodide.js boot()).
-// A ring that appears and vanishes inside 150 ms reads as a glitch, not as
-// feedback: an analyze on a short curve is often that fast, and the visitor
-// concludes nothing happened. So the ring holds for a beat once shown — long
-// enough for the eye to catch the rotation, short enough never to feel like
-// waiting on an answer that has already arrived.
-const MIN_BUSY_MS = 450;
+// An analyze on a short curve returns in well under a tenth of a second, so
+// without a floor the indicator appears and vanishes inside one blink: the
+// visitor sees nothing and concludes nothing happened. The floor is one full
+// beat of the animation — the curve traced, then the knee landing on the bend
+// at 62% of the 1.5 s cycle. Anything shorter shows motion without showing
+// what the motion means; anything longer would feel like waiting on an answer
+// already on screen.
+const MIN_BUSY_MS = 950;
 let busyCount = 0;
 let busySince = 0;
 let busyHide = null;
