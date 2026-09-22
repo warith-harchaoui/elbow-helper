@@ -22,7 +22,13 @@ Then upload the CONTENTS of the matching folder to the target web folder:
 
 ```bash
 sftp> put -r webapp/dist/* /path/to/htdocs/elbow-helper/
+sftp> put webapp/dist/.htaccess /path/to/htdocs/elbow-helper/.htaccess
 ```
+
+The second line is not redundant: a `*` glob skips dotfiles, so a recursive
+put alone leaves `.htaccess` behind — and without it Apache serves the whole
+app ungated. Send it explicitly, or upload the folder itself rather than its
+glob.
 
 The bundle is relocatable (relative URLs only), so it works at any mount
 point, e.g. `https://deraison.ai/elbow-helper`. The Pyodide runtime and numpy
