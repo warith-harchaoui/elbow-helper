@@ -55,6 +55,18 @@ entry point: the bundle is then a plain static folder any host serves as is,
 with the app open to every visitor. That is the shape uploaded to the sev7n
 public SFTP (see ``webapp/deploy_sev7n.py``).
 
+The two deployments are two assemblies of the same source, so each gets its
+own output folder and neither can overwrite the other::
+
+    python webapp/build.py                       # dist/      → deraison.ai
+    python webapp/build.py --no-gate --out \
+        webapp/dist-open                         # dist-open/ → sev7n public
+
+Shipping the wrong folder is the one silently public mistake available here:
+an ungated bundle uploaded over the gated one serves the app to everybody.
+``--out`` is what keeps the two apart on disk; both deploy scripts additionally
+check the folder's shape before uploading a byte.
+
 The Pyodide runtime itself is loaded from the jsDelivr CDN at page load (see
 ``backend-pyodide.js``): only the wheel built here ships in the folder.
 """
@@ -72,6 +84,8 @@ from pathlib import Path
 # Repo layout anchors: this file lives in <repo>/webapp/.
 WEBAPP = Path(__file__).resolve().parent
 REPO = WEBAPP.parent
+# The default output folder; --out redirects it (see main), which is how the
+# gated and open-access assemblies coexist without overwriting each other.
 DIST = WEBAPP / "dist"
 
 # Where the bundle is deployed; drives the canonical URL, the OG image URL and
@@ -318,7 +332,12 @@ def site_indexes(base_url: str) -> None:
 
 
 def main() -> None:
-    """Build dist/ end to end; ``--clean`` wipes a previous build first."""
+    """Build the bundle end to end; ``--clean`` wipes a previous build first."""
+    # Every helper above writes into the module-level DIST, so redirecting the
+    # build with --out is a single rebinding rather than an argument threaded
+    # through each one.
+    global DIST
+
     parser = argparse.ArgumentParser(
         description="Build the static elbow-helper web app."
     )
@@ -335,7 +354,13 @@ def main() -> None:
         action="store_true",
         help="open-access build: skip the lead-magnet gate (no PHP, no email)",
     )
+    parser.add_argument(
+        "--out",
+        default=str(DIST),
+        help="output folder (default: %(default)s)",
+    )
     args = parser.parse_args()
+    DIST = Path(args.out).resolve()
 
     if args.clean and DIST.exists():
         shutil.rmtree(DIST)
@@ -350,10 +375,12 @@ def main() -> None:
         gate_assets(args.base_url)
     site_indexes(args.base_url)
     total = sum(f.stat().st_size for f in DIST.rglob("*") if f.is_file())
+    shape = "open-access" if args.no_gate else "gated"
     print(
-        f"\ndist/ ready ({total / 1e6:.1f} MB before the CDN-served Pyodide runtime)."
+        f"\n{DIST.name}/ ready, {shape} "
+        f"({total / 1e6:.1f} MB before the CDN-served Pyodide runtime)."
     )
-    print("Upload the CONTENTS of webapp/dist/ to the web folder (e.g. /elbow-helper).")
+    print(f"Upload the CONTENTS of {DIST} to the web folder (e.g. /elbow-helper).")
 
 
 if __name__ == "__main__":

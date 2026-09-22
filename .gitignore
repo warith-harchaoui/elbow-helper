@@ -4,6 +4,8 @@ __pycache__/
 .eggs/
 build/
 dist/
+# The open-access web build (webapp/build.py --no-gate --out webapp/dist-open)
+dist-open/
 .pytest_cache/
 .ruff_cache/
 .coverage

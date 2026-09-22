@@ -10,10 +10,18 @@ standpoint's.
 
 ## Build and deploy
 
+There are two deployments, so there are two builds of the same source — and
+each writes its own folder, so neither can overwrite the other:
+
 ```bash
-python webapp/build.py            # writes webapp/dist/ (~1.2 MB)
-# upload the CONTENTS of webapp/dist/ to the target web folder, e.g.:
-#   sftp> put -r webapp/dist/* /path/to/htdocs/elbow-helper/
+python webapp/build.py --clean                                  # webapp/dist/      gated, for deraison.ai
+python webapp/build.py --clean --no-gate --out webapp/dist-open # webapp/dist-open/ open access, for sev7n
+```
+
+Then upload the CONTENTS of the matching folder to the target web folder:
+
+```bash
+sftp> put -r webapp/dist/* /path/to/htdocs/elbow-helper/
 ```
 
 The bundle is relocatable (relative URLs only), so it works at any mount
@@ -27,7 +35,7 @@ A second deployment carries the same app with no gate at all: no email asked,
 no PHP, no activity beacon. One command builds it and ships it:
 
 ```bash
-python webapp/deploy_sev7n.py             # build --clean --no-gate, then upload
+python webapp/deploy_sev7n.py             # build into dist-open/, then upload
 python webapp/deploy_sev7n.py --dry-run   # build and report, upload nothing
 ```
 
@@ -41,8 +49,20 @@ what `--no-gate` produces. The canonical URL still points at
 site in a search index. Credentials come from `~/sev7n/settings.yaml` through
 `sftp_helper.credentials`, never from the repo (see `~/sev7n/sftp.md`).
 
-A plain deploy leaves `dist/` in its ungated shape; rebuild with
-`python webapp/build.py --clean` before deploying to deraison.ai again.
+Shipping the wrong folder is the one silently public mistake available here:
+an ungated bundle uploaded over the gated one serves the app to everybody. Two
+things keep that from happening — the separate output folders, and a shape
+check in `deploy_sev7n.py`, which refuses to upload a folder carrying gate
+files (this host cannot execute PHP, so `index.php` would be served as source
+text).
+
+The reverse direction deserves the same care by hand: when uploading to
+deraison.ai, check that `index.php`, `.htaccess` and `gate/` are present in
+what you send, and never let another project's sync run over that folder —
+that is how the gate was lost on 2026-09-20, which is why every gate endpoint
+now restores the root `.htaccess` from `gate/htaccess.dist` on each request.
+Leave the server's own `private/` alone as well: the HMAC secret, the leads
+and the activity logs live there, and only there.
 
 ## Files
 
