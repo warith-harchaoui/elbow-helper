@@ -246,7 +246,7 @@
     <p class="mt-1">
       BSD 3-Clause License ·
       <a href="https://deraison.ai" rel="author" class="underline">Warith Harchaoui</a> ·
-      <a href="https://harchaoui.org/warith/ai-helpers/docs/elbow-helper-doc/" class="underline" data-i18n="footer_docs"></a> ·
+      <a href="https://deraison.ai/blog/elbow-helper" class="underline" data-i18n="footer_blog"></a> ·
       <a href="https://pypi.org/project/elbow-helper/" class="underline" data-i18n="footer_pypi"></a> ·
       <a id="landscapeLink" href="https://github.com/warith-harchaoui/elbow-helper/blob/main/LANDSCAPE.md" class="underline" data-i18n="footer_landscape"></a>
     </p>
@@ -285,9 +285,31 @@ const backend = window.backend || {
 // backend object covers every data call without per-call wiring; `ehBusy` is
 // the same mechanism exposed to the engine boot, which starts on its own and
 // is the longest wait the visitor ever sees (see backend-pyodide.js boot()).
+// A ring that appears and vanishes inside 150 ms reads as a glitch, not as
+// feedback: an analyze on a short curve is often that fast, and the visitor
+// concludes nothing happened. So the ring holds for a beat once shown — long
+// enough for the eye to catch the rotation, short enough never to feel like
+// waiting on an answer that has already arrived.
+const MIN_BUSY_MS = 450;
 let busyCount = 0;
-function busyStart() { busyCount++; $("busy").classList.remove("hidden"); }
-function busyEnd() { busyCount = Math.max(0, busyCount - 1); if (!busyCount) $("busy").classList.add("hidden"); }
+let busySince = 0;
+let busyHide = null;
+function busyStart() {
+  busyCount++;
+  if (busyHide) { clearTimeout(busyHide); busyHide = null; }
+  if (busyCount === 1) busySince = performance.now();
+  $("busy").classList.remove("hidden");
+}
+function busyEnd() {
+  busyCount = Math.max(0, busyCount - 1);
+  if (busyCount) return;
+  const left = MIN_BUSY_MS - (performance.now() - busySince);
+  if (left <= 0) { $("busy").classList.add("hidden"); return; }
+  busyHide = setTimeout(() => {
+    busyHide = null;
+    if (!busyCount) $("busy").classList.add("hidden");
+  }, left);
+}
 window.ehBusy = { start: busyStart, end: busyEnd };
 for (const key of Object.keys(backend)) {
   const op = backend[key];

@@ -71,7 +71,7 @@
   "dl_svg": "Download SVG",
   "dl_png": "Download PNG",
   "footer_engine": "The detection runs in your browser (WebAssembly); no data leaves your machine.",
-  "footer_docs": "Documentation",
+  "footer_blog": "Blog",
   "footer_pypi": "PyPI",
   "footer_landscape": "Landscape"
 }
