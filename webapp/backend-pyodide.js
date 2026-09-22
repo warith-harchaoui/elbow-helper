@@ -13,8 +13,10 @@
 //   5. write py/glue.py into site-packages and import it; from then on every
 //      call is one JSON string in, one JSON string out
 //
-// The page wraps these methods with its busy ring; the fixed bottom-right
-// badge below narrates the boot itself.
+// Two indicators, two jobs: the page's header activity ring (top right) says
+// THAT work is in flight — the page wraps these methods with it, and boot()
+// lights it for the boot itself — while the fixed bottom-right badge narrates
+// WHICH boot step is running.
 
 (function () {
   "use strict";
@@ -84,11 +86,20 @@ import elbow_helper_glue  # fails loudly here if anything is missing
 
   function boot() {
     if (!bootPromise) {
-      bootPromise = bootOnce().catch((err) => {
-        bootPromise = null; // let the next call retry
-        badge("Python engine failed: " + (err && err.message ? err.message : err), true);
-        throw err;
-      });
+      // Light the page's header activity ring for the whole boot. The page
+      // wraps its backend calls, but this boot starts on its own (below, on
+      // DOMContentLoaded), so nothing else would account for the wait it
+      // causes — and that wait is the longest one the visitor ever sees.
+      if (window.ehBusy) window.ehBusy.start();
+      bootPromise = bootOnce()
+        .catch((err) => {
+          bootPromise = null; // let the next call retry
+          badge("Python engine failed: " + (err && err.message ? err.message : err), true);
+          throw err;
+        })
+        .finally(() => {
+          if (window.ehBusy) window.ehBusy.end();
+        });
     }
     return bootPromise;
   }

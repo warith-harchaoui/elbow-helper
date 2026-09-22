@@ -273,6 +273,11 @@ const backend = window.backend || {
 };
 
 // --- global activity indicator ----------------------------------------------
+// A counter rather than a boolean: overlapping operations each take their own
+// slot, so the header ring stays lit until the LAST one finishes. Wrapping the
+// backend object covers every data call without per-call wiring; `ehBusy` is
+// the same mechanism exposed to the engine boot, which starts on its own and
+// is the longest wait the visitor ever sees (see backend-pyodide.js boot()).
 let busyCount = 0;
 function busyStart() { busyCount++; $("busy").classList.remove("hidden"); }
 function busyEnd() { busyCount = Math.max(0, busyCount - 1); if (!busyCount) $("busy").classList.add("hidden"); }
