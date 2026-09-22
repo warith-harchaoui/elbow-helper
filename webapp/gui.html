@@ -17,15 +17,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&family=Roboto+Serif:wght@400;500;600&family=Roboto+Mono&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    // Pre-paint: apply the persisted theme and language before any CSS
-    // resolves, so there is no flash. Same localStorage keys as the landing.
+    // Pre-paint: apply the theme and language before any CSS resolves, so
+    // there is no flash. Same localStorage keys AND the same fallback rule as
+    // the landing: a stored choice wins, otherwise the browser decides. The
+    // two pages must resolve identically — a visitor who reads a French
+    // landing and never touches the flag has to land in a French app.
     (function () {
       var theme = localStorage.getItem("eh-theme");
       var dark = theme ? theme === "dark"
         : window.matchMedia("(prefers-color-scheme: dark)").matches;
       if (dark) document.documentElement.classList.add("dark");
       var lang = localStorage.getItem("eh-lang");
-      if (lang === "fr" || lang === "en") document.documentElement.lang = lang;
+      if (lang !== "fr" && lang !== "en") {
+        lang = (navigator.language || "en").toLowerCase().indexOf("fr") === 0 ? "fr" : "en";
+      }
+      document.documentElement.lang = lang;
     })();
   </script>
   <style>
@@ -98,12 +104,48 @@
     .btn-ghost:hover { background: #f0f0f0; }
     .dark .btn-ghost { border-color: #404040; }
     .dark .btn-ghost:hover { background: #262626; }
-    .spinner { width: 1.1rem; height: 1.1rem; border-radius: 9999px;
-      border: 2px solid #d4d4d4; border-top-color: #171717;
-      animation: spin .8s linear infinite; }
-    .dark .spinner { border-color: #404040; border-top-color: #e5e5e5; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+    /* The activity indicator: not a generic spinner but the thing the app
+       does. A curve of diminishing returns sits faintly in the header; while
+       work is in flight it is traced from its steep start to its plateau,
+       and a dot lands on the bend — the knee, found. Then it fades and starts
+       over. Neutral throughout (currentColor): the header is chrome, and in
+       this app colour means data.
+       Reduced motion gets the finished state, curve drawn and knee marked:
+       the indicator's presence is what signals activity, the motion only
+       makes it legible. */
+    .busy { display: inline-flex; width: 1.5rem; height: 1.5rem;
+      align-items: center; justify-content: center; }
+    .busy svg { width: 100%; height: 100%; overflow: visible; }
+    .busy path { fill: none; stroke: currentColor; stroke-width: 2;
+      stroke-linecap: round; }
+    .busy-track { opacity: .16; }
+    /* pathLength=100 on the element makes the dash maths independent of the
+       curve's real geometry: 100 is "the whole curve", whatever d says. */
+    .busy-trace { stroke-dasharray: 100; stroke-dashoffset: 100;
+      animation: eh-trace 1.5s cubic-bezier(.45,0,.2,1) infinite; }
+    /* The knee marker needs a halo of the page ground, or it merges into the
+       stroke it sits on and reads as a lump in the curve rather than a point
+       found on it — the same reason the diagnostic figures ring their knee. */
+    .busy-knee { fill: currentColor; stroke: #fafafa; stroke-width: 1.2;
+      opacity: 0; transform-box: fill-box; transform-origin: center;
+      animation: eh-knee 1.5s cubic-bezier(.34,1.3,.64,1) infinite; }
+    .dark .busy-knee { stroke: #0a0a0a; }
+    @keyframes eh-trace {
+      0%   { stroke-dashoffset: 100; opacity: 1; }
+      55%  { stroke-dashoffset: 0; opacity: 1; }
+      86%  { stroke-dashoffset: 0; opacity: 1; }
+      100% { stroke-dashoffset: 0; opacity: 0; }
+    }
+    @keyframes eh-knee {
+      0%, 46%  { opacity: 0; transform: scale(.2); }
+      62%      { opacity: 1; transform: scale(1.45); }
+      74%, 86% { opacity: 1; transform: scale(1); }
+      100%     { opacity: 0; transform: scale(1); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .busy-trace { animation: none; stroke-dashoffset: 0; }
+      .busy-knee { animation: none; opacity: 1; }
+    }
     /* The diagnostic figure: scale to the card; its own dark-mode media rule
        is stripped at injection time (the page theme is a class, not the OS
        preference) and replaced by these equivalents of the SVG's rules. */
@@ -132,7 +174,13 @@
       <span id="version" class="mono text-xs text-neutral-500"></span>
     </div>
     <div class="flex items-center gap-1">
-      <div id="busy" class="spinner hidden" role="status" aria-label="Working"></div>
+      <span id="busy" class="busy hidden" role="status" data-i18n-aria="busy_aria" aria-label="Working">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path class="busy-track" d="M3 20 C 4 12, 7 7, 21 6" />
+          <path class="busy-trace" d="M3 20 C 4 12, 7 7, 21 6" pathLength="100" />
+          <circle class="busy-knee" cx="6.7" cy="10.8" r="2" />
+        </svg>
+      </span>
       <a id="ghLink" class="gh-link" href="https://github.com/warith-harchaoui/elbow-helper"
          target="_blank" rel="noopener" data-i18n="github">⭐️ on GitHub</a>
       <button id="langToggle" class="toggle-btn" type="button" aria-label="Switch language">🇫🇷</button>

@@ -3,6 +3,7 @@
   "meta_description": "Noise-robust knee and elbow detection in your browser: a knee with its uncertainty or a frank abstention. Nothing is uploaded.",
   "github": "⭐️ on GitHub",
   "home_aria": "Back to the home page",
+  "busy_aria": "Working…",
   "lang_aria": "Switch language",
   "theme_to_dark_aria": "Switch to dark theme",
   "theme_to_light_aria": "Switch to light theme",
