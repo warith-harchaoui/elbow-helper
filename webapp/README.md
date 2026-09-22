@@ -18,7 +18,10 @@ python webapp/build.py --clean                                  # webapp/dist/  
 python webapp/build.py --clean --no-gate --out webapp/dist-open # webapp/dist-open/ open access, for sev7n
 ```
 
-Then upload the CONTENTS of the matching folder to the target web folder:
+Only one of the two is scripted, and that is deliberate: sev7n has
+`deploy_sev7n.py`, while deraison.ai is uploaded BY HAND. Nothing is missing
+there — no deploy script, no credentials in a config file, nothing to look
+for. Then upload the CONTENTS of the matching folder to the target web folder:
 
 ```bash
 sftp> put -r webapp/dist/* /path/to/htdocs/elbow-helper/
