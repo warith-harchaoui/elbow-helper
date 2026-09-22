@@ -113,8 +113,19 @@
        Reduced motion gets the finished state, curve drawn and knee marked:
        the indicator's presence is what signals activity, the motion only
        makes it legible. */
-    .busy { display: inline-flex; width: 1.5rem; height: 1.5rem;
-      align-items: center; justify-content: center; }
+    /* The slot always occupies the row, the indicator inside it comes and
+       goes: hiding the indicator itself would collapse the gap and nudge
+       every control beside it on each analyze. Keeping display:none on the
+       indicator (rather than visibility) also restarts the animation, so it
+       always appears at the beginning of its trace rather than mid-cycle. */
+    .busy-slot { display: inline-flex; width: 2.25rem; height: 2.25rem;
+      align-items: center; justify-content: center; flex: none; }
+    /* A neutral chip: the indicator stands beside a saturated star, a
+       tricolour flag and a sun, and a bare 1.5rem line loses that contest. */
+    .busy { display: inline-flex; width: 2.25rem; height: 2.25rem; padding: .35rem;
+      align-items: center; justify-content: center; border-radius: .5rem;
+      background: rgba(23, 23, 23, .07); }
+    .dark .busy { background: rgba(229, 229, 229, .12); }
     .busy svg { width: 100%; height: 100%; overflow: visible; }
     .busy path { fill: none; stroke: currentColor; stroke-width: 2;
       stroke-linecap: round; }
@@ -126,10 +137,10 @@
     /* The knee marker needs a halo of the page ground, or it merges into the
        stroke it sits on and reads as a lump in the curve rather than a point
        found on it — the same reason the diagnostic figures ring their knee. */
-    .busy-knee { fill: currentColor; stroke: #fafafa; stroke-width: 1.2;
+    .busy-knee { fill: currentColor; stroke: #f0f0f0; stroke-width: 1.2;
       opacity: 0; transform-box: fill-box; transform-origin: center;
       animation: eh-knee 1.5s cubic-bezier(.34,1.3,.64,1) infinite; }
-    .dark .busy-knee { stroke: #0a0a0a; }
+    .dark .busy-knee { stroke: #1e1e1e; }
     @keyframes eh-trace {
       0%   { stroke-dashoffset: 100; opacity: 1; }
       55%  { stroke-dashoffset: 0; opacity: 1; }
@@ -174,13 +185,13 @@
       <span id="version" class="mono text-xs text-neutral-500"></span>
     </div>
     <div class="flex items-center gap-1">
-      <span id="busy" class="busy hidden" role="status" data-i18n-aria="busy_aria" aria-label="Working">
+      <span class="busy-slot"><span id="busy" class="busy hidden" role="status" data-i18n-aria="busy_aria" aria-label="Working">
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <path class="busy-track" d="M3 20 C 4 12, 7 7, 21 6" />
           <path class="busy-trace" d="M3 20 C 4 12, 7 7, 21 6" pathLength="100" />
           <circle class="busy-knee" cx="6.7" cy="10.8" r="2" />
         </svg>
-      </span>
+      </span></span>
       <a id="ghLink" class="gh-link" href="https://github.com/warith-harchaoui/elbow-helper"
          target="_blank" rel="noopener" data-i18n="github">⭐️ on GitHub</a>
       <button id="langToggle" class="toggle-btn" type="button" aria-label="Switch language">🇫🇷</button>
@@ -309,6 +320,7 @@
 let LANG = document.documentElement.lang === "fr" ? "fr" : "en";
 let THEME = document.documentElement.classList.contains("dark") ? "dark" : "light";
 let T = {};                 // gui strings for LANG, from ./i18n/<lang>.json
+/*I18N_FALLBACK*/
 let lastSvg = null;         // the untouched SVG string, for downloads
 let lastResult = null;      // the JSON verdict, for language re-renders
 let currentPreset = null;   // preset id, or null for user data
@@ -417,7 +429,12 @@ function updateToggles() {
 }
 
 async function loadI18n() {
-  try { T = await backend.i18n(LANG); } catch (e) { T = {}; }
+  // Every label on this page is authored empty and filled from the string
+  // table, so a failed fetch used to render a ghost: blank buttons, blank
+  // captions, raw keys. The English table is embedded at build time, so the
+  // worst case is now an English page rather than an empty one.
+  try { T = await backend.i18n(LANG); } catch (e) { T = T_FALLBACK; }
+  if (!T || !T.run) T = T_FALLBACK;
   applyI18n();
 }
 

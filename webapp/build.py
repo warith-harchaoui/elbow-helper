@@ -141,6 +141,19 @@ def _inject_head(html: str, head: str, source: str) -> str:
     return html.replace("<!--SEO_HEAD-->", head)
 
 
+def _i18n_fallback() -> str:
+    """The English string table, inlined as a JS constant.
+
+    Every label in ``gui.html`` is authored empty and filled from the table
+    fetched at page load, so a failed fetch would render a page of blank
+    buttons and raw keys. Embedding one table turns that worst case into an
+    English page. It is injected rather than duplicated, so ``i18n/en.json``
+    stays the single source.
+    """
+    table = (WEBAPP / "i18n" / "en.json").read_text(encoding="utf-8")
+    return "const T_FALLBACK = " + table.strip() + ";"
+
+
 def compose_app(base_url: str, gated: bool = True) -> None:
     """Write the app page: gui.html plus the head its deployment needs.
 
@@ -151,6 +164,9 @@ def compose_app(base_url: str, gated: bool = True) -> None:
     per piece of content, never two competing for the same search result.
     """
     html = (WEBAPP / "gui.html").read_text(encoding="utf-8")
+    if html.count("/*I18N_FALLBACK*/") != 1:
+        raise SystemExit("gui.html I18N_FALLBACK placeholder missing")
+    html = html.replace("/*I18N_FALLBACK*/", _i18n_fallback())
     if gated:
         html = _inject_head(html, _seo_head(base_url), "gui.html")
         name = "index.html"

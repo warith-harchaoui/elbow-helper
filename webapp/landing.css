@@ -49,15 +49,28 @@ h1 { font-size: clamp(2.2rem, 6vw, 3.4rem); font-weight: 600; margin: .3rem 0 .8
 .guide { color: #44403c; max-width: 44rem; }
 section.card { background: #fff; border: 1px solid #e7e5e4; border-radius: 1rem;
   padding: 1.5rem; margin-top: 2rem; }
-.gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-  gap: 1rem; margin-top: 1rem; }
+/* Four figures, so two columns rather than auto-fit: at a desktop width
+   auto-fit resolved to three and left the fourth alone on its own row, and
+   each thumbnail was small enough that its axis labels became texture. Two
+   columns fill the block and nearly double the figures. */
+.gallery { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-top: 1rem; }
+@media (min-width: 40rem) { .gallery { grid-template-columns: repeat(2, 1fr); } }
 figure { border: 1px solid #e7e5e4; border-radius: .75rem; overflow: hidden; background: #fff; }
 figure img { display: block; width: 100%; height: auto; }
 figcaption { padding: .5rem .8rem; font-size: .85rem; font-weight: 500;
   border-top: 3px solid var(--tint, var(--accent)); }
 figure button { display: block; width: 100%; padding: 0; border: 0;
-  background: transparent; cursor: zoom-in; }
+  background: transparent; cursor: zoom-in; position: relative; }
 figure button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* The cards open full screen, which a zoom cursor announces only to a mouse
+   that is already hovering. A corner glyph says it to everyone, all the time. */
+figure button::after { content: "⤢"; position: absolute; top: .5rem; right: .5rem;
+  width: 1.5rem; height: 1.5rem; display: flex; align-items: center;
+  justify-content: center; border-radius: .375rem; font-size: .8rem;
+  background: rgba(28, 25, 23, .62); color: #fff; opacity: .85;
+  transition: opacity .15s, background-color .15s; }
+figure button:hover::after, figure button:focus-visible::after {
+  opacity: 1; background: rgba(28, 25, 23, .85); }
 #lightbox[hidden] { display: none; }
 #lightbox { position: fixed; inset: 0; z-index: 60; cursor: zoom-out;
   background: rgba(12,10,9,.88); display: flex;
