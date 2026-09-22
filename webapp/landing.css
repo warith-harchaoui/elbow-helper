@@ -1,0 +1,116 @@
+/* landing.css — the shared look of the two landing pages.
+
+   elbow-helper ships two front doors built from the same design: the gated
+   one (gate/landing.php, which asks for a professional email) and the open
+   one (landing.html, which opens the tool straight away). They differ by a
+   single card, so the style lives here once rather than twice.
+
+   Same typographic system and the same dark-mode convention as the app: a
+   .dark class on <html>, never a media query, so one toggle rules every page.
+*/
+/* Same typographic system as the app: Roboto for chrome, Roboto Serif for
+   the headline, Roboto Mono for the eyebrow. Good Colors blue as accent.
+   Dark mode is a .dark class on <html> (not a media query), exactly like
+   the app, so the shared theme toggle rules both pages. */
+:root { --accent: #007AFF; --accent-soft: #CCE4FF; }
+* { box-sizing: border-box; margin: 0; }
+body {
+  font-family: Roboto, system-ui, -apple-system, Helvetica, Arial, sans-serif;
+  background: #f5f5f4; color: #1c1917; line-height: 1.55;
+}
+.headline { font-family: "Roboto Serif", Georgia, serif; }
+.eyebrow { font-family: "Roboto Mono", ui-monospace, SFMono-Regular, monospace;
+  font-size: .8rem; letter-spacing: .08em; color: #78716c; }
+/* Sticky header, mirrored from the app: brand left, controls top right. */
+.site-header { position: sticky; top: 0; z-index: 40;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  background: rgba(245,245,244,.85); border-bottom: 1px solid #e7e5e4; }
+.dark .site-header { background: rgba(11,11,12,.8); border-bottom-color: #262626; }
+.nav { max-width: 60rem; margin: 0 auto; padding: .55rem 1.25rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.brand { display: flex; align-items: center; gap: .5rem; font-weight: 600;
+  letter-spacing: -.01em; }
+.brand img { width: 1.75rem; height: 1.75rem; border-radius: .25rem; }
+.controls { display: flex; align-items: center; gap: .25rem; }
+.gh-link { display: inline-flex; align-items: center; gap: .35rem;
+  font-size: .875rem; color: #44403c; text-decoration: none;
+  padding: .35rem .6rem; border-radius: .5rem; }
+.gh-link:hover { background: #e7e5e4; }
+.dark .gh-link { color: #d4d4d4; }
+.dark .gh-link:hover { background: #262626; }
+.toggle-btn { font-size: 1.15rem; line-height: 1; width: 2.25rem; height: 2.25rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 0; background: transparent; border-radius: .5rem; cursor: pointer; }
+.toggle-btn:hover { background: #e7e5e4; }
+.dark .toggle-btn:hover { background: #262626; }
+.toggle-btn:focus-visible, .gh-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+main { max-width: 60rem; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+h1 { font-size: clamp(2.2rem, 6vw, 3.4rem); font-weight: 600; margin: .3rem 0 .8rem; }
+.guide { color: #44403c; max-width: 44rem; }
+section.card { background: #fff; border: 1px solid #e7e5e4; border-radius: 1rem;
+  padding: 1.5rem; margin-top: 2rem; }
+.gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem; margin-top: 1rem; }
+figure { border: 1px solid #e7e5e4; border-radius: .75rem; overflow: hidden; background: #fff; }
+figure img { display: block; width: 100%; height: auto; }
+figcaption { padding: .5rem .8rem; font-size: .85rem; font-weight: 500;
+  border-top: 3px solid var(--tint, var(--accent)); }
+figure button { display: block; width: 100%; padding: 0; border: 0;
+  background: transparent; cursor: zoom-in; }
+figure button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#lightbox[hidden] { display: none; }
+#lightbox { position: fixed; inset: 0; z-index: 60; cursor: zoom-out;
+  background: rgba(12,10,9,.88); display: flex;
+  align-items: center; justify-content: center; padding: 2rem; }
+#lightbox img { max-width: 100%; max-height: 100%; background: #fff;
+  border-radius: .75rem; }
+form { display: grid; gap: .9rem; max-width: 30rem; margin-top: 1rem; }
+label { font-weight: 500; }
+input[type=email] { padding: .65rem .8rem; border: 1px solid #d6d3d1;
+  border-radius: .6rem; font-size: 1rem; width: 100%; }
+input[type=email]:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.consent { display: flex; gap: .55rem; align-items: flex-start; font-size: .85rem;
+  color: #57534e; font-weight: 400; }
+.consent input { margin-top: .25rem; }
+.btn-cta,
+button[type=submit] { background: #1c1917; color: #fff; border: 0;
+  border-radius: .6rem; padding: .7rem 1.2rem; font-size: 1rem; font-weight: 600;
+  cursor: pointer; justify-self: start; }
+.btn-cta:hover,
+button[type=submit]:hover { background: #292524; }
+.btn-cta:focus-visible,
+button[type=submit]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.msg { border-radius: .6rem; padding: .7rem .9rem; font-size: .95rem; display: none; }
+.msg.ok { background: #D4F5D9; color: #14532d; display: block; }
+.msg.err { background: #FFD8D6; color: #7f1d1d; display: block; }
+.hp { position: absolute; left: -9999px; }
+footer { border-top: 1px solid #e7e5e4; margin-top: 3rem; padding-top: 1rem;
+  font-size: .85rem; color: #78716c; }
+footer a { color: inherit; }
+.dark body, .dark { background: #0c0a09; }
+.dark body { color: #e7e5e4; }
+.dark .guide { color: #d6d3d1; }
+.dark section.card, .dark figure { background: #1c1917; border-color: #292524; }
+.dark input[type=email] { background: #0c0a09; border-color: #44403c; color: #e7e5e4; }
+.dark .btn-cta,
+.dark button[type=submit] { background: #e7e5e4; color: #1c1917; }
+.dark .btn-cta:hover,
+.dark button[type=submit]:hover { background: #fff; }
+.dark .msg.ok { background: #14532d; color: #D4F5D9; }
+.dark .msg.err { background: #7f1d1d; color: #FFD8D6; }
+/* The muted grays readable on white fail on the dark cards (consent,
+   notes, eyebrow ~2.8:1); lift them to a legible stone. */
+.dark .consent { color: #a8a29e; }
+.dark .note, .dark .eyebrow, .dark footer { color: #a8a29e; }
+.dark .gh-link { color: #d4d4d4; }
+.dark footer { border-color: #292524; }
+/* The example SVGs carry their own prefers-color-scheme block; on this
+   page the theme is a class, so keep the previews on white cards in both
+   themes (the figures are self-contained documents, light by design). */
+
+/* The open landing's call to action: a link that has to look and size like
+   the gated landing's submit button, so it needs the box a <button> gets for
+   free. Everything else (colors, hover, focus ring) it inherits above. */
+.btn-cta { display: inline-block; text-decoration: none; margin-top: 1.1rem; }
+.cta-note { margin-top: .9rem; font-size: .9rem; color: #57534e; }
+.dark .cta-note { color: #a8a29e; }

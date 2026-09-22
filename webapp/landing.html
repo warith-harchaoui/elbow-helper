@@ -1,47 +1,26 @@
-<?php
-// landing.php — the public face of the gated deployment (becomes dist/index.php).
-//
-// Carries the full SEO/GEO head plus STATIC, non-editable example figures, so
-// crawlers and generative engines keep seeing what elbow-helper does even
-// though the interactive app sits behind the professional-email gate. A
-// returning visitor with a valid cookie skips this page entirely.
-//
-// Fully bilingual, with the SAME top-right controls as the app itself (flag
-// language toggle, sun/moon theme toggle, GitHub link in a sticky header) and
-// the SAME localStorage keys (eh-lang, eh-theme): the language and theme a
-// visitor picks here follow them into the app after they sign in.
-
-declare(strict_types=1);
-
-require __DIR__ . '/gate/auth.php';
-
-if (current_email() !== null) {
-    header('Location: index.html');
-    exit;
-}
-
-// Server-side initial language for the first paint and no-JS visitors:
-// explicit ?lang= wins, else the browser's Accept-Language. localStorage
-// (the durable choice, shared with the app) takes over before first paint.
-$lang = (string) ($_GET['lang'] ?? '');
-if ($lang !== 'fr' && $lang !== 'en') {
-    $accept = strtolower((string) ($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? ''));
-    $lang = str_starts_with($accept, 'fr') ? 'fr' : 'en';
-}
-$title = $lang === 'fr' ? 'elbow-helper : le coude est-il réel ?' : 'elbow-helper: is that elbow real?';
-$meta = $lang === 'fr'
-    ? "Détection de coude robuste au bruit, dans votre navigateur : un coude assorti de son incertitude ou une abstention franche. Rien n'est envoyé."
-    : 'Noise-robust knee and elbow detection in your browser: a knee with its uncertainty or a frank abstention. Nothing is uploaded.';
-$prefill = (string) ($_GET['email'] ?? '');
-$flag = (string) ($_GET['link'] ?? ($_GET['login'] ?? ''));
-?>
 <!doctype html>
-<html lang="<?= $lang ?>">
+<!-- landing.html — the public face of the OPEN deployment (becomes dist/index.html
+     in a `build.py --no-gate` build, with the app one click away at app.html).
+
+     Same page as the gated landing (gate/landing.php) minus the wall: same
+     headline, same tagline, same bilingual chrome, same static example
+     gallery, same shared stylesheet (landing.css). The one card that differs
+     asks for nothing and simply opens the tool.
+
+     Why keep a landing at all when the app is free? Because the app is a
+     working surface, not an explanation. This page is what a share card, a
+     search result or a generative engine sees: it says what the tool does and
+     shows four real verdicts before anyone clicks.
+
+     No server: the initial language comes from the browser (localStorage
+     first, then navigator.language), where the gated twin can read
+     Accept-Language in PHP. -->
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="<?= htmlspecialchars($meta, ENT_QUOTES) ?>" />
-  <title><?= htmlspecialchars($title, ENT_QUOTES) ?></title>
+  <meta name="description" content="Noise-robust knee and elbow detection in your browser: a knee with its uncertainty or a frank abstention. Nothing is uploaded." />
+  <title>elbow-helper: is that elbow real?</title>
 <!--SEO_HEAD-->
   <link rel="icon" href="./static/favicon.ico" sizes="any" />
   <link rel="icon" type="image/png" sizes="32x32" href="./static/favicon-32.png" />
@@ -52,19 +31,22 @@ $flag = (string) ($_GET['link'] ?? ($_GET['login'] ?? ''));
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&family=Roboto+Serif:wght@400;500;600&family=Roboto+Mono&display=swap" rel="stylesheet" />
   <script>
-    // Pre-paint: apply the persisted theme and language (the app's own
-    // localStorage keys) before any CSS resolves, so there is no flash.
+    // Pre-paint: theme and language before any CSS resolves, so there is no
+    // flash. Same localStorage keys as the app, so a choice made here follows
+    // the visitor into the tool. With nothing stored, the browser decides.
     (function () {
       var theme = localStorage.getItem("eh-theme");
       var dark = theme ? theme === "dark"
         : window.matchMedia("(prefers-color-scheme: dark)").matches;
       if (dark) document.documentElement.classList.add("dark");
       var lang = localStorage.getItem("eh-lang");
-      if (lang === "fr" || lang === "en") document.documentElement.lang = lang;
+      if (lang !== "fr" && lang !== "en") {
+        lang = (navigator.language || "en").toLowerCase().indexOf("fr") === 0 ? "fr" : "en";
+      }
+      document.documentElement.lang = lang;
     })();
   </script>
-  <!-- The look is shared with the open landing (webapp/landing.html);
-       build.py copies webapp/landing.css next to this page. -->
+  <!-- The look is shared with the gated landing (webapp/gate/landing.php). -->
   <link rel="stylesheet" href="./landing.css" />
 </head>
 <body>
@@ -88,27 +70,11 @@ $flag = (string) ($_GET['link'] ?? ($_GET['login'] ?? ''));
   <h1 class="headline" data-i18n="title"></h1>
   <p class="guide" data-i18n="tagline"></p>
 
-  <section class="card" aria-labelledby="access-h">
-    <h2 id="access-h" data-i18n="form_title"></h2>
-    <p data-i18n="form_sub"></p>
-    <div class="msg" id="formMsg" role="status" aria-live="polite"></div>
-    <form id="accessForm" novalidate>
-      <div>
-        <label for="email" data-i18n="email_label"></label>
-        <input type="email" id="email" name="email" required autocomplete="email"
-               value="<?= htmlspecialchars($prefill, ENT_QUOTES) ?>" />
-      </div>
-      <!-- Honeypot: humans never see it, naive bots fill it. -->
-      <div class="hp" aria-hidden="true">
-        <label for="website">Website</label>
-        <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" />
-      </div>
-      <label class="consent">
-        <input type="checkbox" id="consent" name="consent" required />
-        <span data-i18n="consent"></span>
-      </label>
-      <button type="submit" data-i18n="submit"></button>
-    </form>
+  <section class="card" aria-labelledby="open-h">
+    <h2 id="open-h" data-i18n="open_title"></h2>
+    <p data-i18n="open_sub"></p>
+    <a class="btn-cta" id="openApp" href="./app.html" data-i18n="open_cta"></a>
+    <p class="cta-note" data-i18n="open_note"></p>
   </section>
 
   <section class="card" aria-labelledby="examples-h">
@@ -143,23 +109,12 @@ const STRINGS = {
     theme_to_light_aria: "Switch to light theme",
     title: "Is that elbow real?",
     tagline: "Detect where the curve bends",
-    form_title: "Get access with your work email",
-    form_sub: "We send you a sign-in link. One click and the interactive app is yours for 30 days on this device.",
-    email_label: "Work email (no generic addresses such as gmail.com)",
-    consent: "I agree that my email address is stored. Removal on request: warith@deraison.ai.",
-    submit: "Email me the access link",
+    open_title: "Open the tool",
+    open_sub: "Paste your curve, or start from one of the examples below. The engine runs in your browser, so your data never leaves your machine.",
+    open_cta: "Open the tool",
+    open_note: "Free, open source, no account. The engine downloads on first visit, then your browser keeps it.",
     examples_title: "What you will get",
     zoom_aria: "View full screen",
-    msg_sent: "Link sent. Check your inbox (and spam folder).",
-    msg_generic: "Please use your professional email address, not a generic one (gmail, yahoo, orange…).",
-    msg_invalid: "That email address does not look valid.",
-    msg_nodomain: "That domain does not seem to receive email.",
-    msg_consent: "Please tick the consent box.",
-    msg_ratelimit: "Too many requests; please try again later.",
-    msg_sendfail: "The email could not be sent. Please try again, or write to warith@deraison.ai.",
-    msg_link_expired: "That access link has expired. Enter your email to receive a fresh one.",
-    msg_link_invalid: "That access link is not valid. Enter your email to receive a new one.",
-    msg_login_required: "Please enter your work email to access the app.",
     examples: {
       kmeans: "The k-means elbow",
       queueing_latency: "Queueing latency",
@@ -176,23 +131,12 @@ const STRINGS = {
     theme_to_light_aria: "Passer au thème clair",
     title: "Le coude est-il réel ?",
     tagline: "Détecter là où la courbe plie",
-    form_title: "Accédez avec votre email professionnel",
-    form_sub: "Nous vous envoyons un lien de connexion. Un clic et l'application interactive est à vous pour 30 jours sur cet appareil.",
-    email_label: "Email professionnel (pas d'adresse générique type gmail.com)",
-    consent: "J'accepte que mon adresse email soit enregistrée. Suppression sur demande : warith@deraison.ai.",
-    submit: "Recevoir le lien d'accès",
+    open_title: "Ouvrir l'outil",
+    open_sub: "Collez votre courbe, ou partez d'un des exemples ci-dessous. Le moteur tourne dans votre navigateur : vos données ne quittent jamais votre machine.",
+    open_cta: "Ouvrir l'outil",
+    open_note: "Gratuit, open source, sans compte. Le moteur se télécharge à la première visite, puis votre navigateur le garde.",
     examples_title: "Ce que vous obtiendrez",
     zoom_aria: "Voir en plein écran",
-    msg_sent: "Lien envoyé. Vérifiez votre boîte (et les spams).",
-    msg_generic: "Merci d'utiliser votre email professionnel, pas une adresse générique (gmail, yahoo, orange…).",
-    msg_invalid: "Cette adresse email ne semble pas valide.",
-    msg_nodomain: "Ce domaine ne semble pas recevoir d'emails.",
-    msg_consent: "Merci de cocher la case de consentement.",
-    msg_ratelimit: "Trop de demandes ; réessayez plus tard.",
-    msg_sendfail: "L'email n'a pas pu partir. Réessayez, ou écrivez à warith@deraison.ai.",
-    msg_link_expired: "Ce lien d'accès a expiré. Saisissez votre email pour en recevoir un nouveau.",
-    msg_link_invalid: "Ce lien d'accès n'est pas valide. Saisissez votre email pour en recevoir un nouveau.",
-    msg_login_required: "Saisissez votre email professionnel pour accéder à l'application.",
     examples: {
       kmeans: "Le coude de k-means",
       queueing_latency: "Latence de file d'attente",
@@ -271,12 +215,6 @@ document.addEventListener("keydown", (ev) => {
   if (ev.key === "Escape" && !lightbox.hidden) closeLightbox();
 });
 
-function showMsg(kind, text) {
-  const box = document.getElementById("formMsg");
-  box.className = "msg " + kind;
-  box.textContent = text;
-}
-
 document.getElementById("langToggle").addEventListener("click", () => {
   lang = lang === "fr" ? "en" : "fr";
   localStorage.setItem("eh-lang", lang);
@@ -289,32 +227,18 @@ document.getElementById("themeToggle").addEventListener("click", () => {
   apply();
 });
 
-document.getElementById("accessForm").addEventListener("submit", async (ev) => {
-  ev.preventDefault();
-  const t = STRINGS[lang];
-  const form = ev.target;
-  if (!form.consent.checked) { showMsg("err", t.msg_consent); return; }
-  const data = new FormData(form);
-  data.set("lang", lang);
-  try {
-    const res = await fetch("gate/access.php", { method: "POST", body: data });
-    const out = await res.json();
-    if (out.ok) {
-      showMsg("ok", t.msg_sent);
-      form.reset();
-    } else {
-      showMsg("err", t["msg_" + out.error] || t.msg_sendfail);
-    }
-  } catch (e) {
-    showMsg("err", t.msg_sendfail);
-  }
-});
-
-// Flags carried back by login.php / serve.php redirects.
-const FLAG = <?= json_encode($flag) ?>;
-if (FLAG === "expired") showMsg("err", STRINGS[lang].msg_link_expired);
-else if (FLAG === "invalid") showMsg("err", STRINGS[lang].msg_link_invalid);
-else if (FLAG === "required") showMsg("err", STRINGS[lang].msg_login_required);
+// The visitor arrives to read, then clicks through to compute. Warming the
+// engine on hover buys most of the boot before the click lands, and costs
+// nothing to someone who never clicks.
+let warmed = false;
+document.getElementById("openApp").addEventListener("mouseenter", () => {
+  if (warmed) return;
+  warmed = true;
+  const link = document.createElement("link");
+  link.rel = "prefetch";
+  link.href = "./app.html";
+  document.head.append(link);
+}, { once: true });
 
 apply();
 </script>

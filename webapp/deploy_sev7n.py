@@ -3,9 +3,10 @@
 Two things distinguish this deployment from the deraison.ai one:
 
 - **No gate.** The bundle is built with ``--no-gate``: no ``index.php``, no
-  ``gate/``, no ``.htaccess``, no ``private/``, no activity beacon. Nobody is
-  asked for an email address; ``index.html`` is the entry point and every
-  visitor lands straight in the app.
+  ``gate/``, no ``.htaccess``, no ``private/``, no activity beacon. The
+  landing survives the removal — same headline, same example gallery — with a
+  button where the email form was, so a visitor reads what the tool does and
+  then opens it (``app.html``) without giving anything.
 - **No PHP.** The host is SFTPGo's HTTPS front (``sftp.s7n.app``), which
   serves static files and nothing else. That is exactly what an ungated
   bundle needs, since the engine runs in the visitor's browser.

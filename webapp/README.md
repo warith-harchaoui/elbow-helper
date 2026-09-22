@@ -41,7 +41,11 @@ ships in the folder.
 ## The open-access mirror (sev7n public SFTP)
 
 A second deployment carries the same app with no gate at all: no email asked,
-no PHP, no activity beacon. One command builds it and ships it:
+no PHP, no activity beacon. It keeps everything else the gated one has — the
+landing page included. `index.html` is that landing (from `landing.html`:
+same headline, same tagline, same example gallery, a button where the email
+form was) and the app answers at `app.html`, one click away. One command
+builds it and ships it:
 
 ```bash
 python webapp/deploy_sev7n.py             # build into dist-open/, then upload
@@ -77,8 +81,8 @@ and the activity logs live there, and only there.
 
 | File                  | Role                                                                        |
 | --------------------- | --------------------------------------------------------------------------- |
-| `build.py`            | Composes `dist/` from `gui.html` + these files                              |
-| `gui.html`            | The app page: presets, paste-your-points, options, verdict, figure          |
+| `build.py`            | Composes the bundle from `gui.html`, `landing.html` and these files         |
+| `gui.html`            | The app page: presets, paste-your-points, options, verdict, figure. Becomes `index.html` gated, `app.html` open |
 | `backend-pyodide.js`  | The `window.backend` transport: Pyodide boot, wheel install, JSON bridge    |
 | `glue.py`             | The in-Pyodide endpoint logic: presets (the repo's examples, same seeds) and analyze (verdict + SVG, one pipeline run thanks to a memoized `robust_knee`) |
 | `os_helper_stub.py`   | Browser stand-in for `os-helper` (whose psutil dependency has no WASM build)|
@@ -87,6 +91,8 @@ and the activity logs live there, and only there.
 | `seo/icons/`          | Favicon/PWA set generated from `assets/logo.png` (sprezzature-publish)      |
 | `seo/make_og_card.py` | Regenerates `seo/og-card.png` (the 1200×630 Open Graph card)                |
 | `seo/logo-header.png` | The header logo (56 px, resized from `assets/logo.png`)                     |
+| `landing.html`        | The OPEN landing (becomes `index.html` in a `--no-gate` build): the gated landing minus the wall, with a button where the form was |
+| `landing.css`         | The look both landings share; copied to the bundle root by either build |
 | `gate/`               | The lead-magnet gate: `auth.php` (HMAC magic links, file-based storage), `landing.php` → `dist/index.php`, `serve.php` (cookie-gated asset serving), `access.php`/`login.php`/`track.php`, `track.js` (activity beacon), `free_domains.txt` (generic-domain blocklist) |
 
 The build also emits `robots.txt`, `sitemap.xml`, `llms.txt`, `llms-full.txt`

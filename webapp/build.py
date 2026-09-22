@@ -27,9 +27,12 @@ What lands in ``dist/``:
 - ``*.md``                the curated Markdown corpus (README/LISEZ-MOI,
                           EXAMPLES/EXEMPLES, LANDSCAPE/PAYSAGE) the indexes
                           cite, served raw
+- ``landing.css``         the landing stylesheet, shared by both front doors
 - ``index.php``           the PUBLIC landing page (lead-magnet gate): SEO
                           head, static example figures, professional-email
-                          form
+                          form. An open build has no PHP, so it ships the same
+                          page as static ``index.html`` (from landing.html)
+                          and moves the app to ``app.html``
 - ``gate/*.php``, ``gate/free_domains.txt``, ``gate/track.js``, ``.htaccess``
                           the gate itself (see webapp/gate/auth.php):
                           magic-link auth, per-user activity logs,
@@ -49,10 +52,13 @@ Run from the repo root with the project env active::
     python webapp/build.py --clean    # rebuild from scratch
     python webapp/build.py --no-gate  # open-access build: no PHP, no email
 
-``--no-gate`` skips the whole lead-magnet layer (no ``index.php``, no
-``gate/``, no ``.htaccess``, no ``private/``) and leaves ``index.html`` as the
-entry point: the bundle is then a plain static folder any host serves as is,
-with the app open to every visitor. That is the shape uploaded to the sev7n
+``--no-gate`` drops the lead-magnet layer (no ``index.php``, no ``gate/``, no
+``.htaccess``, no ``private/``) and keeps everything else, the landing page
+included: ``index.html`` is then the open landing (``webapp/landing.html`` —
+same headline, same example gallery as the gated one, with a button where the
+email form was) and the app answers at ``app.html``. The bundle is a plain
+static folder any host serves as is, with the tool one click from the landing
+and nothing asked of the visitor. That is the shape uploaded to the sev7n
 public SFTP (see ``webapp/deploy_sev7n.py``).
 
 The two deployments are two assemblies of the same source, so each gets its
@@ -146,29 +152,70 @@ def build_wheel() -> list[str]:
 TRACK_TAG = '<script src="./gate/track.js" defer></script>\n'
 
 
-def compose_index(base_url: str, gated: bool = True) -> None:
-    """Write dist/index.html: gui.html + the deployment SEO head."""
+def _seo_head(base_url: str) -> str:
+    """The deployment SEO/GEO block (canonical, OG/Twitter card, JSON-LD).
+
+    A deployment concern, so it lives in the build rather than in the page
+    sources: a local checkout must never claim the deraison.ai canonical.
+    """
+    head = (WEBAPP / "seo" / "head-seo.html").read_text(encoding="utf-8")
+    return head.replace("{BASE}", base_url.rstrip("/"))
+
+
+def _inject_head(html: str, head: str, source: str) -> str:
+    """Replace the single ``<!--SEO_HEAD-->`` placeholder of *source*."""
+    if html.count("<!--SEO_HEAD-->") != 1:
+        raise SystemExit(f"{source} SEO_HEAD placeholder missing")
+    return html.replace("<!--SEO_HEAD-->", head)
+
+
+def compose_app(base_url: str, gated: bool = True) -> None:
+    """Write the app page: gui.html plus the head its deployment needs.
+
+    Gated, the app IS the site's single page (the landing is index.php, which
+    PHP serves instead), so it carries the full SEO head. Open, the landing
+    is a real page of its own and the indexed one, so the app answers at
+    app.html with a canonical pointing back at it and a noindex: one address
+    per piece of content, never two competing for the same search result.
+    """
     html = (WEBAPP / "gui.html").read_text(encoding="utf-8")
-    if not gated:
+    if gated:
+        html = _inject_head(html, _seo_head(base_url), "gui.html")
+        name = "index.html"
+    else:
         if html.count(TRACK_TAG) != 1:
             raise SystemExit("gui.html activity-beacon tag missing")
         html = html.replace(TRACK_TAG, "")
-    # The SEO/GEO head block (canonical, Open Graph / Twitter card, JSON-LD)
-    # is a deployment concern, so it lives in the build, not in gui.html:
-    # a local checkout must never claim the deraison.ai canonical.
-    seo_head = (WEBAPP / "seo" / "head-seo.html").read_text(encoding="utf-8")
-    seo_head = seo_head.replace("{BASE}", base_url.rstrip("/"))
-    if html.count("<!--SEO_HEAD-->") != 1:
-        raise SystemExit("gui.html SEO_HEAD placeholder missing")
-    html = html.replace("<!--SEO_HEAD-->", seo_head)
+        base = base_url.rstrip("/")
+        head = (
+            f'  <link rel="canonical" href="{base}/" />\n'
+            '  <meta name="robots" content="noindex, follow" />\n'
+        )
+        html = _inject_head(html, head, "gui.html")
+        name = "app.html"
+    (DIST / name).write_text(html, encoding="utf-8")
+    print(f"{name} composed")
+
+
+def compose_landing(base_url: str) -> None:
+    """Write dist/index.html for an open build: landing.html + the SEO head.
+
+    The gated build has no use for this: its landing is index.php, installed
+    by :func:`gate_assets` from the same design (see webapp/landing.css).
+    """
+    html = (WEBAPP / "landing.html").read_text(encoding="utf-8")
+    html = _inject_head(html, _seo_head(base_url), "landing.html")
     (DIST / "index.html").write_text(html, encoding="utf-8")
-    print("index.html composed")
+    print("index.html composed (open landing)")
 
 
 def copy_assets(wheel_names: list[str]) -> None:
     """Copy the transport, glue, strings, icons, figures; write the manifest."""
     (DIST / "py").mkdir(parents=True, exist_ok=True)
     shutil.copy2(WEBAPP / "backend-pyodide.js", DIST / "backend-pyodide.js")
+    # The landing stylesheet, shared by the open landing (landing.html) and
+    # the gated one (gate/landing.php); both builds serve it at the root.
+    shutil.copy2(WEBAPP / "landing.css", DIST / "landing.css")
     shutil.copy2(WEBAPP / "os_helper_stub.py", DIST / "py" / "os_helper_stub.py")
     shutil.copy2(WEBAPP / "glue.py", DIST / "py" / "glue.py")
     (DIST / "py" / "manifest.json").write_text(
@@ -367,10 +414,11 @@ def main() -> None:
     DIST.mkdir(parents=True, exist_ok=True)
 
     wheels = build_wheel()
-    compose_index(args.base_url, gated=not args.no_gate)
+    compose_app(args.base_url, gated=not args.no_gate)
     copy_assets(wheels)
     if args.no_gate:
-        print("gate skipped (--no-gate): index.html is the entry point")
+        compose_landing(args.base_url)
+        print("gate skipped (--no-gate): the landing opens the app directly")
     else:
         gate_assets(args.base_url)
     site_indexes(args.base_url)
