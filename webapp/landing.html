@@ -1,20 +1,19 @@
 <!doctype html>
-<!-- landing.html — the public face of the OPEN deployment (becomes dist/index.html
-     in a `build.py --no-gate` build, with the app one click away at app.html).
+<!-- landing.html — the public face of the site (becomes dist/index.html, with
+     the app one click away at app.html).
 
-     Same page as the gated landing (gate/landing.php) minus the wall: same
-     headline, same tagline, same bilingual chrome, same static example
-     gallery, same shared stylesheet (landing.css). The one card that differs
-     asks for nothing and simply opens the tool.
+     Why a landing at all, when the app is free and one click away? Because
+     the app is a working surface, not an explanation. This page is what a
+     share card, a search result or a generative engine sees: it says what the
+     tool does and shows four real verdicts before anyone clicks.
 
-     Why keep a landing at all when the app is free? Because the app is a
-     working surface, not an explanation. This page is what a share card, a
-     search result or a generative engine sees: it says what the tool does and
-     shows four real verdicts before anyone clicks.
+     It descends from the landing of the retired email gate (gate/landing.php)
+     and keeps its design — headline, tagline, bilingual chrome, example
+     gallery, shared stylesheet (landing.css) — with a button where the form
+     used to be.
 
-     No server: the initial language comes from the browser (localStorage
-     first, then navigator.language), where the gated twin can read
-     Accept-Language in PHP. -->
+     No server here, so the initial language comes from the browser
+     (localStorage first, then navigator.language). -->
 <html lang="en">
 <head>
   <meta charset="utf-8" />

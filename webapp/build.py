@@ -1,17 +1,23 @@
 """Compose the static, SFTP-uploadable elbow-helper web app into ``webapp/dist/``.
 
+The site is **https://deraison.ai/elbow-helper**, and it is open: a visitor
+lands on a page that says what the tool does, clicks once, and computes. No
+account, no email, nothing to sign. Upload ``dist/`` to any static host and
+that is the whole deployment — no process to run, nothing to maintain
+server-side.
+
 The interactive page (``webapp/gui.html``) runs the real package on an
 in-browser Python engine: ``backend-pyodide.js`` boots Pyodide, registers a
 tiny ``os_helper`` stub (the real one drags in psutil, a C extension absent
 from Pyodide, for six trivial symbols), micropip-installs the wheel built
-here and drives ``webapp/glue.py`` with JSON strings. Uploading the resulting
-``dist/`` folder to any static host (e.g. SFTP to
-https://deraison.ai/elbow-helper) yields a fully working app: no process to
-run, nothing to maintain server-side.
+here and drives ``webapp/glue.py`` with JSON strings.
 
 What lands in ``dist/``:
 
-- ``index.html``          the composed app page (gui.html + the SEO head)
+- ``index.html``          the landing (webapp/landing.html + the SEO head):
+                          what the tool does, the example gallery, one button
+- ``app.html``            the composed app page (gui.html), one click away
+- ``landing.css``         the landing stylesheet
 - ``backend-pyodide.js``  the Pyodide transport
 - ``py/os_helper_stub.py``browser stand-in for os-helper (see file)
 - ``py/glue.py``          the endpoint logic: presets + analyze
@@ -27,51 +33,17 @@ What lands in ``dist/``:
 - ``*.md``                the curated Markdown corpus (README/LISEZ-MOI,
                           EXAMPLES/EXEMPLES, LANDSCAPE/PAYSAGE) the indexes
                           cite, served raw
-- ``landing.css``         the landing stylesheet, shared by both front doors
-- ``index.php``           the PUBLIC landing page (lead-magnet gate): SEO
-                          head, static example figures, professional-email
-                          form. An open build has no PHP, so it ships the same
-                          page as static ``index.html`` (from landing.html)
-                          and moves the app to ``app.html``
-- ``gate/*.php``, ``gate/free_domains.txt``, ``gate/track.js``, ``.htaccess``
-                          the gate itself (see webapp/gate/auth.php):
-                          magic-link auth, per-user activity logs,
-                          generic-domain blocklist; the .htaccess routes
-                          every app file through the gate
-- ``private/``            runtime data (secret, leads, logs), pre-created
-                          here with its "Require all denied" .htaccess
-
-The gate needs the host to run PHP (deraison.ai does) and to honour
-.htaccess rewrites; served without PHP the SAME dist/ degrades to an ungated
-static app (index.html still works directly), which is also how the local
-python -m http.server smoke tests keep passing.
 
 Run from the repo root with the project env active::
 
-    python webapp/build.py            # writes webapp/dist/
-    python webapp/build.py --clean    # rebuild from scratch
-    python webapp/build.py --no-gate  # open-access build: no PHP, no email
+    python webapp/build.py          # writes webapp/dist/
+    python webapp/build.py --clean  # rebuild from scratch
 
-``--no-gate`` drops the lead-magnet layer (no ``index.php``, no ``gate/``, no
-``.htaccess``, no ``private/``) and keeps everything else, the landing page
-included: ``index.html`` is then the open landing (``webapp/landing.html`` —
-same headline, same example gallery as the gated one, with a button where the
-email form was) and the app answers at ``app.html``. The bundle is a plain
-static folder any host serves as is, with the tool one click from the landing
-and nothing asked of the visitor. That is the shape uploaded to the sev7n
-public SFTP (see ``webapp/deploy_sev7n.py``).
-
-The two deployments are two assemblies of the same source, so each gets its
-own output folder and neither can overwrite the other::
-
-    python webapp/build.py                       # dist/      → deraison.ai
-    python webapp/build.py --no-gate --out \
-        webapp/dist-open                         # dist-open/ → sev7n public
-
-Shipping the wrong folder is the one silently public mistake available here:
-an ungated bundle uploaded over the gated one serves the app to everybody.
-``--out`` is what keeps the two apart on disk; both deploy scripts additionally
-check the folder's shape before uploading a byte.
+``--gate`` re-installs the retired lead-magnet layer (``index.php``, ``gate/``,
+``.htaccess``, ``private/``: a professional-email magic link in front of the
+app, PHP required). The site no longer asks for an email, so this flag exists
+only to reproduce the old shape; see ``webapp/gate/auth.php`` for how it
+worked.
 
 The Pyodide runtime itself is loaded from the jsDelivr CDN at page load (see
 ``backend-pyodide.js``): only the wheel built here ships in the folder.
@@ -397,9 +369,9 @@ def main() -> None:
         help="deployment URL for canonical/OG/sitemap (default: %(default)s)",
     )
     parser.add_argument(
-        "--no-gate",
+        "--gate",
         action="store_true",
-        help="open-access build: skip the lead-magnet gate (no PHP, no email)",
+        help="legacy: re-install the professional-email gate (needs PHP)",
     )
     parser.add_argument(
         "--out",
@@ -414,16 +386,15 @@ def main() -> None:
     DIST.mkdir(parents=True, exist_ok=True)
 
     wheels = build_wheel()
-    compose_app(args.base_url, gated=not args.no_gate)
+    compose_app(args.base_url, gated=args.gate)
     copy_assets(wheels)
-    if args.no_gate:
-        compose_landing(args.base_url)
-        print("gate skipped (--no-gate): the landing opens the app directly")
-    else:
+    if args.gate:
         gate_assets(args.base_url)
+    else:
+        compose_landing(args.base_url)
     site_indexes(args.base_url)
     total = sum(f.stat().st_size for f in DIST.rglob("*") if f.is_file())
-    shape = "open-access" if args.no_gate else "gated"
+    shape = "gated (legacy)" if args.gate else "open"
     print(
         f"\n{DIST.name}/ ready, {shape} "
         f"({total / 1e6:.1f} MB before the CDN-served Pyodide runtime)."
