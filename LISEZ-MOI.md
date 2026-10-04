@@ -20,7 +20,7 @@ Publié sur [PyPI](https://pypi.org/project/elbow-helper/), six versions numéro
 
 [🌐 Application web](https://deraison.ai/elbow-helper) — le pipeline dans votre navigateur : aucune installation, rien n'est envoyé
 
-[💻 Documentation](https://harchaoui.org/warith/ai-helpers/docs/elbow-helper-doc/)
+[💻 Documentation](https://deraison.ai/ai-helpers/docs/elbow-helper-doc/)
 
 [🗺️ Paysage](https://github.com/warith-harchaoui/elbow-helper/blob/main/PAYSAGE.md)
 

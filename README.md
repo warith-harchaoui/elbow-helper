@@ -20,7 +20,7 @@ Published on [PyPI](https://pypi.org/project/elbow-helper/), six semantic-versio
 
 [🌐 Web app](https://deraison.ai/elbow-helper) — the pipeline in your browser: no install, nothing uploaded
 
-[💻 Documentation](https://harchaoui.org/warith/ai-helpers/docs/elbow-helper-doc/)
+[💻 Documentation](https://deraison.ai/ai-helpers/docs/elbow-helper-doc/)
 
 [🗺️ Landscape](https://github.com/warith-harchaoui/elbow-helper/blob/main/LANDSCAPE.md)
 
