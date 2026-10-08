@@ -288,6 +288,7 @@
     <div id="verdict" class="hidden mt-3">
       <p id="verdictTitle" class="headline text-xl font-semibold text-neutral-900"></p>
       <p id="verdictBody" class="text-neutral-700 mt-1 max-w-[46rem]"></p>
+      <p id="verdictDetail" class="hidden text-neutral-500 mt-2 max-w-[46rem] text-sm"></p>
       <div id="figure" class="mt-4 rounded-xl overflow-hidden border-neutral-200" style="border-width:1px;"></div>
       <div class="flex flex-wrap items-center gap-3 mt-4">
         <button id="dlSvg" type="button" class="btn-ghost" data-i18n="dl_svg"></button>
@@ -520,6 +521,17 @@ function renderVerdictText() {
       reason_text: t("reason_" + r.reason),
       code: r.reason,
     });
+  }
+  // The reason code names the gate that closed; `detail` says by how much it
+  // was missed, which is the half a reader can act on. The engine writes it in
+  // the page's language, so there is nothing to translate here.
+  const detail = $("verdictDetail");
+  if (!r.is_clear && r.detail) {
+    detail.textContent = t("verdict_detail_prefix") + r.detail + ".";
+    detail.classList.remove("hidden");
+  } else {
+    detail.textContent = "";
+    detail.classList.add("hidden");
   }
 }
 

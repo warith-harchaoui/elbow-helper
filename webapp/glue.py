@@ -202,7 +202,9 @@ def _op_analyze(arg: dict) -> dict:
     x_label = arg.get("x_label") or None
     y_label = arg.get("y_label") or None
     log_y = bool(arg.get("log_y"))
-    config = RobustKneeConfig(random_seed=0)
+    # The abstention detail is prose, so it follows the page's language;
+    # nothing else about the run does.
+    config = RobustKneeConfig(random_seed=0, language=language)
 
     if y is None:
         y = x

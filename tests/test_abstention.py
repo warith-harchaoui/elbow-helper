@@ -117,3 +117,35 @@ def test_an_early_knee_on_a_long_curve_is_not_a_boundary_artefact():
     assert not isinstance(r, NoClearKnee), r
     # The line runs on to x=11 before flattening, so 11 is the breakpoint.
     assert abs(r.knee_x - 11.0) <= 1.0, r.knee_x
+
+
+def test_the_detail_follows_the_configured_language():
+    """``detail`` is prose, so a French caller gets French prose.
+
+    Only the wording depends on the language: the reason code, every
+    threshold and every measurement are identical either way, so a caller
+    switching languages never sees the verdict change with it.
+    """
+    from elbow_helper import RobustKneeConfig
+
+    x = np.arange(1, 121.0)
+    y = 10 / (1 + np.exp((x - 60) / 4))
+
+    en = robust_knee(x, y, "convex", "decreasing", RobustKneeConfig(random_seed=0))
+    fr = robust_knee(
+        x, y, "convex", "decreasing", RobustKneeConfig(random_seed=0, language="fr")
+    )
+    assert isinstance(en, NoClearKnee) and isinstance(fr, NoClearKnee)
+    assert en.reason == fr.reason
+    assert en.detail and fr.detail
+    assert en.detail != fr.detail
+    # French puts a non-breaking space before the percent sign; English does not.
+    if "%" in fr.detail:
+        assert " %" in fr.detail, fr.detail
+    assert " %" not in en.detail
+
+    # An unknown language falls back to English rather than failing.
+    other = robust_knee(
+        x, y, "convex", "decreasing", RobustKneeConfig(random_seed=0, language="xx")
+    )
+    assert other.detail == en.detail

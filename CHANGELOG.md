@@ -6,6 +6,39 @@ All notable changes to `elbow-helper` are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **`RobustKneeConfig.language`**: the abstention `detail` is prose, so it now
+  follows a language, `"en"` (default) or `"fr"`. Only the wording depends on
+  it -- the reason code, every threshold and every measurement are identical
+  either way, so switching languages never switches the verdict. The sentences
+  live in `explain._STRINGS`, the same shape `plotting._STRINGS` already used
+  for its chrome text; the logic deciding *which* clauses apply (which of four
+  persistence gates failed, whether held-out error fell short or rose) stays
+  written once, which it would not be if the phrasing were pushed out to each
+  consumer. French joins clauses with a semicolon rather than a comma, and
+  spaces its percent signs.
+- **Web app**: the verdict panel shows the detail under the reason code, in the
+  page's language -- `glue.analyze` passes the UI language into the config, so
+  the engine writes the sentence and the page has nothing to translate.
+
+### Changed
+- **`pyproject.toml` gains `[tool.ruff]`**, and `ruff` joins the `dev` extra.
+  `.githooks/pre-push` blocks a push on `ruff check` or `ruff format`, but the
+  project had no ruff configuration at all, so the gate enforced whatever the
+  installed ruff happened to default to. Those defaults widened between
+  releases and the repository went red with 292 findings in code nobody had
+  touched. The configuration now states what this project lints for: `E4`,
+  `E7`, `E9`, `W`, `F`, `I`, `B`, `BLE`, `C4`, `UP`, `RUF`, with the typing
+  modernization rules (`UP006`/`UP035`/`UP045`) off because the package is
+  written consistently the other way and converting it would be a
+  six-thousand-line diff, and with `B905`, `RUF001`, `RUF002`, `RUF022` and
+  `UP032` off for reasons stated at each one. Ruff is also held to Python
+  files: 0.16 began reformatting Python blocks inside Markdown, which would
+  have exploded the hand-written teaching examples in both READMEs and both
+  EXAMPLES files. The 54 real findings that remained are fixed, including two
+  implicit `Optional` annotations and five import blocks whose local helpers
+  ruff had been sorting as third-party.
+
 ### Fixed
 - **`bootstrap.bootstrap_knee`**: `ClearKnee.ci90` could exclude `ClearKnee.
   knee_x`. The point estimate comes from the scale-space cluster, while the

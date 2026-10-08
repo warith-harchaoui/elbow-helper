@@ -125,6 +125,19 @@ La même phrase est recopiée dans `diagnostics["detail"]`, si bien que la ligne
 de commande, l'API HTTP et le serveur MCP la transmettent sans travail
 supplémentaire.
 
+`detail` est de la prose : elle suit donc `config.language`, soit `"en"` (par
+défaut) soit `"fr"`. Seule la formulation change. Le code de raison, chaque
+seuil et chaque mesure restent identiques d'une langue à l'autre, si bien que
+changer de langue ne change jamais le verdict.
+
+```python
+robust_elbow(x, y, config=RobustKneeConfig(language="fr"))
+# NoClearKnee(reason='SEGMENTED_MODEL_NOT_BETTER', detail="une ligne brisée
+#  n'ajuste pas mieux qu'une droite ici : le BIC ne gagne que 6.824 au lieu
+#  des 10 exigés ; l'erreur hors échantillon augmente même de 126.0 %
+#  lorsqu'on ajoute le pli")
+```
+
 ## Courbes qui s'étendent sur plusieurs ordres de grandeur : passer au logarithme
 
 Le détecteur travaille sur la courbe normalisée sur le carré unité. Un `y` qui

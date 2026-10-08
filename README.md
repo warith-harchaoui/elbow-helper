@@ -123,6 +123,19 @@ normalised ones the gate works in.
 The same sentence is mirrored into `diagnostics["detail"]`, so the CLI, the
 HTTP API and the MCP server hand it on without any extra work.
 
+`detail` is prose, so it follows `config.language` — `"en"` (default) or
+`"fr"`. Only the wording changes: the reason code, every threshold and every
+measurement are identical either way, so switching languages never switches the
+verdict.
+
+```python
+robust_elbow(x, y, config=RobustKneeConfig(language="fr"))
+# NoClearKnee(reason='SEGMENTED_MODEL_NOT_BETTER', detail="une ligne brisée
+#  n'ajuste pas mieux qu'une droite ici : le BIC ne gagne que 6.824 au lieu
+#  des 10 exigés ; l'erreur hors échantillon augmente même de 126.0 %
+#  lorsqu'on ajoute le pli")
+```
+
 ## Curves spanning orders of magnitude: take the log first
 
 The detector works on the curve normalised to the unit square, so a `y` that

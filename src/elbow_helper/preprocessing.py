@@ -111,7 +111,9 @@ def _median_despike(y: np.ndarray, window: int) -> np.ndarray:
     return np.median(windows, axis=1)
 
 
-def _clean_and_normalize(x, y, min_samples: int, despike_window: int = 3):
+def _clean_and_normalize(
+    x, y, min_samples: int, despike_window: int = 3, language: str = "en"
+):
     """Clean, sort, deduplicate, and normalize a raw curve to the unit square.
 
     Shared by :func:`prepare_curve` (single-knee, adds shape screening on
@@ -122,6 +124,9 @@ def _clean_and_normalize(x, y, min_samples: int, despike_window: int = 3):
 
     Parameters
     ----------
+    language : str, optional
+        Language of the ``INSUFFICIENT_DATA`` detail sentence; see
+        :class:`~elbow_helper.config.RobustKneeConfig`.
     despike_window : int, optional
         Width of the median despiker applied to ``y`` before scaling, used
         by :func:`prepare_curve` for outlier robustness. A median filter
@@ -171,7 +176,7 @@ def _clean_and_normalize(x, y, min_samples: int, despike_window: int = 3):
             Reason.INSUFFICIENT_DATA,
             n=int(n),
             min_samples=min_samples,
-            detail=explain_insufficient(int(n), min_samples),
+            detail=explain_insufficient(int(n), min_samples, language),
         )
 
     x_lo, x_hi = float(x.min()), float(x.max())
@@ -229,7 +234,11 @@ def prepare_curve(
         raise Abstain(Reason.INVALID_INPUT, detail="direction invalid")
 
     x_norm, y_scaled, n, x_lo, x_hi, y_lo, y_hi = _clean_and_normalize(
-        x, y, config.min_samples, despike_window=config.despike_window
+        x,
+        y,
+        config.min_samples,
+        despike_window=config.despike_window,
+        language=config.language,
     )
 
     # Auto-detect whatever the caller left unspecified, from the cleaned data.

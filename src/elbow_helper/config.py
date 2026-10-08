@@ -149,6 +149,16 @@ class RobustKneeConfig:
     null_replicates: int = 200
     max_null_p_value: float = 0.01
 
+    # --- reporting ---
+    # Language of the plain-language ``NoClearKnee.detail`` sentence, "en" or
+    # "fr". Only the wording depends on it; every threshold, measurement and
+    # :class:`~elbow_helper.types.Reason` code is identical either way. It
+    # lives on the config rather than on the call because the sentence is
+    # assembled deep in the pipeline, where the numbers are, and the config is
+    # the one thing already threaded to every stage. See
+    # :mod:`elbow_helper.explain`.
+    language: str = "en"
+
     # --- reproducibility ---
     random_seed: Optional[int] = None
 
@@ -184,7 +194,7 @@ class RobustKneeConfig:
             samples = self.positional_floor_samples
         return max(float(threshold), float(samples) / max(int(n) - 1, 1))
 
-    def with_(self, **changes) -> "RobustKneeConfig":
+    def with_(self, **changes) -> RobustKneeConfig:
         """Return a copy of this config with ``changes`` applied.
 
         Parameters
@@ -227,6 +237,6 @@ class RobustKneesConfig:
     # --- reproducibility ---
     random_seed: Optional[int] = None
 
-    def with_(self, **changes) -> "RobustKneesConfig":
+    def with_(self, **changes) -> RobustKneesConfig:
         """Return a copy of this config with ``changes`` applied."""
         return replace(self, **changes)
