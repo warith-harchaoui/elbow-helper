@@ -116,3 +116,30 @@ def test_unexpected_internal_error_abstains_instead_of_crashing(
     assert isinstance(r, NoClearKnee)
     assert r.reason == Reason.INTERNAL_NUMERICAL_FAILURE
     assert "synthetic failure" in r.diagnostics["error"]
+
+
+def test_reported_interval_always_brackets_the_reported_knee(fast_config):
+    """``ci90`` is an interval *for* ``knee_x``, so it has to contain it.
+
+    The replicates re-find the knee of the smoothed signal they are drawn
+    from, which sits a little off the knee reported for the observed curve,
+    so their raw percentiles used to come back excluding the point estimate
+    entirely -- ``knee_x=6.5`` published next to ``ci90=(7.5, 7.5)``. Two
+    numbers that contradict each other are worse than either alone: a caller
+    cannot act on them, and the diagnostic plot draws the marker outside its
+    own band.
+    """
+    curves = [
+        clear_knee_curve(seed=s, knee_frac=f, noise=noise)
+        for s in (1, 2, 3)
+        for f, noise in ((0.25, 0.01), (0.3, 0.02), (0.45, 0.03))
+    ]
+    checked = 0
+    for x, y in curves:
+        r = robust_knee(x, y, "concave", "increasing", fast_config)
+        if not isinstance(r, ClearKnee):
+            continue
+        checked += 1
+        lo, hi = r.ci90
+        assert lo <= r.knee_x <= hi, (r.knee_x, r.ci90)
+    assert checked, "no curve committed, the invariant was never exercised"

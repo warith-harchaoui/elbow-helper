@@ -64,10 +64,14 @@ class RobustKneeConfig:
     # read for its *location*. Persistence is judged across the whole scale
     # space, but a smoothed corner's difference-curve peak slides toward the
     # shallower side, so the coarse scales sit systematically late; see
-    # :func:`~elbow_helper.clustering._fine_scale_location`. ``1`` keeps two
-    # scales -- enough members to median away locator jitter without
-    # inheriting the drift.
-    fine_scale_span: int = 1
+    # :func:`~elbow_helper.clustering._fine_scale_location`. ``0`` reads the
+    # finest scale alone, which is the only one carrying no displacement at
+    # all: on curves whose breakpoint is unambiguous it is accurate to 0.18
+    # samples on average, against 0.50 for the two finest scales pooled,
+    # because pooling two scales splits the difference with a drift rather
+    # than averaging away a jitter. Jitter is still averaged, over the
+    # several sensitivities the cluster has at that one scale.
+    fine_scale_span: int = 0
 
     # --- global shape compatibility ---
     min_spearman_abs: float = 0.60

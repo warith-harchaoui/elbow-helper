@@ -55,8 +55,9 @@ def bootstrap_knee(
     prepared : PreparedCurve
         The observed normalized curve.
     knee_x_norm : float
-        The accepted knee location, used to measure the bootstrap median
-        shift against.
+        The accepted knee location. The replicate spread is reported
+        centred on it, and the median shift is measured against the knee of
+        the smoothed signal the replicates are drawn from.
     config : RobustKneeConfig
         Bootstrap thresholds and ``random_seed``.
 
@@ -106,7 +107,7 @@ def bootstrap_knee(
         return BootstrapEvidence(
             passes=False,
             detection_rate=detection_rate,
-            ci90=(0.0, 0.0),
+            ci90=(k, k),
             ci90_width=1.0,
             primary_cluster_rate=0.0,
             secondary_cluster_rate=0.0,
@@ -117,9 +118,34 @@ def bootstrap_knee(
 
     knees_arr = np.array(knees)
     lo, hi = np.percentile(knees_arr, [5, 95])
-    ci90 = (float(lo), float(hi))
+    center = float(np.median(knees_arr))
     ci90_width = float(hi - lo)
-    median_shift = float(abs(np.median(knees_arr) - k_ref))
+    median_shift = float(abs(center - k_ref))
+
+    # Report the replicate *spread*, recentred on the knee it qualifies.
+    #
+    # The replicates re-find the knee of ``yhat``, so their percentiles are
+    # centred wherever the signal smoother put the corner -- at ``k_ref``, not
+    # at the ``k`` this interval is published alongside. Handing the raw
+    # percentiles out as ``ClearKnee.ci90`` therefore produced intervals that
+    # exclude the very location they are an interval for: on the measurement
+    # suite 20 of 28 accepted knees came back like ``knee_x=6.5,
+    # ci90=(7.5, 7.5)``. An interval that does not contain its own point
+    # estimate is not a statement a caller can act on -- it reads as two
+    # contradictory answers -- and the plotting module draws it as a band
+    # around a marker sitting outside the band.
+    #
+    # What the bootstrap actually measures is how far resampling the noise
+    # *moves* the estimate, which is the shape of the replicate distribution
+    # about its own centre. Translating that shape onto ``k`` keeps every
+    # measured quantity intact -- the width is unchanged to the last bit, so
+    # ``max_ci90_width`` still gates exactly what it gated -- while making
+    # containment automatic: ``lo <= center <= hi`` holds for any sample, so
+    # the translated interval brackets ``k`` always, with no clamping.
+    #
+    # The residual ``k - k_ref`` is not swept under the rug: it is precisely
+    # what ``median_shift`` measures, against its own threshold, just above.
+    ci90 = (k + (float(lo) - center), k + (float(hi) - center))
 
     # Every threshold below bounds a distance in normalized x, which is
     # quantized at one sample spacing; see RobustKneeConfig.positional.

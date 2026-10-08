@@ -230,9 +230,13 @@ class BootstrapEvidence:
     detection_rate : float
         Fraction of bootstrap replicates in which a knee was redetected.
     ci90 : tuple of float
-        The 5th-95th percentile interval of redetected locations, data units.
+        The 5th-95th percentile spread of the redetected locations,
+        translated onto the knee being assessed so it always brackets it.
+        In normalized ``x`` units here; the pipeline maps it back to data
+        units before publishing it.
     ci90_width : float
-        Width of ``ci90``, in normalized ``x`` units.
+        Width of ``ci90``, in normalized ``x`` units. Unaffected by the
+        translation, so it still measures the raw replicate spread.
     primary_cluster_rate : float
         Fraction of redetections in the dominant location cluster.
     secondary_cluster_rate : float
@@ -307,7 +311,10 @@ class ClearKnee(KneeResult):
     knee_index : int
         Index of the knee on the cleaned, sorted curve.
     ci90 : tuple of float
-        90% bootstrap interval for the knee location, data units.
+        90% bootstrap interval for the knee location, data units. It is the
+        spread of the resampled redetections centred on ``knee_x``, so it
+        always contains ``knee_x``: it says how far resampling the noise
+        moves the estimate, not where some other estimate sits.
     detection_rate : float
         Fraction of bootstrap replicates in which the knee was redetected.
     smoothing_window, sensitivity : int, float
