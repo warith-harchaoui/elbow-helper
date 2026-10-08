@@ -20,6 +20,7 @@ import numpy as np
 from .config import RobustKneeConfig
 from .numerics import ols_rss
 from .search import run_search
+from .smoothing import signal_and_noise
 from .types import NullEvidence, PreparedCurve, Reason
 
 
@@ -32,9 +33,15 @@ def no_knee_null_test(
     """Monte-Carlo test of the observed knee against a straight-line null.
 
     The null model is a straight line (the *shape* under "no knee") carrying
-    noise of the magnitude estimated from the **accepted broken-line fit** — not
-    from the straight-line fit, whose residuals on a genuinely kinked curve are
-    the knee signal itself and would inflate the null distribution.
+    noise of the magnitude the data actually show — not the straight-line
+    fit's own residuals, which on a genuinely kinked curve are the knee signal
+    itself and would inflate the null distribution. The noise scale comes from
+    :func:`~elbow_helper.smoothing.signal_and_noise`, i.e. the residuals of a
+    light smoother rescaled to the successive-difference noise estimate. It
+    used to come from the accepted broken line's residuals, which carry that
+    model's misfit on any smoothly bending curve and so made the null
+    replicates far noisier than the data, miscalibrating the test in the
+    permissive direction.
 
     Parameters
     ----------
@@ -43,7 +50,8 @@ def no_knee_null_test(
     observed_statistic : tuple
         The search statistic of the accepted knee (from :func:`run_search`).
     knee_x_norm : float
-        The accepted knee, used to estimate the true noise scale.
+        The accepted knee. Unused since the noise scale stopped coming from
+        the broken-line fit; kept so the stage signatures stay uniform.
     config : RobustKneeConfig
         ``null_replicates``, ``max_null_p_value`` and ``random_seed``.
 
@@ -60,11 +68,8 @@ def no_knee_null_test(
     line_coef, _ = ols_rss(line_design, y)
     yhat = line_design @ line_coef
 
-    # True noise scale: residuals of the accepted broken-line model.
-    k = float(knee_x_norm)
-    broken_design = np.column_stack([np.ones_like(x), x, np.maximum(0.0, x - k)])
-    broken_coef, _ = ols_rss(broken_design, y)
-    residuals = y - broken_design @ broken_coef
+    # True noise scale: the curve's own high-frequency component.
+    _, residuals = signal_and_noise(y, config)
 
     # Offset the seed so the null draws differ from the bootstrap draws.
     seed = None if config.random_seed is None else config.random_seed + 10_007

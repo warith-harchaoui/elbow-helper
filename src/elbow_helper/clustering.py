@@ -90,8 +90,8 @@ def cluster_candidates(
     clusters: List[CandidateCluster] = []
     for members in clusters_members:
         locs = np.array([m.knee_x_norm for m in members])
-        median_knee = float(np.median(locs))
-        mad = float(np.median(np.abs(locs - median_knee)))
+        mad = float(np.median(np.abs(locs - np.median(locs))))
+        median_knee = _fine_scale_location(members, window_rank, config)
 
         member_windows = [m.window for m in members]
         ranks = [window_rank[w] for w in member_windows if w in window_rank]
@@ -117,7 +117,7 @@ def cluster_candidates(
                 np.median([m.noise_prominence_ratio for m in members])
             ),
         )
-        cluster.persistent = _is_persistent(cluster, config)
+        cluster.persistent = _is_persistent(cluster, config, prepared.n)
         if cluster.persistent:
             cluster.stable_window = _smallest_stable_window(cluster, windows, config)
         clusters.append(cluster)
@@ -173,8 +173,61 @@ def _neighbor_shift(members: List[KneeCandidate], window_rank: dict) -> float:
     return float(np.max(np.abs(np.diff(medians))))
 
 
-def _is_persistent(cluster: CandidateCluster, config: RobustKneeConfig) -> bool:
+def _fine_scale_location(
+    members: List[KneeCandidate], window_rank: dict, config: RobustKneeConfig
+) -> float:
+    """Locate a cluster from its finest smoothing scales only.
+
+    Coarse scales establish that a knee *persists*; they are the wrong place to
+    read its *position* from, because smoothing moves the difference-curve peak
+    downhill. The locator maximizes ``y_norm - x_norm``, i.e. it returns the
+    point where the curve's normalized slope crosses 1. Convolving the curve
+    with a Gaussian of width ``sigma`` convolves its slope with the same
+    Gaussian, so a corner joining slopes ``mL`` (steep) and ``mR`` (shallow)
+    has its crossing displaced to ``k + z * sigma`` with ``Phi(z) = 1 - (1 -
+    mR) / (mL - mR)``. The displacement is zero only when the corner is
+    symmetric about the diagonal, and grows as the kink sharpens: on the
+    benchmark's piecewise curve with a break at 12 of 120 the slopes are
+    ``mL = 8.2``, ``mR = 0.27``, giving ``z = 1.33`` and a drift of 7.6 samples
+    at the widest window -- which is exactly the 12 -> 20 drift measured there.
+    The same curve broken at 60 has ``mL = 1.95``, ``mR = 0.065``, ``z = 0.01``,
+    and shows no drift at all. Averaging across scales therefore does not
+    cancel the error, it bakes in a one-sided bias that scales with how clear
+    the elbow is.
+
+    Taking the median over the ``fine_scale_span + 1`` finest scales the
+    cluster actually appears at keeps several hits to median away locator
+    jitter, while holding ``sigma`` near the smallest window on the grid where
+    the displacement is a fraction of a sample.
+
+    Parameters
+    ----------
+    members : list of KneeCandidate
+        A single cluster's member candidates.
+    window_rank : dict
+        Maps smoothing window size to its rank in the smoothing grid.
+    config : RobustKneeConfig
+        Supplies ``fine_scale_span``.
+
+    Returns
+    -------
+    float
+        Median normalized location over the retained members.
+    """
+    ranks = {m.window: window_rank.get(m.window, 0) for m in members}
+    cutoff = min(ranks.values()) + max(0, int(config.fine_scale_span))
+    locs = [m.knee_x_norm for m in members if ranks[m.window] <= cutoff]
+    return float(np.median(locs))
+
+
+def _is_persistent(cluster: CandidateCluster, config: RobustKneeConfig, n: int) -> bool:
     """Apply the four persistence gates from the plan.
+
+    The two positional gates (``max_cluster_mad``, ``max_neighbor_shift``) are
+    floored at the curve's sampling resolution via
+    :meth:`RobustKneeConfig.positional`: below roughly 60 samples a single
+    locator sample is already wider than the constant, so the gate would be
+    asking for a precision the grid cannot express.
 
     Parameters
     ----------
@@ -183,6 +236,8 @@ def _is_persistent(cluster: CandidateCluster, config: RobustKneeConfig) -> bool:
         MAD and neighbor-shift statistics already populated.
     config : RobustKneeConfig
         The four persistence thresholds to check against.
+    n : int
+        Number of samples on the curve, for the positional floors.
 
     Returns
     -------
@@ -192,8 +247,8 @@ def _is_persistent(cluster: CandidateCluster, config: RobustKneeConfig) -> bool:
     return (
         cluster.consecutive_scales >= config.min_consecutive_scales
         and cluster.sensitivity_support >= config.min_sensitivity_support
-        and cluster.mad <= config.max_cluster_mad
-        and cluster.neighbor_shift <= config.max_neighbor_shift
+        and cluster.mad <= config.positional(config.max_cluster_mad, n)
+        and cluster.neighbor_shift <= config.positional(config.max_neighbor_shift, n)
     )
 
 
@@ -243,7 +298,6 @@ def select_unique_cluster(
         All clusters (sorted by support).
     config : RobustKneeConfig
         ``secondary_support_frac`` and ``min_dominance_ratio``.
-
     Returns
     -------
     tuple

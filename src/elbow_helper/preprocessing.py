@@ -79,7 +79,38 @@ def infer_curve_direction(x_norm: np.ndarray, y_scaled: np.ndarray) -> tuple:
     return curve, direction
 
 
-def _clean_and_normalize(x, y, min_samples: int, robust_y_scaling: bool = True):
+def _median_despike(y: np.ndarray, window: int) -> np.ndarray:
+    """Replace each sample by the median of its ``window``-wide neighbourhood.
+
+    The identity on locally monotone data (the median of an increasing or
+    decreasing run is its middle element), so a genuinely steep head or tail
+    survives untouched while an isolated outlier is pulled back to its
+    neighbours.
+
+    Parameters
+    ----------
+    y : numpy.ndarray
+        The signal to despike.
+    window : int
+        Odd filter width; ``window <= 1`` returns ``y`` unchanged.
+
+    Returns
+    -------
+    numpy.ndarray
+        The despiked signal, same length as ``y``.
+    """
+    y = np.asarray(y, dtype=float)
+    if window <= 1 or y.size < window:
+        return y.copy()
+    if window % 2 == 0:
+        window -= 1
+    radius = window // 2
+    padded = np.pad(y, radius, mode="edge")
+    windows = np.lib.stride_tricks.sliding_window_view(padded, window)
+    return np.median(windows, axis=1)
+
+
+def _clean_and_normalize(x, y, min_samples: int, despike_window: int = 3):
     """Clean, sort, deduplicate, and normalize a raw curve to the unit square.
 
     Shared by :func:`prepare_curve` (single-knee, adds shape screening on
@@ -90,19 +121,22 @@ def _clean_and_normalize(x, y, min_samples: int, robust_y_scaling: bool = True):
 
     Parameters
     ----------
-    robust_y_scaling : bool, optional
-        If ``True`` (default, used by :func:`prepare_curve`), scale ``y`` on
-        its 5th/95th percentiles, clipped to ``[0, 1]``, for outlier
-        robustness ahead of the single-knee difference-curve search. If ``False``
-        (used by :func:`prepare_curve_unconstrained`), scale on the plain
-        min/max instead: percentile clipping flattens roughly the bottom
-        and top 5% of points to exactly 0 or 1, which the single-knee
-        pipeline's boundary-margin filter discards as a
-        ``BOUNDARY_KNEE``, but which a multi-breakpoint search has no such
-        filter for and will happily read as a genuine extra breakpoint at
-        the clipped tail (found by testing: a clean single-breakpoint curve
-        was reported as two breakpoints, one of them sitting exactly at the
-        edge of the percentile-clipped flat region).
+    despike_window : int, optional
+        Width of the median despiker applied to ``y`` before scaling, used
+        by :func:`prepare_curve` for outlier robustness. A median filter
+        reproduces locally monotone data exactly, so it removes isolated
+        spikes without flattening the head or tail of a steep curve.
+        ``prepare_curve_unconstrained`` passes ``1`` (no despiking), leaving
+        the multi-knee search the raw shape.
+
+        Despiking replaces the 5th/95th-percentile clipping this function
+        used to apply. Clipping flattened the top and bottom 5% of points to
+        exactly 1 and 0, which is precisely where a heavy-tailed curve keeps
+        its knee: on a 784-point PCA scree spectrum it flattened the first 40
+        eigenvalues, moving the reported elbow from component ~15 to
+        component ~172. The same clipping was already known to invent a
+        spurious breakpoint at the edge of the flattened tail for the
+        multi-knee search, which is why that path never used it.
 
     Returns
     -------
@@ -141,17 +175,15 @@ def _clean_and_normalize(x, y, min_samples: int, robust_y_scaling: bool = True):
     # Normalize x to [0, 1].
     x_norm = (x - x_lo) / (x_hi - x_lo)
 
-    if robust_y_scaling:
-        # Robust y scaling on the 5th/95th percentiles, clipped to [0, 1].
-        y_lo, y_hi = np.quantile(y, [0.05, 0.95])
-        if y_hi - y_lo < 1e-12:
-            y_lo, y_hi = float(y.min()), float(y.max())
-        y_scaled = np.clip((y - y_lo) / (y_hi - y_lo), 0.0, 1.0)
-    else:
-        y_lo, y_hi = float(y.min()), float(y.max())
-        y_scaled = (y - y_lo) / (y_hi - y_lo)
+    # Despike, then scale y on its own min/max: the scaling stays a pure
+    # affine map, so no part of the curve is flattened away.
+    y = _median_despike(y, despike_window)
+    y_lo, y_hi = float(y.min()), float(y.max())
+    if y_hi - y_lo < 1e-12:
+        raise Abstain(Reason.ZERO_RANGE, y_range=y_hi - y_lo)
+    y_scaled = (y - y_lo) / (y_hi - y_lo)
 
-    return x_norm, y_scaled, n, x_lo, x_hi, float(y_lo), float(y_hi)
+    return x_norm, y_scaled, n, x_lo, x_hi, y_lo, y_hi
 
 
 def prepare_curve(
@@ -191,7 +223,7 @@ def prepare_curve(
         raise Abstain(Reason.INVALID_INPUT, detail="direction invalid")
 
     x_norm, y_scaled, n, x_lo, x_hi, y_lo, y_hi = _clean_and_normalize(
-        x, y, config.min_samples
+        x, y, config.min_samples, despike_window=config.despike_window
     )
 
     # Auto-detect whatever the caller left unspecified, from the cleaned data.
@@ -200,8 +232,11 @@ def prepare_curve(
         curve = curve or inferred_curve
         direction = direction or inferred_direction
 
-    # Global shape compatibility.
-    rho = spearman(x_norm, y_scaled)
+    # Global shape compatibility. The rank correlation is measured over
+    # run-collapsed values so that a saturating curve's flat tail -- the feature
+    # that makes it a knee at all -- does not count against it as a block of
+    # tied ranks.
+    rho = _plateau_aware_spearman(x_norm, y_scaled)
     viol = _direction_violation_rate(y_scaled, direction)
 
     if abs(rho) < config.min_spearman_abs or viol > config.max_direction_violation_rate:
@@ -258,7 +293,7 @@ def prepare_curve_unconstrained(x, y, min_samples: int) -> PreparedCurve:
         With ``INVALID_INPUT``, ``INSUFFICIENT_DATA`` or ``ZERO_RANGE``.
     """
     x_norm, y_scaled, n, x_lo, x_hi, y_lo, y_hi = _clean_and_normalize(
-        x, y, min_samples, robust_y_scaling=False
+        x, y, min_samples, despike_window=1
     )
     return PreparedCurve(
         x_norm=x_norm,
@@ -273,6 +308,45 @@ def prepare_curve_unconstrained(x, y, min_samples: int) -> PreparedCurve:
         spearman=float(spearman(x_norm, y_scaled)),
         violation_rate=0.0,
     )
+
+
+def _plateau_aware_spearman(x: np.ndarray, y: np.ndarray) -> float:
+    """Rank correlation that a long flat tail cannot crush.
+
+    Plain Spearman is a *rank* correlation, so a run of identical values becomes
+    one large block of tied ranks. A saturating curve is mostly such a run --
+    that flat tail is the very feature that makes it a knee -- so the better the
+    knee, the lower its Spearman. The screen ends up anti-correlated with the
+    thing it is screening for: a factor-model spectrum with a hard break at
+    index 10 out of 200 scores only -0.38 and is rejected outright, while the
+    same curve with the break at 50 scores -0.76 and passes.
+
+    Collapsing each run of equal values to a single representative removes that
+    artefact while leaving everything else alone. A curve with no ties -- noise,
+    a noisy flat line, anything the gate is meant to catch -- is unchanged, so
+    this loosens nothing that mattered.
+
+    Parameters
+    ----------
+    x : numpy.ndarray
+        Normalized abscissae, ascending.
+    y : numpy.ndarray
+        The scaled signal.
+
+    Returns
+    -------
+    float
+        Spearman correlation over the run-collapsed curve, or over the raw
+        curve when collapsing leaves too few points to be meaningful.
+    """
+    if y.size < 3:
+        return spearman(x, y)
+    starts = np.concatenate([[0], np.flatnonzero(np.diff(y) != 0) + 1])
+    if starts.size < 3 or starts.size == y.size:
+        return spearman(x, y)
+    ends = np.concatenate([starts[1:], [y.size]])
+    x_runs = np.array([x[a:b].mean() for a, b in zip(starts, ends, strict=True)])
+    return spearman(x_runs, y[starts])
 
 
 def _direction_violation_rate(y: np.ndarray, direction: str) -> float:

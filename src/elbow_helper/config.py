@@ -29,6 +29,24 @@ class RobustKneeConfig:
     # --- data adequacy ---
     min_samples: int = 20
 
+    # --- y normalization ---
+    # Width of the median despiker applied to y before min/max scaling. A
+    # median filter is the identity on locally monotone data, so it removes
+    # isolated outliers without touching the head or tail of a genuinely
+    # steep curve; set to 1 to disable it.
+    despike_window: int = 3
+
+    # --- positional resolution ---
+    # No precision requirement can be meaningfully finer than the x sampling
+    # grid: a knee located on n samples is only ever known to within
+    # 1 / (n - 1) of the normalized range. The gates that demand positional
+    # precision -- cluster MAD, neighbor shift, bootstrap median shift and CI
+    # width -- are floored at this many sample spacings. ``cluster_tolerance``
+    # deliberately is *not*: it decides which hits count as the same knee, so
+    # widening it changes which knee gets reported, not how precisely.
+    # See :meth:`RobustKneeConfig.positional`.
+    positional_floor_samples: float = 2.0
+
     # --- scale-space search ---
     smoothing_fractions: Tuple[float, ...] = (
         0.0,
@@ -41,6 +59,15 @@ class RobustKneeConfig:
         0.25,
     )
     sensitivity_fractions: Tuple[float, ...] = (0.0, 0.01, 0.02, 0.05)
+
+    # How many smoothing scales beyond the finest one a cluster appears at are
+    # read for its *location*. Persistence is judged across the whole scale
+    # space, but a smoothed corner's difference-curve peak slides toward the
+    # shallower side, so the coarse scales sit systematically late; see
+    # :func:`~elbow_helper.clustering._fine_scale_location`. ``1`` keeps two
+    # scales -- enough members to median away locator jitter without
+    # inheriting the drift.
+    fine_scale_span: int = 1
 
     # --- global shape compatibility ---
     min_spearman_abs: float = 0.60
@@ -75,6 +102,10 @@ class RobustKneeConfig:
     cv_folds: int = 5
 
     # --- bootstrap robustness ---
+    # Width of the smoother that supplies the bootstrap's signal. Small on
+    # purpose: it has to average noise away without rounding off the knee the
+    # replicates are meant to re-find.
+    bootstrap_signal_window: int = 5
     bootstrap_replicates: int = 100
     min_bootstrap_detection_rate: float = 0.90
     max_ci90_width: float = 0.10
@@ -88,6 +119,38 @@ class RobustKneeConfig:
 
     # --- reproducibility ---
     random_seed: Optional[int] = None
+
+    def positional(
+        self, threshold: float, n: int, samples: Optional[float] = None
+    ) -> float:
+        """Widen a positional threshold to at least the x sampling resolution.
+
+        Thresholds on normalized ``x`` are written as curve fractions, but the
+        quantity they bound is quantized at the sample spacing
+        ``h = 1 / (n - 1)``: on a 49-point curve a single sample is already
+        0.021 of the range, so a 0.03 tolerance leaves no room for the
+        one-to-two-sample jitter the locator inevitably has. This returns the
+        threshold widened to ``samples * h`` whenever the grid is coarser than
+        the constant, and leaves it untouched on finely sampled curves.
+
+        Parameters
+        ----------
+        threshold : float
+            The configured tolerance, in normalized ``x`` units.
+        n : int
+            Number of samples on the curve.
+        samples : float, optional
+            Number of sample spacings to floor at. Defaults to
+            ``positional_floor_samples``.
+
+        Returns
+        -------
+        float
+            ``max(threshold, samples / (n - 1))``.
+        """
+        if samples is None:
+            samples = self.positional_floor_samples
+        return max(float(threshold), float(samples) / max(int(n) - 1, 1))
 
     def with_(self, **changes) -> "RobustKneeConfig":
         """Return a copy of this config with ``changes`` applied.

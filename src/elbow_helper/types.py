@@ -49,13 +49,14 @@ class PreparedCurve:
     ----------
     x_norm, y_scaled : numpy.ndarray
         The curve on the unit square: ``x`` linearly scaled to ``[0, 1]`` and
-        ``y`` robustly scaled (5th/95th percentile) and clipped to ``[0, 1]``.
+        ``y`` median-despiked, then linearly scaled to ``[0, 1]`` on its own
+        min/max, so the map back to data units is exact everywhere.
     n : int
         Number of retained samples.
     x_lo, x_hi : float
         Original x-range, used to map a normalized knee back to data units.
     y_lo, y_hi : float
-        Robust y-limits used for scaling (inverse transform for y).
+        The despiked y-limits used for scaling (inverse transform for y).
     curve, direction : str
         The caller-supplied curve orientation.
     spearman : float
@@ -139,9 +140,14 @@ class CandidateCluster:
     Attributes
     ----------
     median_knee : float
-        Median normalized location of the cluster's members.
+        Median normalized location of the cluster's members at its finest
+        smoothing scales (see
+        :func:`~elbow_helper.clustering._fine_scale_location`): the coarse
+        scales say the knee persists, the fine ones say where it is.
     mad : float
-        Median absolute deviation of the members' locations.
+        Median absolute deviation of *all* the members' locations, about
+        their own median -- the cluster's dispersion across the whole scale
+        space, not the scatter of the located subset.
     members : list of KneeCandidate
         The candidates in this cluster.
     n_windows : int

@@ -20,6 +20,9 @@ from .types import PreparedCurve, Reason, SegmentEvidence
 
 _EPS = 1e-9
 
+# Smallest number of samples a Theil-Sen slope is read from.
+_MIN_SLOPE_POINTS = 3
+
 
 def _design_single(x: np.ndarray) -> np.ndarray:
     """Design matrix for ``y = a + b x``.
@@ -58,6 +61,19 @@ def _design_broken(x: np.ndarray, k: float) -> np.ndarray:
 def _blocked_cv_sse(x: np.ndarray, y: np.ndarray, k: float, folds: int) -> tuple:
     """Blocked (contiguous) cross-validated SSE for single vs broken models.
 
+    Folds whose *training* half lies entirely on one side of ``k`` are skipped.
+    There ``max(0, x - k)`` is either all zero or an exact affine function of
+    ``x``, so the broken-line design is rank-deficient and its fit coincides
+    with the single line's: the fold cannot tell the two models apart and
+    contributes an identical term to both sums. Counting it anyway reads as
+    evidence against the knee, and it is precisely the fold that holds the
+    knee -- hence the steepest part of the curve and the bulk of the error --
+    that gets held out that way. On a 784-point PCA scree spectrum the four
+    informative folds each showed a 99% error reduction while the one
+    degenerate fold, carrying 96% of the total squared error, showed exactly
+    none; summed naively that came out as a 3.6% improvement and the knee was
+    rejected as ``SEGMENTED_MODEL_NOT_BETTER``.
+
     Parameters
     ----------
     x, y : numpy.ndarray
@@ -70,8 +86,9 @@ def _blocked_cv_sse(x: np.ndarray, y: np.ndarray, k: float, folds: int) -> tuple
     Returns
     -------
     tuple of float
-        ``(sse_single, sse_broken)``, each the held-out sum of squared
-        errors summed over all folds.
+        ``(sse_single, sse_broken)``, each the held-out sum of squared errors
+        summed over the folds on which the two models are distinguishable.
+        ``(0.0, 0.0)`` when no fold is.
     """
     n = x.size
     folds = max(2, min(folds, n // 4)) if n >= 8 else 2
@@ -86,6 +103,10 @@ def _blocked_cv_sse(x: np.ndarray, y: np.ndarray, k: float, folds: int) -> tuple
         train = ~test
         if train.sum() < 4:
             continue
+        # Both pieces of the broken line must be identifiable from the
+        # training half, otherwise the two models are the same model here.
+        if (x[train] < k).sum() < 2 or (x[train] > k).sum() < 2:
+            continue
 
         cs, _ = ols_rss(_design_single(x[train]), y[train])
         pred_s = _design_single(x[test]) @ cs
@@ -96,6 +117,55 @@ def _blocked_cv_sse(x: np.ndarray, y: np.ndarray, k: float, folds: int) -> tuple
         sse_broken += float(np.sum((y[test] - pred_b) ** 2))
 
     return sse_single, sse_broken
+
+
+def _side_mask(
+    x: np.ndarray, k: float, near: float, far: float, side: str, min_points: int
+) -> np.ndarray:
+    """Boolean mask for the slope-fitting window on one side of ``k``.
+
+    The configured window is a pair of offsets in normalized ``x``: skip the
+    ``near`` band hugging the knee (where the bend itself lives), then fit over
+    the next ``far - near`` of the range. Near either end of the curve that
+    window runs off the data, and a knee at 2% of the range -- where a scree
+    plot's elbow routinely sits -- gets an *empty* left window. Reporting that
+    as ``WEAK_SLOPE_CHANGE`` says the slope did not change when in fact it was
+    never measured, so when the configured window holds fewer than
+    ``min_points`` samples this falls back to the ``min_points`` samples
+    nearest the knee on that side, still skipping the single sample adjacent
+    to it.
+
+    Parameters
+    ----------
+    x : numpy.ndarray
+        Normalized ``x`` values, ascending.
+    k : float
+        Candidate knee location.
+    near, far : float
+        Offsets from the knee bounding the window, ``near < far``.
+    side : str
+        ``"left"`` or ``"right"``.
+    min_points : int
+        Smallest usable window, in samples.
+
+    Returns
+    -------
+    numpy.ndarray
+        Boolean mask selecting the window's samples.
+    """
+    if side == "left":
+        mask = (x >= k - far) & (x <= k - near)
+        available = np.nonzero(x < k)[0]
+        fallback = available[max(0, available.size - 1 - min_points) : -1]
+    else:
+        mask = (x >= k + near) & (x <= k + far)
+        available = np.nonzero(x > k)[0]
+        fallback = available[1 : 1 + min_points]
+    if int(mask.sum()) >= min_points or fallback.size < min_points:
+        return mask
+    out = np.zeros_like(mask)
+    out[fallback] = True
+    return out
 
 
 def confirm_segmented_model(
@@ -126,10 +196,10 @@ def confirm_segmented_model(
     # --- robust local slopes on either side of the knee ---
     far_l, near_l = config.slope_left_window
     near_r, far_r = config.slope_right_window
-    left = (x >= k - far_l) & (x <= k - near_l)
-    right = (x >= k + near_r) & (x <= k + far_r)
+    left = _side_mask(x, k, near_l, far_l, "left", _MIN_SLOPE_POINTS)
+    right = _side_mask(x, k, near_r, far_r, "right", _MIN_SLOPE_POINTS)
 
-    if left.sum() < 3 or right.sum() < 3:
+    if left.sum() < _MIN_SLOPE_POINTS or right.sum() < _MIN_SLOPE_POINTS:
         return SegmentEvidence(
             passes=False,
             slope_contrast=0.0,

@@ -16,6 +16,7 @@ from typing import List
 import numpy as np
 
 from .config import RobustKneeConfig
+from .numerics import robust_sigma_from_diffs
 
 
 def _nearest_odd(v: float) -> int:
@@ -129,3 +130,51 @@ def smooth_curve(y: np.ndarray, window: int, method: str = "gaussian") -> np.nda
     # np.convolve 'valid' over a length n+2*radius signal with a (2r+1) kernel
     # yields exactly n samples.
     return smoothed[: y.size]
+
+
+def signal_and_noise(y: np.ndarray, config: RobustKneeConfig) -> tuple:
+    """Split ``y`` into a smooth signal and noise of the curve's own scale.
+
+    The signal is a lightly smoothed copy of the observed curve, so every
+    replicate keeps the shape actually measured. The noise is the smoother's
+    residual, rescaled so its standard deviation matches
+    :func:`~elbow_helper.numerics.robust_sigma_from_diffs`, the
+    successive-difference estimate of the per-sample noise. The rescaling is
+    what makes the bandwidth a shape choice rather than a noise-level choice:
+    whatever curvature the smoother leaves behind, the perturbation injected
+    into the replicates is always the size of the noise the data actually
+    carry.
+
+    This replaces fitting the accepted broken line and resampling *its*
+    residuals. On a smoothly bending curve those residuals are dominated by
+    the broken line's own misfit rather than by noise -- on a 784-point PCA
+    scree spectrum they had a standard deviation of 0.054 against a true
+    noise level of 0.00013, a 400-fold inflation -- so the replicates were
+    curves far noisier than anything observed and the knee went undetected in
+    a fifth to a third of them. The failure grew with how sharply the curve
+    bent, i.e. with how clear the elbow was, which is how a strong elbow
+    ended up reported as ``BOOTSTRAP_UNSTABLE``.
+
+    Parameters
+    ----------
+    y : numpy.ndarray
+        The observed (scaled) curve.
+    config : RobustKneeConfig
+        Supplies ``bootstrap_signal_window``.
+
+    Returns
+    -------
+    tuple of (numpy.ndarray, numpy.ndarray)
+        ``(signal, residuals)``, both the length of ``y``.
+    """
+    window = max(3, int(config.bootstrap_signal_window))
+    if y.size < 4 * window:
+        window = 3
+    signal = smooth_curve(y, window, method="gaussian")
+    residuals = y - signal
+
+    sigma = robust_sigma_from_diffs(y)
+    spread = float(residuals.std())
+    if spread > 1e-12 and sigma > 0.0:
+        residuals = residuals * (sigma / spread)
+    return signal, residuals
