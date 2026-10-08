@@ -112,31 +112,24 @@ mesurée, le seuil qu'elle devait franchir et les positions exprimées dans vos
 propres unités en x plutôt que dans les unités normalisées où travaille la
 porte.
 
+`detail` est de la prose : elle suit donc `config.language`, soit `"fr"` soit
+`"en"` (la valeur par défaut). Seule la formulation change. Le code de raison,
+chaque seuil et chaque mesure restent identiques d'une langue à l'autre, si
+bien que changer de langue ne change jamais le verdict.
+
 ```python
+>>> result = robust_elbow(x, y, config=RobustKneeConfig(language="fr"))
 >>> result.reason
 'SEGMENTED_MODEL_NOT_BETTER'
 >>> result.detail
-'a bent line fits no better than a straight one here: BIC improves by 6.824,
- not the 10 required, and held-out error actually rises by 126.0% when the
- bend is added'
+"une ligne brisée n'ajuste pas mieux qu'une droite ici : le BIC ne gagne que
+ 6.824 au lieu des 10 exigés ; l'erreur hors échantillon augmente même de
+ 126.0 % lorsqu'on ajoute le pli"
 ```
 
 La même phrase est recopiée dans `diagnostics["detail"]`, si bien que la ligne
 de commande, l'API HTTP et le serveur MCP la transmettent sans travail
 supplémentaire.
-
-`detail` est de la prose : elle suit donc `config.language`, soit `"en"` (par
-défaut) soit `"fr"`. Seule la formulation change. Le code de raison, chaque
-seuil et chaque mesure restent identiques d'une langue à l'autre, si bien que
-changer de langue ne change jamais le verdict.
-
-```python
-robust_elbow(x, y, config=RobustKneeConfig(language="fr"))
-# NoClearKnee(reason='SEGMENTED_MODEL_NOT_BETTER', detail="une ligne brisée
-#  n'ajuste pas mieux qu'une droite ici : le BIC ne gagne que 6.824 au lieu
-#  des 10 exigés ; l'erreur hors échantillon augmente même de 126.0 %
-#  lorsqu'on ajoute le pli")
-```
 
 ## Courbes qui s'étendent sur plusieurs ordres de grandeur : passer au logarithme
 
