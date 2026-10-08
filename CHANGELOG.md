@@ -6,7 +6,59 @@ All notable changes to `elbow-helper` are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+- **`bootstrap.bootstrap_knee`**: `ClearKnee.ci90` could exclude `ClearKnee.
+  knee_x`. The point estimate comes from the scale-space cluster, while the
+  interval came from the raw percentiles of the bootstrap replicates, which
+  re-find the knee of the *smoothed* signal they are drawn from; nothing tied
+  the two together. On the measurement suite 20 of 28 accepted knees came back
+  with an interval excluding their own estimate, e.g. `knee_x=6.5` published
+  next to `ci90=(7.5, 7.5)`. A caller cannot act on two contradictory numbers,
+  and `plotting.py` drew the marker outside its own band. The bootstrap now
+  reports the replicate *spread* translated onto the knee it qualifies: the
+  width is bit-for-bit unchanged, so `max_ci90_width` gates exactly what it
+  gated, and containment follows from `lo <= median <= hi` with no clamping.
+  The displacement between the two reads stays visible as `median_shift`,
+  measured against its own threshold. Now 0 of 30.
+- **`config.fine_scale_span` 1 -> 0**: a cluster's location is read from its
+  finest smoothing scale alone. Pooling the two finest scales does not average
+  away a jitter, it splits the difference with a drift, and smoothing displaces
+  a corner one way only. On curves whose breakpoint is unambiguous the finest
+  scale alone is accurate to 0.18 samples on average against 0.50 for the pair.
+  Exact plateaus are now recovered exactly (breakpoints at 21, 41, 61, 81
+  reported as 21, 41, 61, 81, previously 21.5, 41.5, 61.5, 81) and the
+  benchmark's exponentials match their Kneedle reference exactly.
+- **`metrics.passes_basic_filters`**: the boundary margin is now the wider of
+  `boundary_margin` (a fraction of the range) and the new
+  `boundary_min_samples` (a count), because the two things it guards against
+  scale differently. As a pure fraction it silently got stricter the longer the
+  curve was: at n=200 a 0.10 margin discards the first 20 samples. Worse than
+  missing an early knee, it rejected the knee at its true position while
+  keeping the copy the coarse smoothing scales had dragged further in -- a
+  200-point curve whose plateau begins at index 11 had candidates at 11, 13,
+  14, 15 and 18 all thrown out, and answered 21. `boundary_margin` drops
+  0.10 -> 0.03, calibrated by sweeping it against 160 no-knee control curves:
+  the false-positive count is flat at 1/160 across 0.10 down to 0.01, so the
+  margin was not buying conservatism, while detection saturates at 0.04.
+  Exact-plateau recovery 4/5 -> 5/5 and factor-rank recovery 2/4 -> 4/4.
+
 ### Added
+- **`NoClearKnee.detail` and `elbow_helper.explain`**: every abstention now
+  carries a plain-language sentence naming the gate that closed, the value
+  measured and the threshold it had to clear, with positions in the caller's
+  own x units rather than the normalized ones the gate works in. A `Reason`
+  code says *which* gate; it cannot say whether the curve is hopeless or merely
+  under-measured, and those call for opposite responses. The sentence is
+  mirrored into `diagnostics["detail"]`, so the CLI, HTTP API and MCP server
+  carry it through `dataclasses.asdict` with no change of their own. `Reason`
+  codes are untouched, so anything matching on them keeps working.
+- **README / LISEZ-MOI**: a section on curves spanning orders of magnitude.
+  The detector works on the curve normalized to the unit square, so a `y` that
+  falls across several decades has everything past its first few points crushed
+  into the bottom percent of that square, and the corner of *that* shape is not
+  the corner the reader sees. k-means inertia is the common case: raw, it
+  answers k=6-7 (where the Kneedle construction also puts it); on
+  `log(inertia)` it answers exactly 8, the true cluster count, on every seed.
 - **Static web app (`webapp/`)**: the site deployed at
   https://deraison.ai/elbow-helper, built on the standpoint model.
   `webapp/build.py` composes a relocatable `webapp/dist/`: the app page

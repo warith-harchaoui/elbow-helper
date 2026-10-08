@@ -62,6 +62,17 @@ def passes_basic_filters(
     within the boundary margin, too few points on one side, within half a
     smoothing window of an end, weak prominence, or weak prominence-to-noise.
 
+    The boundary margin is the wider of ``boundary_margin`` (a fraction of the
+    range) and ``boundary_min_samples`` (a count), because the two things it
+    guards against scale differently -- see the field comments on
+    :class:`~elbow_helper.config.RobustKneeConfig`. Taken as a fraction alone
+    it silently got stricter the longer the curve was, and on a long one it
+    did worse than miss an early knee: it rejected the knee at its true
+    position while keeping the drifted copy the coarse smoothing scales put
+    further in. A 200-point curve whose plateau begins at index 11 had
+    candidates at 11, 13, 14, 15 and 18 all thrown out as boundary artefacts,
+    and the cluster that survived to be reported sat at 21.
+
     Parameters
     ----------
     candidate : KneeCandidate
@@ -76,7 +87,11 @@ def passes_basic_filters(
     bool
         Whether the candidate passes.
     """
-    if candidate.boundary_distance < config.boundary_margin:
+    margin = max(
+        config.boundary_margin,
+        config.boundary_min_samples / max(n - 1, 1),
+    )
+    if candidate.boundary_distance < margin:
         candidate.rejected = Reason.BOUNDARY_KNEE
         return False
 

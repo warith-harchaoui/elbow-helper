@@ -80,8 +80,8 @@ Laisser `curve` ou `direction` vide revient à les déduire des données une foi
 
 `robust_knee` renvoie toujours l'un de deux types, tous deux sous-classes de `KneeResult` et qu'on distingue par `.is_clear` :
 
-- `ClearKnee` : `knee_x`, `knee_x_norm`, `knee_index`, `ci90` (un intervalle bootstrap à 90 %, en unités des données), `detection_rate`, `smoothing_window`, `sensitivity`, `prominence`, `slope_contrast`, `bic_improvement`, `null_p_value`, plus l'ensemble des `diagnostics`.
-- `NoClearKnee` : un code `reason` lisible par une machine, plus les `diagnostics`.
+- `ClearKnee` : `knee_x`, `knee_x_norm`, `knee_index`, `ci90` (un intervalle bootstrap à 90 %, en unités des données, qui contient toujours `knee_x`), `detection_rate`, `smoothing_window`, `sensitivity`, `prominence`, `slope_contrast`, `bic_improvement`, `null_p_value`, plus l'ensemble des `diagnostics`.
+- `NoClearKnee` : un code `reason` lisible par une machine, un `detail` en langage clair qui énonce la valeur mesurée et le seuil qu'elle devait franchir, plus les `diagnostics`.
 
 L'abstention doit être traitée explicitement : il n'existe aucun repli silencieux vers une estimation approximative.
 
@@ -104,6 +104,46 @@ Seul un candidat qui franchit chacune de ces étapes devient un `ClearKnee`.
 `MULTIPLE_PLAUSIBLE_KNEES`, `BOUNDARY_KNEE`, `WEAK_SLOPE_CHANGE`,
 `SEGMENTED_MODEL_NOT_BETTER`, `BOOTSTRAP_UNSTABLE`, `BOOTSTRAP_MULTIMODAL`,
 `NULL_NOT_REJECTED`, `INTERNAL_NUMERICAL_FAILURE`.
+
+Un code nomme la porte qui s'est fermée. Il ne dit pas si la courbe est
+désespérée ou simplement trop peu mesurée. Comme ces deux situations appellent
+des réponses opposées, chaque abstention porte aussi un `detail` : la valeur
+mesurée, le seuil qu'elle devait franchir et les positions exprimées dans vos
+propres unités en x plutôt que dans les unités normalisées où travaille la
+porte.
+
+```python
+>>> result.reason
+'SEGMENTED_MODEL_NOT_BETTER'
+>>> result.detail
+'a bent line fits no better than a straight one here: BIC improves by 6.824,
+ not the 10 required, and held-out error actually rises by 126.0% when the
+ bend is added'
+```
+
+La même phrase est recopiée dans `diagnostics["detail"]`, si bien que la ligne
+de commande, l'API HTTP et le serveur MCP la transmettent sans travail
+supplémentaire.
+
+## Courbes qui s'étendent sur plusieurs ordres de grandeur : passer au logarithme
+
+Le détecteur travaille sur la courbe normalisée sur le carré unité. Un `y` qui
+chute de plusieurs décades voit donc tout ce qui suit ses premiers points
+écrasé dans le dernier pour cent de ce carré. Le coin de la forme normalisée
+n'est alors plus le coin que vous lisez sur le graphique. Le détecteur
+rapportera fidèlement le premier.
+
+L'inertie des k-moyennes est le cas courant : sur huit amas bien séparés, elle
+tombe d'environ 80000 à environ 500 avant même que la queue ne commence.
+Appliqué à la courbe brute, `robust_elbow` renvoie k = 6 ou 7, exactement là où
+la construction de Kneedle place elle aussi le coude. Appliqué à
+`log(inertie)`, il renvoie exactement 8, le vrai nombre d'amas, sur chacune des
+graines testées. Tracer une telle courbe sur un axe logarithmique revient déjà
+à regarder la forme transformée : autant confier la même au détecteur.
+
+```python
+result = robust_elbow(k_values, np.log(inertie))
+```
 
 ## Configuration
 

@@ -19,6 +19,7 @@ import os_helper as oh
 
 from .bootstrap import bootstrap_knee
 from .config import RobustKneeConfig
+from .explain import detail_for
 from .null_test import no_knee_null_test
 from .preprocessing import Abstain, prepare_curve
 from .search import run_search
@@ -69,7 +70,7 @@ def robust_knee(
         prepared = prepare_curve(x, y, curve, direction, config)
     except Abstain as a:
         diagnostics.update(a.diagnostics)
-        return NoClearKnee(reason=a.reason, diagnostics=diagnostics)
+        return _abstain(a.reason, diagnostics, a.diagnostics.get("detail", ""))
 
     diagnostics.update(
         curve=prepared.curve,
@@ -85,8 +86,7 @@ def robust_knee(
             n_candidates=result.n_candidates, n_filtered=result.n_filtered
         )
         if not result.detected:
-            oh.info(f"[elbow-helper] abstain: {result.reason}")
-            return NoClearKnee(reason=result.reason, diagnostics=diagnostics)
+            return _abstain(result.reason, diagnostics, result.detail)
 
         cluster = result.cluster
         seg = result.segment
@@ -106,8 +106,11 @@ def robust_knee(
             "passes": seg.passes,
         }
         if not seg.passes:
-            oh.info(f"[elbow-helper] abstain: {seg.reason}")
-            return NoClearKnee(reason=seg.reason, diagnostics=diagnostics)
+            return _abstain(
+                seg.reason,
+                diagnostics,
+                detail_for(seg.reason, prepared, config, seg=seg),
+            )
 
         boot = bootstrap_knee(prepared, result.knee_x_norm, config)
         diagnostics["bootstrap"] = {
@@ -120,8 +123,11 @@ def robust_knee(
             "passes": boot.passes,
         }
         if not boot.passes:
-            oh.info(f"[elbow-helper] abstain: {boot.reason}")
-            return NoClearKnee(reason=boot.reason, diagnostics=diagnostics)
+            return _abstain(
+                boot.reason,
+                diagnostics,
+                detail_for(boot.reason, prepared, config, boot=boot),
+            )
 
         null = no_knee_null_test(prepared, result.statistic, result.knee_x_norm, config)
         diagnostics["null"] = {
@@ -130,8 +136,11 @@ def robust_knee(
             "passes": null.passes,
         }
         if not null.passes:
-            oh.info(f"[elbow-helper] abstain: {null.reason}")
-            return NoClearKnee(reason=null.reason, diagnostics=diagnostics)
+            return _abstain(
+                null.reason,
+                diagnostics,
+                detail_for(null.reason, prepared, config, null=null),
+            )
 
         # Accepted: map back to data units.
         knee_x = prepared.denormalize_x(result.knee_x_norm)
@@ -168,13 +177,42 @@ def robust_knee(
 
     except Abstain as a:
         diagnostics.update(a.diagnostics)
-        return NoClearKnee(reason=a.reason, diagnostics=diagnostics)
+        return _abstain(a.reason, diagnostics, a.diagnostics.get("detail", ""))
     except Exception as exc:  # numerical safety net — never crash the caller
         oh.warning(f"[elbow-helper] internal failure: {exc}")
         diagnostics["error"] = str(exc)
-        return NoClearKnee(
-            reason=Reason.INTERNAL_NUMERICAL_FAILURE, diagnostics=diagnostics
-        )
+        return _abstain(Reason.INTERNAL_NUMERICAL_FAILURE, diagnostics, str(exc))
+
+
+def _abstain(reason: str, diagnostics: dict, detail: str) -> NoClearKnee:
+    """Build an abstention that says what closed the gate, not just which one.
+
+    A reason code alone leaves a user unable to tell a hopeless curve from an
+    under-measured one, and those call for opposite responses. ``detail``
+    carries the measured value and the threshold it missed; it is mirrored
+    into ``diagnostics`` so every door -- library, CLI, HTTP, MCP -- hands it
+    on without each having to know about a new field.
+
+    Parameters
+    ----------
+    reason : str
+        The :class:`~elbow_helper.types.Reason` code.
+    diagnostics : dict
+        Accumulated stage diagnostics, updated in place with ``detail``.
+    detail : str
+        The plain-language account, possibly empty.
+
+    Returns
+    -------
+    NoClearKnee
+        The abstention to return to the caller.
+    """
+    if detail:
+        diagnostics["detail"] = detail
+        oh.info(f"[elbow-helper] abstain: {reason} -- {detail}")
+    else:
+        oh.info(f"[elbow-helper] abstain: {reason}")
+    return NoClearKnee(reason=reason, diagnostics=diagnostics, detail=detail)
 
 
 def robust_elbow(x, y=None, config: Optional[RobustKneeConfig] = None) -> KneeResult:

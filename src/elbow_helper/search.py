@@ -18,6 +18,7 @@ from typing import Optional, Tuple
 from .candidates import generate_candidates
 from .clustering import cluster_candidates, select_unique_cluster
 from .config import RobustKneeConfig
+from .explain import explain_candidates, explain_clusters
 from .metrics import passes_basic_filters
 from .segmented import confirm_segmented_model
 from .types import CandidateCluster, PreparedCurve, Reason, SegmentEvidence
@@ -36,6 +37,9 @@ class SearchResult:
     statistic: Tuple[int, float, float] = (0, 0.0, 0.0)
     n_candidates: int = 0
     n_filtered: int = 0
+    # Plain-language account of the gate that closed, for an abstention; see
+    # :mod:`elbow_helper.explain`.
+    detail: str = ""
 
 
 def run_search(
@@ -62,19 +66,30 @@ def run_search(
     """
     candidates = generate_candidates(prepared, config)
     if not candidates:
-        return SearchResult(False, reason=Reason.NO_KNEE_CANDIDATES)
+        return SearchResult(
+            False,
+            reason=Reason.NO_KNEE_CANDIDATES,
+            detail=explain_candidates([], prepared, config),
+        )
 
     filtered = [c for c in candidates if passes_basic_filters(c, prepared.n, config)]
     if not filtered:
         return SearchResult(
-            False, reason=Reason.ALL_CANDIDATES_WEAK, n_candidates=len(candidates)
+            False,
+            reason=Reason.ALL_CANDIDATES_WEAK,
+            n_candidates=len(candidates),
+            detail=explain_candidates(candidates, prepared, config),
         )
 
     clusters = cluster_candidates(filtered, prepared, config)
     selected, reason = select_unique_cluster(clusters, config)
     if selected is None:
         return SearchResult(
-            False, reason=reason, n_candidates=len(candidates), n_filtered=len(filtered)
+            False,
+            reason=reason,
+            n_candidates=len(candidates),
+            n_filtered=len(filtered),
+            detail=explain_clusters(clusters, reason, prepared, config),
         )
 
     knee_x_norm = selected.median_knee

@@ -353,9 +353,25 @@ class ClearKnee(KneeResult):
 
 @dataclass
 class NoClearKnee(KneeResult):
-    """An explicit abstention: no knee is strong enough to report."""
+    """An explicit abstention: no knee is strong enough to report.
+
+    Attributes
+    ----------
+    detail : str
+        A plain-language sentence naming the gate that closed, the value
+        measured and the threshold it had to clear -- in the caller's own x
+        units wherever the quantity is a position. ``reason`` says which
+        gate; this says whether the curve is hopeless or merely under-
+        measured, which is the part that tells a user what to do next. Also
+        mirrored into ``diagnostics["detail"]``. Empty when the reason
+        needs no elaboration.
+    """
+
+    detail: str = ""
 
     def __repr__(self) -> str:  # pragma: no cover - cosmetic
+        if self.detail:
+            return f"NoClearKnee(reason={self.reason!r}, detail={self.detail!r})"
         return f"NoClearKnee(reason={self.reason!r})"
 
 

@@ -78,7 +78,35 @@ class RobustKneeConfig:
     max_direction_violation_rate: float = 0.25
 
     # --- candidate basic filters ---
-    boundary_margin: float = 0.10
+    # A knee is rejected when it sits within ``boundary_margin`` of either end
+    # of the normalized range, or within ``boundary_min_samples`` samples of
+    # it, whichever band is wider. Two parameters rather than one because the
+    # two reasons an end knee is untrustworthy scale differently: too few
+    # points on one side to read a slope from is a count, and it does not get
+    # better on a longer curve; a feature indistinguishable from the curve
+    # simply starting steeply is a fraction of the range. Expressing the
+    # count as a fraction, as a single ``boundary_margin`` had to, overstates
+    # it badly once the curve is long -- at n=200 a 0.10 margin discards the
+    # first 20 samples, and a rank-10 factor structure lives there. See
+    # :func:`~elbow_helper.metrics.passes_basic_filters`.
+    #
+    # 0.03 is calibrated, not guessed. Swept against 160 no-knee control
+    # curves (straight, flat, flat plus noise, pure noise, line plus noise at
+    # four lengths and eight seeds each) and the detection suites:
+    #
+    #   margin   plateau  factor-rank   false positives on controls
+    #   0.10        4/5       2/4            1/160
+    #   0.06        5/5       3/4            1/160
+    #   0.04        5/5       4/4            1/160
+    #   0.03        5/5       4/4            1/160
+    #   0.01        5/5       4/4            1/160
+    #
+    # The false-positive count does not move anywhere in that range, so the
+    # margin was not buying conservatism; detection saturates at 0.04, and
+    # 0.03 takes the full gain one step inside the plateau rather than
+    # perched on its edge.
+    boundary_margin: float = 0.03
+    boundary_min_samples: int = 5
     min_side_points: int = 5
     min_prominence: float = 0.05
     min_noise_prominence_ratio: float = 4.0

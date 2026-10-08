@@ -80,8 +80,8 @@ Leaving `curve` or `direction` unset infers them from the cleaned, normalised da
 
 `robust_knee` always returns one of two types, both subclasses of `KneeResult` and distinguished by `.is_clear`:
 
-- `ClearKnee`: `knee_x`, `knee_x_norm`, `knee_index`, `ci90` (a 90% bootstrap interval, in data units), `detection_rate`, `smoothing_window`, `sensitivity`, `prominence`, `slope_contrast`, `bic_improvement`, `null_p_value`, and the full `diagnostics`.
-- `NoClearKnee`: a machine-readable `reason` code plus `diagnostics`.
+- `ClearKnee`: `knee_x`, `knee_x_norm`, `knee_index`, `ci90` (a 90% bootstrap interval, in data units, always containing `knee_x`), `detection_rate`, `smoothing_window`, `sensitivity`, `prominence`, `slope_contrast`, `bic_improvement`, `null_p_value`, and the full `diagnostics`.
+- `NoClearKnee`: a machine-readable `reason` code, a plain-language `detail` saying what was measured and what it had to clear, plus `diagnostics`.
 
 You are forced to handle abstention explicitly: there is no silent fallback to a guess.
 
@@ -104,6 +104,43 @@ Only a candidate that clears every gate becomes a `ClearKnee`.
 `MULTIPLE_PLAUSIBLE_KNEES`, `BOUNDARY_KNEE`, `WEAK_SLOPE_CHANGE`,
 `SEGMENTED_MODEL_NOT_BETTER`, `BOOTSTRAP_UNSTABLE`, `BOOTSTRAP_MULTIMODAL`,
 `NULL_NOT_REJECTED`, `INTERNAL_NUMERICAL_FAILURE`.
+
+A code names the gate that closed. It does not say whether the curve is
+hopeless or merely under-measured, and those call for opposite responses, so
+every abstention also carries `detail`: the number that was measured, the
+threshold it had to clear, and positions in your own x units rather than the
+normalised ones the gate works in.
+
+```python
+>>> result.reason
+'SEGMENTED_MODEL_NOT_BETTER'
+>>> result.detail
+'a bent line fits no better than a straight one here: BIC improves by 6.824,
+ not the 10 required, and held-out error actually rises by 126.0% when the
+ bend is added'
+```
+
+The same sentence is mirrored into `diagnostics["detail"]`, so the CLI, the
+HTTP API and the MCP server hand it on without any extra work.
+
+## Curves spanning orders of magnitude: take the log first
+
+The detector works on the curve normalised to the unit square, so a `y` that
+falls across several decades has everything past its first few points crushed
+into the bottom percent of that square. The corner of the normalised shape is
+then not the corner you read off the plot, and the detector will faithfully
+report the former.
+
+k-means inertia is the common case: on eight well-separated blobs it drops
+from about 80000 to about 500 before the tail even begins. Run on the raw
+curve, `robust_elbow` returns k = 6 or 7 (which is also where the Kneedle
+construction puts it). Run on `log(inertia)`, it returns exactly 8, the true
+cluster count, on every seed tested. Plot such a curve on a log axis and you
+are already looking at the transformed shape: hand the detector the same one.
+
+```python
+result = robust_elbow(k_values, np.log(inertia))
+```
 
 ## Configuration
 

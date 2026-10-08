@@ -17,6 +17,7 @@ import numpy as np
 import os_helper as oh
 
 from .config import RobustKneeConfig
+from .explain import explain_insufficient, explain_shape
 from .numerics import spearman
 from .smoothing import smooth_curve
 from .types import PreparedCurve, Reason
@@ -166,7 +167,12 @@ def _clean_and_normalize(x, y, min_samples: int, despike_window: int = 3):
 
     n = x.size
     if n < min_samples:
-        raise Abstain(Reason.INSUFFICIENT_DATA, n=int(n), min_samples=min_samples)
+        raise Abstain(
+            Reason.INSUFFICIENT_DATA,
+            n=int(n),
+            min_samples=min_samples,
+            detail=explain_insufficient(int(n), min_samples),
+        )
 
     x_lo, x_hi = float(x.min()), float(x.max())
     if x_hi - x_lo < 1e-12 or float(y.max() - y.min()) < 1e-12:
@@ -244,6 +250,7 @@ def prepare_curve(
             Reason.INCOMPATIBLE_GLOBAL_SHAPE,
             spearman=round(rho, 4),
             violation_rate=round(viol, 4),
+            detail=explain_shape(rho, viol, config),
         )
 
     oh.info(
