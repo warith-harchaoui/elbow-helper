@@ -146,7 +146,7 @@ def run_all() -> List[Trial]:
     done = 0
     for true_k in TRUE_KS:
         for noise_label, noise in NOISE_LEVELS.items():
-            for rep in range(N_REPLICATES):
+            for _rep in range(N_REPLICATES):
                 all_trials.extend(run_one_curve(true_k, noise, noise_label, seed))
                 seed += 1
                 done += 1

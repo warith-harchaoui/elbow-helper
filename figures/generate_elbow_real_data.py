@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import numpy as np
 
@@ -33,17 +33,17 @@ REPO_ROOT = HERE.parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
+from elbow_helper import RobustKneeConfig, robust_elbow  # noqa: E402
+
 from generate_experiment_figures import (  # noqa: E402
     BLUE,
+    GRID,
     INK,
     SUBTLE,
-    GRID,
+    _write_and_rasterize,
     svg_open,
     xml_escape,
-    _write_and_rasterize,
 )
-
-from elbow_helper import robust_elbow, RobustKneeConfig  # noqa: E402
 
 # Same short-curve profile tests/test_real_world_examples.py uses for the
 # synthetic k-means/PCA examples: elbow-helper's defaults are tuned for
@@ -165,7 +165,7 @@ def _single_panel_svg(
     xs: np.ndarray,
     ys: np.ndarray,
     note: str,
-    candidate_x: float = None,
+    candidate_x: Optional[float] = None,
     candidate_label: str = "",
 ) -> str:
     width, height = 1000, 580

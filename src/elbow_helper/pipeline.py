@@ -178,7 +178,7 @@ def robust_knee(
     except Abstain as a:
         diagnostics.update(a.diagnostics)
         return _abstain(a.reason, diagnostics, a.diagnostics.get("detail", ""))
-    except Exception as exc:  # numerical safety net — never crash the caller
+    except Exception as exc:  # noqa: BLE001 — numerical safety net, never crash the caller
         oh.warning(f"[elbow-helper] internal failure: {exc}")
         diagnostics["error"] = str(exc)
         return _abstain(Reason.INTERNAL_NUMERICAL_FAILURE, diagnostics, str(exc))

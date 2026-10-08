@@ -32,15 +32,15 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from generate_experiment_figures import (  # noqa: E402
     BLUE,
-    RED,
     GREEN,
-    ORANGE,
-    INK,
-    SUBTLE,
     GRID,
-    svg_open,
+    INK,
+    ORANGE,
+    RED,
+    SUBTLE,
     _write_and_rasterize,
     pow10_label,
+    svg_open,
 )
 
 CAT_P = np.array([0.5, 0.3, 0.15, 0.05])
@@ -423,15 +423,15 @@ def simulate_regression(rng: np.random.Generator, n: int = 24) -> dict:
     sigma_hat = math.sqrt(mse)
     heights = gaussian_pdf(y, a + b * x, sigma_hat)
     geo_mean = float(np.exp(np.mean(np.log(heights))))
-    return dict(
-        x=x,
-        y=y,
-        a=float(a),
-        b=float(b),
-        sigma_hat=sigma_hat,
-        mse=mse,
-        geo_mean=geo_mean,
-    )
+    return {
+        "x": x,
+        "y": y,
+        "a": float(a),
+        "b": float(b),
+        "sigma_hat": sigma_hat,
+        "mse": mse,
+        "geo_mean": geo_mean,
+    }
 
 
 def build_regression_density_svg(rng: np.random.Generator) -> str:
@@ -445,7 +445,7 @@ def build_regression_density_svg(rng: np.random.Generator) -> str:
     plot_h = height - m_top - m_bottom
 
     order = np.argsort(x)
-    picks = [order[int(round(q * (len(order) - 1)))] for q in (0.08, 0.38, 0.62, 0.92)]
+    picks = [order[round(q * (len(order) - 1))] for q in (0.08, 0.38, 0.62, 0.92)]
     bell_tops = [a + b * float(x[i]) + 3.2 * sigma_hat for i in picks]
     bell_bots = [a + b * float(x[i]) - 3.2 * sigma_hat for i in picks]
 

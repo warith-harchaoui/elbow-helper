@@ -17,7 +17,7 @@ CFG = RobustKneeConfig()
 
 
 def test_cleans_sorts_and_deduplicates():
-    x = np.array([3.0, 1.0, 2.0, 2.0, np.nan, 5.0, 4.0] + list(range(6, 25)), float)
+    x = np.array([3.0, 1.0, 2.0, 2.0, np.nan, 5.0, 4.0, *range(6, 25)], float)
     y = np.array([0.3, 0.1, 0.2, 0.25, 9.9, 0.5, 0.4] + [0.5] * 19, float)
     prepared = prepare_curve(x, y, "concave", "increasing", CFG)
     assert prepared.n == 24  # nan pair dropped, one dup x aggregated

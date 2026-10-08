@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import numpy as np
 
-from conftest import clear_knee_curve, noisy_line
 from elbow_helper import RobustKneesConfig
 from elbow_helper.plotting import (
     plot_diagnostics_panels,
@@ -25,6 +24,8 @@ from elbow_helper.plotting import (
     render_svg_multi,
     render_svg_panels,
 )
+
+from conftest import clear_knee_curve, noisy_line
 
 
 def test_render_svg_clear_knee_shows_the_legend(fast_config) -> None:

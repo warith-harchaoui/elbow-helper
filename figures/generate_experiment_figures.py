@@ -514,7 +514,7 @@ def build_wald_svg(lang: str, rng: np.random.Generator) -> str:
         f"{xml_escape(t['wald_sub'])}</text>"
     )
 
-    y_ticks = sorted(set([round(a_lo, 2), 0.0, round(a_hi, 2)]))
+    y_ticks = sorted({round(a_lo, 2), 0.0, round(a_hi, 2)})
     for v in y_ticks:
         gy = sy(v)
         parts.append(
@@ -652,8 +652,8 @@ def _loglog_panel(
 ) -> None:
     log_n_min, log_n_max = math.log10(4), math.log10(1300)
     all_vals = np.concatenate([emp, theory])
-    y_top_k = int(math.ceil(math.log10(all_vals.max())))
-    y_bot_k = int(math.floor(math.log10(all_vals.min())))
+    y_top_k = math.ceil(math.log10(all_vals.max()))
+    y_bot_k = math.floor(math.log10(all_vals.min()))
 
     def sx(n: float) -> float:
         return px + (math.log10(n) - log_n_min) / (log_n_max - log_n_min) * pw

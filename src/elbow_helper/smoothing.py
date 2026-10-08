@@ -32,7 +32,7 @@ def _nearest_odd(v: float) -> int:
     int
         The nearest odd integer, at least ``1``.
     """
-    w = int(round(v))
+    w = round(v)
     if w < 1:
         w = 1
     if w % 2 == 0:

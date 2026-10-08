@@ -160,9 +160,7 @@ def bootstrap_knee(
     width_ok = ci90_width <= config.positional(config.max_ci90_width, n, samples=3.0)
     primary_ok = primary_rate >= config.min_primary_cluster_rate
     secondary_ok = secondary_rate <= config.max_secondary_cluster_rate
-    shift_ok = median_shift <= config.positional(
-        config.max_bootstrap_median_shift, n
-    )
+    shift_ok = median_shift <= config.positional(config.max_bootstrap_median_shift, n)
 
     reason = None
     if not secondary_ok or not primary_ok:

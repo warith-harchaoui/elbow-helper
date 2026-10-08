@@ -42,8 +42,8 @@ except ImportError as exc:  # pragma: no cover - exercised only without the extr
         "the HTTP API needs the [api] extra. Run: pip install 'elbow-helper[api]'"
     ) from exc
 
-from . import _core_cli as core
 from . import __version__
+from . import _core_cli as core
 
 
 class CurveRequest(BaseModel):

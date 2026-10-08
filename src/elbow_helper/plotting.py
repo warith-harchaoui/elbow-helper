@@ -166,7 +166,7 @@ def _log_ticks(lo: float, hi: float) -> List[float]:
 def _fmt_tick(v: float) -> str:
     """Thousands-separated tick label; whole numbers drop the decimal part."""
     if abs(v - round(v)) < 1e-9:
-        return f"{int(round(v)):,}"
+        return f"{round(v):,}"
     return f"{v:,.2f}"
 
 
@@ -590,7 +590,7 @@ def render_svg(
 
 
 def _emit_legend(
-    p: List[str], result: "ClearKnee", strings: dict, fit_score: float
+    p: List[str], result: ClearKnee, strings: dict, fit_score: float
 ) -> None:
     """Append a compact evidence legend: detection probability, null p, slope
     contrast, BIC-derived posterior probability, and worst-case-normalized fit

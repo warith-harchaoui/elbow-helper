@@ -69,7 +69,7 @@ def generate_candidates(
                     interp_method="interp1d",
                     online=True,
                 )
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001 — one grid point may fail, the sweep goes on
                 # Expected sometimes (a degenerate smoothed curve at an
                 # extreme window/sensitivity combo can trip a locator
                 # precondition) — but silent, per the codebase's

@@ -43,14 +43,14 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from generate_experiment_figures import (  # noqa: E402
     BLUE,
-    RED,
-    ORANGE,
-    INK,
-    SUBTLE,
     GRID,
+    INK,
+    ORANGE,
+    RED,
+    SUBTLE,
+    _write_and_rasterize,
     svg_open,
     xml_escape,
-    _write_and_rasterize,
 )
 
 

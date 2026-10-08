@@ -39,7 +39,7 @@ from __future__ import annotations
 import math
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -48,13 +48,13 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from generate_experiment_figures import (  # noqa: E402
     BLUE,
-    ORANGE,
-    INK,
-    SUBTLE,
     GRID,
+    INK,
+    ORANGE,
+    SUBTLE,
+    _write_and_rasterize,
     svg_open,
     xml_escape,
-    _write_and_rasterize,
 )
 
 PENGUINS_URL = (
@@ -298,7 +298,7 @@ def _curve_panel(
     val_label: str,
     *,
     log_y: bool,
-    y_range: Tuple[float, float] = None,
+    y_range: Optional[Tuple[float, float]] = None,
 ) -> None:
     xs = np.arange(1, n_iters + 1)
 
@@ -348,7 +348,7 @@ def _curve_panel(
         f'<line x1="{px:.1f}" y1="{py:.1f}" x2="{px:.1f}" y2="{ax_bottom:.1f}" '
         f'stroke="{INK}" stroke-width="1.5"/>'
     )
-    x_ticks = [1] + [t for t in (n_iters // 4, n_iters // 2, 3 * n_iters // 4, n_iters)]
+    x_ticks = [1, n_iters // 4, n_iters // 2, 3 * n_iters // 4, n_iters]
     for xv in x_ticks:
         gx = sx(float(xv))
         parts.append(
@@ -369,7 +369,7 @@ def _curve_panel(
         f'transform="rotate(-90 {ytx:.1f} {yty:.1f})">{xml_escape(ylabel)}</text>'
     )
 
-    for series, color, label, dash in (
+    for series, color, _label, dash in (
         (train_y, BLUE, train_label, ""),
         (val_y, ORANGE, val_label, "6 4"),
     ):
@@ -435,27 +435,27 @@ def build_classification_svg(lang: str, res: Dict[str, object]) -> str:
         t["clf_title"],
         t["clf_sub"],
         n_iters,
-        left_kwargs=dict(
-            train_y=res["train_ce"],
-            val_y=res["val_ce"],
-            title=t["clf_panel_a_title"],
-            ylabel=t["clf_panel_a_y"],
-            xlabel=t["x_iter"],
-            train_label=t["train"],
-            val_label=t["val"],
-            log_y=True,
-        ),
-        right_kwargs=dict(
-            train_y=q_train,
-            val_y=q_val,
-            title=t["clf_panel_b_title"],
-            ylabel=t["clf_panel_b_y"],
-            xlabel=t["x_iter"],
-            train_label=t["train"],
-            val_label=t["val"],
-            log_y=False,
-            y_range=(0.0, 1.0),
-        ),
+        left_kwargs={
+            "train_y": res["train_ce"],
+            "val_y": res["val_ce"],
+            "title": t["clf_panel_a_title"],
+            "ylabel": t["clf_panel_a_y"],
+            "xlabel": t["x_iter"],
+            "train_label": t["train"],
+            "val_label": t["val"],
+            "log_y": True,
+        },
+        right_kwargs={
+            "train_y": q_train,
+            "val_y": q_val,
+            "title": t["clf_panel_b_title"],
+            "ylabel": t["clf_panel_b_y"],
+            "xlabel": t["x_iter"],
+            "train_label": t["train"],
+            "val_label": t["val"],
+            "log_y": False,
+            "y_range": (0.0, 1.0),
+        },
     )
 
 
@@ -471,28 +471,28 @@ def build_regression_svg(lang: str, res: Dict[str, object]) -> str:
         t["reg_title"],
         t["reg_sub"],
         n_iters,
-        left_kwargs=dict(
-            train_y=res["train_mse"],
-            val_y=res["val_mse"],
-            title=t["reg_panel_a_title"],
-            ylabel=t["reg_panel_a_y"],
-            xlabel=t["x_iter"],
-            train_label=t["train"],
-            val_label=t["val"],
-            log_y=False,
-            y_range=(0.0, mse_hi),
-        ),
-        right_kwargs=dict(
-            train_y=q_train,
-            val_y=q_val,
-            title=t["reg_panel_b_title"],
-            ylabel=t["reg_panel_b_y"],
-            xlabel=t["x_iter"],
-            train_label=t["train"],
-            val_label=t["val"],
-            log_y=False,
-            y_range=(0.0, 1.0),
-        ),
+        left_kwargs={
+            "train_y": res["train_mse"],
+            "val_y": res["val_mse"],
+            "title": t["reg_panel_a_title"],
+            "ylabel": t["reg_panel_a_y"],
+            "xlabel": t["x_iter"],
+            "train_label": t["train"],
+            "val_label": t["val"],
+            "log_y": False,
+            "y_range": (0.0, mse_hi),
+        },
+        right_kwargs={
+            "train_y": q_train,
+            "val_y": q_val,
+            "title": t["reg_panel_b_title"],
+            "ylabel": t["reg_panel_b_y"],
+            "xlabel": t["x_iter"],
+            "train_label": t["train"],
+            "val_label": t["val"],
+            "log_y": False,
+            "y_range": (0.0, 1.0),
+        },
     )
 
 
@@ -511,27 +511,27 @@ def build_regression_mlp_svg(lang: str, res: Dict[str, object]) -> str:
         t["mlp_title"],
         t["mlp_sub"],
         n_iters,
-        left_kwargs=dict(
-            train_y=res["train_mse"],
-            val_y=res["val_mse"],
-            title=t["reg_panel_a_title"],
-            ylabel=t["reg_panel_a_y"],
-            xlabel=t["x_iter"],
-            train_label=t["train"],
-            val_label=t["val"],
-            log_y=True,
-        ),
-        right_kwargs=dict(
-            train_y=q_train,
-            val_y=q_val,
-            title=t["reg_panel_b_title"],
-            ylabel=t["reg_panel_b_y"],
-            xlabel=t["x_iter"],
-            train_label=t["train"],
-            val_label=t["val"],
-            log_y=False,
-            y_range=(0.0, 1.0),
-        ),
+        left_kwargs={
+            "train_y": res["train_mse"],
+            "val_y": res["val_mse"],
+            "title": t["reg_panel_a_title"],
+            "ylabel": t["reg_panel_a_y"],
+            "xlabel": t["x_iter"],
+            "train_label": t["train"],
+            "val_label": t["val"],
+            "log_y": True,
+        },
+        right_kwargs={
+            "train_y": q_train,
+            "val_y": q_val,
+            "title": t["reg_panel_b_title"],
+            "ylabel": t["reg_panel_b_y"],
+            "xlabel": t["x_iter"],
+            "train_label": t["train"],
+            "val_label": t["val"],
+            "log_y": False,
+            "y_range": (0.0, 1.0),
+        },
     )
 
 

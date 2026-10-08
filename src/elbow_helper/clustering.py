@@ -12,6 +12,7 @@ Warith Harchaoui, <warith.harchaoui@deraison.ai>
 
 from __future__ import annotations
 
+import itertools
 from typing import List, Optional, Tuple
 
 import numpy as np
@@ -38,7 +39,7 @@ def _longest_consecutive_run(ranks: List[int]) -> int:
         return 0
     s = sorted(set(ranks))
     best = run = 1
-    for a, b in zip(s, s[1:]):
+    for a, b in itertools.pairwise(s):
         run = run + 1 if b == a + 1 else 1
         best = max(best, run)
     return best

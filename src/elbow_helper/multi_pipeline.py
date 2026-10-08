@@ -133,7 +133,7 @@ def robust_knees(
         oh.info(f"[elbow-helper] robust_knees: k={len(knees)}")
         return Knees(reason=Reason.KNEES_FOUND, diagnostics=diagnostics, knees=knees)
 
-    except Exception as exc:  # numerical safety net -- never crash the caller
+    except Exception as exc:  # noqa: BLE001 — numerical safety net, never crash the caller
         oh.warning(f"[elbow-helper] internal failure: {exc}")
         diagnostics["error"] = str(exc)
         return InvalidKnees(
