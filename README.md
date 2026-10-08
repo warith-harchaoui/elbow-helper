@@ -152,6 +152,8 @@ RobustKneeConfig(bootstrap_replicates=100, null_replicates=200)
 config.with_(bootstrap_replicates=500, null_replicates=1000)
 ```
 
+`min_samples` defaults to 20, and that is a deliberate floor rather than an arbitrary one: the persistence and bootstrap gates need a scale space to work across, and below about twenty points they measure noise instead. A sixteen-point reconstruction-error curve is a legitimate thing to want a knee on, so the floor is not a wall — pass `config.with_(min_samples=8)` and the pipeline runs. Read what comes back as indicative rather than confirmed; the gates still apply, they are simply working with less to go on. The `INSUFFICIENT_DATA` abstention says all of this in its `detail`.
+
 A note on these thresholds: they are calibrated, conservative defaults, not universal constants. `cluster_tolerance` and `max_neighbor_shift` sit slightly above the reference plan's 0.05 to absorb the locator's one- or two-sample discretisation jitter at modest sample sizes (n of about 60 to 100). Recalibrate them against your own curve and noise family if needed.
 
 ## Diagnostics

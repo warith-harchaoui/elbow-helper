@@ -155,6 +155,8 @@ RobustKneeConfig(bootstrap_replicates=100, null_replicates=200)
 config.with_(bootstrap_replicates=500, null_replicates=1000)
 ```
 
+`min_samples` vaut 20 par défaut. Ce plancher est délibéré plutôt qu'arbitraire : les portes de persistance et de bootstrap ont besoin d'un espace d'échelles pour travailler et, en dessous d'une vingtaine de points, elles mesurent du bruit. Une courbe d'erreur de reconstruction à seize points reste une chose légitime sur laquelle chercher un coude, aussi ce plancher n'est-il pas un mur : passez `config.with_(min_samples=8)` et le pipeline s'exécute. Lisez alors le résultat comme une indication plutôt que comme une confirmation. Les portes s'appliquent toujours ; elles disposent simplement de moins de matière. L'abstention `INSUFFICIENT_DATA` dit tout cela dans son `detail`.
+
 Une précision sur ces seuils : ce sont des valeurs par défaut calibrées et prudentes, pas des constantes universelles. `cluster_tolerance` et `max_neighbor_shift` dépassent légèrement les 0,05 du plan de référence, pour absorber la gigue de discrétisation d'un ou deux échantillons propre au repéreur, aux tailles d'échantillon modestes (n de l'ordre de 60 à 100). N'hésitez pas à les recalibrer sur votre propre famille de courbes et de bruit.
 
 ## Diagnostics
