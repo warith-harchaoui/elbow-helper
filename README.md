@@ -281,6 +281,16 @@ uvicorn elbow_helper.mcp_server:app --port 8021
 
 Every surface exposes the same four operations (`knee`, `elbow`, `diagnostics`, `locator`), matching `robust_knee`, `robust_elbow`, `plot_diagnostics`, and the standalone `KneeLocator` one-to-one. Data goes in as inline comma-separated values, a `.npy` file, or a CSV column (CLI), or a JSON body (`x`/`y` lists, HTTP). `RobustKneeConfig` overrides travel as `--config-json '{"bootstrap_replicates": 500}'` (CLI) or a `config_overrides` object (HTTP). The `diagnostics` operation returns the SVG itself, not a JSON wrapper around it.
 
+### Use it as an agent skill
+
+`skills/elbow-helper/` packages elbow-helper as a **Claude Skill** *and* an **OpenCode
+skill**, so an agent can reach for it on your behalf. See
+[`skills/README.md`](https://github.com/warith-harchaoui/elbow-helper/blob/main/skills/README.md) to install it (symlink into
+`~/.claude/skills/` and `~/.opencode/skills/`), and
+[`TRIGGERS.md`](https://github.com/warith-harchaoui/elbow-helper/blob/main/TRIGGERS.md) for the exhaustive trigger catalogue —
+`scripts/check_triggers.py` keeps the skill's description in sync with it, and
+the test suite fails if a capability stops being named.
+
 ## Author
 
 [Warith HARCHAOUI](https://linkedin.com/in/warith-harchaoui)
