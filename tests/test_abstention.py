@@ -110,10 +110,26 @@ def test_an_early_knee_on_a_long_curve_is_not_a_boundary_artefact():
     reject the knee at its true position while keeping the copy the coarse
     smoothing scales had dragged further in: candidates at 11, 13, 14, 15 and
     18 were all thrown out and the answer came back as 21.
+
+    The null test runs here at the validation-grade replicate count the config
+    module recommends, not the default 200, and the reason is arithmetic. The
+    p-value is ``(1 + at_least) / (B + 1)``, so at ``B=200`` a 1% threshold
+    accepts ``at_least <= 1`` and nothing more. Measured over 8000 null draws,
+    a straight line carrying this curve's noise reaches the observed statistic
+    about once in 850 — which makes "two or more out of 200" a 2% event, and
+    turned this assertion into a coin that landed wrong that often. At
+    ``B=1000`` the same 1% threshold accepts nine such draws against an
+    expected 1.2, and the false abstention drops to about one run in a million.
+    Nothing about the knee or the margin changes: the decision simply stops
+    being limited by how coarsely 200 replicates can resolve a p-value.
     """
+    from elbow_helper import RobustKneeConfig
+
     x = np.arange(1, 201.0)
     y = np.where(x <= 10, 100 - (x - 1) * 9.0, 10.0)
-    r = robust_knee(x, y, "convex", "decreasing")
+    r = robust_knee(
+        x, y, "convex", "decreasing", RobustKneeConfig(null_replicates=1000)
+    )
     assert not isinstance(r, NoClearKnee), r
     # The line runs on to x=11 before flattening, so 11 is the breakpoint.
     assert abs(r.knee_x - 11.0) <= 1.0, r.knee_x
