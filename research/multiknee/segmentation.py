@@ -20,7 +20,7 @@ that the O(n^2) segment-cost table costs O(n) to build.
 
 Author
 ------
-Warith Harchaoui, <warith.harchaoui@deraison.ai>
+Warith Harchaoui, <warithmetics@deraison.ai>
 """
 
 from __future__ import annotations

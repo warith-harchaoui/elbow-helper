@@ -12,7 +12,7 @@ Produces: :func:`cli` (the ``elbow-helper-click`` console-script entry point).
 
 Author
 ------
-Warith Harchaoui, <warith.harchaoui@deraison.ai>
+Warith Harchaoui, <warithmetics@deraison.ai>
 """
 
 from __future__ import annotations

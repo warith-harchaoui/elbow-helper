@@ -22,7 +22,7 @@ Three criteria, deliberately of increasing sophistication:
 
 Author
 ------
-Warith Harchaoui, <warith.harchaoui@deraison.ai>
+Warith Harchaoui, <warithmetics@deraison.ai>
 """
 
 from __future__ import annotations

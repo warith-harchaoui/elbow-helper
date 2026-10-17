@@ -12,7 +12,7 @@ reminder that the located knee is not simply "one time constant" (see below).
 
 Author
 ------
-Warith Harchaoui, <warith.harchaoui@deraison.ai>
+Warith Harchaoui, <warithmetics@deraison.ai>
 """
 
 from __future__ import annotations

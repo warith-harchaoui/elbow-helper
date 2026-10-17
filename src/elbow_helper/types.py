@@ -8,7 +8,7 @@ of :class:`KneeResult`, so callers must handle abstention explicitly. Every
 
 Author
 ------
-Warith Harchaoui, <warith.harchaoui@deraison.ai>
+Warith Harchaoui, <warithmetics@deraison.ai>
 """
 
 from __future__ import annotations

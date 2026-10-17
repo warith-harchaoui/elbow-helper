@@ -24,8 +24,11 @@ declare(strict_types=1);
 const GATE_COOKIE = 'eh_auth';
 const COOKIE_DAYS = 30;      // authenticated-session lifetime
 const LINK_HOURS = 72;       // magic-link validity window
-const OWNER_EMAIL = 'warith@deraison.ai';
-const FROM_EMAIL = 'no-reply@deraison.ai';
+const OWNER_EMAIL = 'warithmetics@deraison.ai';
+// A reachable sender, deliberately: a magic-link mail nobody can answer is a
+// dead end for whoever is trying to get in. Same address as OWNER_EMAIL, so a
+// reply lands where it can actually be read.
+const FROM_EMAIL = 'warithmetics@deraison.ai';
 
 /** Filesystem root of the deployed bundle (the directory holding index.php). */
 function gate_root(): string

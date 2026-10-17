@@ -5,7 +5,7 @@ the PCA scree plot. Both are the "convex-decreasing" case the docstring of
 
 Author
 ------
-Warith Harchaoui, <warith.harchaoui@deraison.ai>
+Warith Harchaoui, <warithmetics@deraison.ai>
 """
 
 from __future__ import annotations

@@ -8,7 +8,7 @@ versus 0.77 and 11% for the literal additive form).
 
 Author
 ------
-Warith Harchaoui, <warith.harchaoui@deraison.ai>
+Warith Harchaoui, <warithmetics@deraison.ai>
 """
 
 from __future__ import annotations

@@ -16,7 +16,7 @@ Produces: :func:`do_knee`, :func:`do_elbow`, :func:`do_diagnostics`,
 
 Author
 ------
-Warith Harchaoui, <warith.harchaoui@deraison.ai>
+Warith Harchaoui, <warithmetics@deraison.ai>
 """
 
 from __future__ import annotations

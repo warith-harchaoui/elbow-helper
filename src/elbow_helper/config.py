@@ -10,7 +10,7 @@ counts so the full pipeline runs in seconds. For validation-grade runs raise
 
 Author
 ------
-Warith Harchaoui, <warith.harchaoui@deraison.ai>
+Warith Harchaoui, <warithmetics@deraison.ai>
 """
 
 from __future__ import annotations

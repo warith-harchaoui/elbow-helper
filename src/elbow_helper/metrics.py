@@ -7,7 +7,7 @@ the cheap structural filters before any expensive stability analysis.
 
 Author
 ------
-Warith Harchaoui, <warith.harchaoui@deraison.ai>
+Warith Harchaoui, <warithmetics@deraison.ai>
 """
 
 from __future__ import annotations

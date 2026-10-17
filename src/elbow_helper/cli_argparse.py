@@ -14,7 +14,7 @@ Produces: :func:`main` (the ``elbow-helper`` console-script entry point).
 
 Author
 ------
-Warith Harchaoui, <warith.harchaoui@deraison.ai>
+Warith Harchaoui, <warithmetics@deraison.ai>
 """
 
 from __future__ import annotations

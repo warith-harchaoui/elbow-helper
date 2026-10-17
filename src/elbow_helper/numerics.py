@@ -6,7 +6,7 @@ slope, OLS + BIC) so the package keeps to a numpy-only core.
 
 Author
 ------
-Warith Harchaoui, <warith.harchaoui@deraison.ai>
+Warith Harchaoui, <warithmetics@deraison.ai>
 """
 
 from __future__ import annotations

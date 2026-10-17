@@ -28,7 +28,7 @@ Produces: :data:`app` (the ASGI application), :func:`build_server`.
 
 Author
 ------
-Warith Harchaoui, <warith.harchaoui@deraison.ai>
+Warith Harchaoui, <warithmetics@deraison.ai>
 """
 
 from __future__ import annotations
