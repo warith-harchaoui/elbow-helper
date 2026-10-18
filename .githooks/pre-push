@@ -13,6 +13,20 @@ echo "[pre-push] ruff format --check..."
 ruff format --check . || { echo "[pre-push] ruff format failed - push aborted."; exit 1; }
 
 echo "[pre-push] full pytest sweep (unit + integration)..."
-python -m pytest -q -m "" || { echo "[pre-push] tests failed - push aborted."; exit 1; }
+# A gate must never hang. This sweep deliberately clears the marker filter with -m "",
+# which wakes integration tests that reach the network; yt-dlp and friends inherit
+# Python's default socket timeout, i.e. none at all. A vocal-helper run sat at 0 % CPU
+# for nine minutes on half-closed sockets and had to be killed -- a push that never
+# finishes is worse than one that fails, because the only way out is --no-verify, which
+# skips the lint and the tests together.
+#
+# pytest-timeout turns that stall into a failure naming the test. It is in each project's
+# dev extra, but the gate must still work in an environment that lacks it, so the flag is
+# only passed when the plugin is importable.
+TIMEOUT_ARGS=""
+if python -c "import pytest_timeout" 2>/dev/null; then
+  TIMEOUT_ARGS="--timeout=600"
+fi
+python -m pytest -q -m "" $TIMEOUT_ARGS || { echo "[pre-push] tests failed - push aborted."; exit 1; }
 
 echo "[pre-push] all green - pushing."
