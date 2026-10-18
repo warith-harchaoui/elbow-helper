@@ -19,9 +19,12 @@ classifiers = [
 ]
 
 # Hard dependencies: numpy + os-helper ONLY.
+# os-helper is capped below 3 like everywhere else in the suite: a major bump
+# is allowed to move the logging / path helpers this package calls, so resolving
+# into it unseen would break elbow-helper silently rather than at install time.
 dependencies = [
     "numpy>=1.24",
-    "os-helper>=1.8",
+    "os-helper>=2.0.0,<3",
 ]
 
 [project.optional-dependencies]

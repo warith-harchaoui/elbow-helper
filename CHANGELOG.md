@@ -22,6 +22,12 @@ All notable changes to `elbow-helper` are documented here. The format follows
   the engine writes the sentence and the page has nothing to translate.
 
 ### Changed
+- **`os-helper` is pinned `>=2.0.0,<3`** instead of `>=1.8`, matching every
+  other member of the suite. The old floor admitted an os-helper 1.x that
+  predates the current `init_logging` / `folder_name_ext` surface this package
+  calls, and the missing upper bound let a future 2.x-incompatible release
+  resolve in unannounced -- a breakage that would surface as an AttributeError
+  at run time rather than as a resolver error at install time.
 - **`pyproject.toml` gains `[tool.ruff]`**, and `ruff` joins the `dev` extra.
   `.githooks/pre-push` blocks a push on `ruff check` or `ruff format`, but the
   project had no ruff configuration at all, so the gate enforced whatever the
