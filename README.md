@@ -1,6 +1,6 @@
 # elbow-helper
 
-[🇫🇷](https://github.com/warith-harchaoui/elbow-helper/blob/main/LISEZ-MOI.md)&nbsp;&nbsp;|&nbsp;&nbsp;[🇬🇧](https://github.com/warith-harchaoui/elbow-helper/blob/main/README.md)
+[🇫🇷](https://github.com/warith-harchaoui/elbow-helper/blob/main/LISEZMOI.md)&nbsp;&nbsp;|&nbsp;&nbsp;[🇬🇧](https://github.com/warith-harchaoui/elbow-helper/blob/main/README.md)
 
 **Noise-robust knee and elbow detection: it reports a knee with uncertainty; it abstains outright otherwise.**
 

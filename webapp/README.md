@@ -66,7 +66,7 @@ order, since every gate endpoint rewrites `.htaccess` from
 
 The build also emits `robots.txt`, `sitemap.xml`, `llms.txt`, `llms-full.txt`
 and `humans.txt` into `dist/` (sprezzature-publish `site_indexes.py`), plus
-the curated Markdown corpus those indexes cite (README/LISEZ-MOI,
+the curated Markdown corpus those indexes cite (README/LISEZMOI,
 EXAMPLES/EXEMPLES, LANDSCAPE/PAYSAGE). Note for the deployer: crawlers only
 honor a `robots.txt` served at the DOMAIN root, so reference
 `https://deraison.ai/elbow-helper/sitemap.xml` from deraison.ai's own

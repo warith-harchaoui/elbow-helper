@@ -30,7 +30,7 @@ What lands in ``dist/``:
                           STATIC example figures the landing shows
 - ``robots.txt`` / ``sitemap.xml`` / ``llms.txt`` / ``llms-full.txt`` /
   ``humans.txt``          SEO + GEO indexes (sprezzature-publish site_indexes)
-- ``*.md``                the curated Markdown corpus (README/LISEZ-MOI,
+- ``*.md``                the curated Markdown corpus (README/LISEZMOI,
                           EXAMPLES/EXEMPLES, LANDSCAPE/PAYSAGE) the indexes
                           cite, served raw
 
@@ -306,7 +306,7 @@ def site_indexes(base_url: str) -> None:
 
     Runs sprezzature-publish's stdlib-only ``site_indexes.py`` over a staged
     corpus: the built ``index.html`` (for the sitemap) plus the repo's curated
-    Markdown (README/LISEZ-MOI, EXAMPLES/EXEMPLES, LANDSCAPE/PAYSAGE), which
+    Markdown (README/LISEZMOI, EXAMPLES/EXEMPLES, LANDSCAPE/PAYSAGE), which
     becomes the ``llms-full.txt`` full-text body that generative engines read.
     """
     script = _SPREZZATURE / "site_indexes.py"
@@ -315,7 +315,7 @@ def site_indexes(base_url: str) -> None:
         return
     corpus = [
         "README.md",
-        "LISEZ-MOI.md",
+        "LISEZMOI.md",
         "EXAMPLES.md",
         "EXEMPLES.md",
         "LANDSCAPE.md",

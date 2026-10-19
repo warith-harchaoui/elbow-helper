@@ -2,7 +2,7 @@
 
 Des recettes exécutables pour `elbow-helper`. Chacune existe aussi comme
 script autonome dans `examples/` : on peut copier le code ou lancer le
-fichier tel quel. Voir [`LISEZ-MOI.md`](LISEZ-MOI.md) pour la référence
+fichier tel quel. Voir [`LISEZMOI.md`](LISEZMOI.md) pour la référence
 complète de l'API et le pipeline sur lequel tout ceci repose.
 
 ## 1. Un coude net, à saturation
@@ -109,7 +109,7 @@ NoClearKnee(reason='NO_PERSISTENT_CLUSTER')
 ```
 
 Chaque abstention porte l'un des quinze codes documentés dans la section
-« Codes d'abstention » du LISEZ-MOI ; `result.diagnostics` conserve la trace
+« Codes d'abstention » du LISEZMOI ; `result.diagnostics` conserve la trace
 numérique complète derrière la décision, utile pour ajuster
 `RobustKneeConfig` sur votre propre famille de courbes.
 

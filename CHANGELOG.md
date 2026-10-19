@@ -4,7 +4,7 @@ All notable changes to `elbow-helper` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.2.0] — 2026-10-18
 
 ### Added
 - **`RobustKneeConfig.language`**: the abstention `detail` is prose, so it now
@@ -22,6 +22,10 @@ All notable changes to `elbow-helper` are documented here. The format follows
   the engine writes the sentence and the page has nothing to translate.
 
 ### Changed
+- **`LISEZ-MOI.md` is now `LISEZMOI.md`**, the name the other fourteen packages in
+  the suite use. The hyphenated spelling is the better French; the unhyphenated one
+  is what every sibling repository, and anyone scanning them, already expects. The
+  web app's Markdown corpus referenced the old name in code, so that moved with it.
 - **`os-helper` is pinned `>=2.0.0,<3`** instead of `>=1.8`, matching every
   other member of the suite. The old floor admitted an os-helper 1.x that
   predates the current `init_logging` / `folder_name_ext` surface this package

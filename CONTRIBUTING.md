@@ -41,6 +41,6 @@ mutable default arguments.
 `doc/ELBOW-en.tex` derives every formula the package runs; `doc/
 LIKELIHOOD-en.tex` covers the general likelihood theory behind it. Compile
 with `latexmk -pdf <name>.tex` from inside `doc/`. If a source change
-affects behavior described in `README.md`, `LISEZ-MOI.md`, `EXAMPLES.md`,
+affects behavior described in `README.md`, `LISEZMOI.md`, `EXAMPLES.md`,
 `EXEMPLES.md`, or `CHANGELOG.md`, update those too: they drift out of sync
 with the code easily.
