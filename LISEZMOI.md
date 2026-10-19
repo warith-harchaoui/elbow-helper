@@ -88,6 +88,21 @@ L'abstention doit être traitée explicitement : il n'existe aucun repli silenci
 ## Comment la décision se prend : le pipeline
 
 1. **Prétraitement.** Les données sont nettoyées, triées, dédoublonnées, puis normalisées de façon robuste sur le carré unité. Leur forme globale est ensuite examinée par une corrélation de Spearman (une mesure, fondée sur les rangs, du caractère monotone de la courbe) et par une vérification de monotonie pondérée par l'amplitude.
+
+   La corrélation de Spearman est mesurée sur des valeurs **à plateaux
+   fusionnés** — ce détail compte plus qu'il n'y paraît. Une courbe
+   saturante est surtout faite de sa queue plate ; or sous une corrélation de
+   rangs, une queue plate forme un gros bloc de rangs ex æquo — donc plus le
+   coude est franc, plus son Spearman brut est mauvais, puis le filtre finit
+   anticorrélé avec ce qu'il filtre. Réduire chaque plateau à un représentant
+   supprime cet artefact.
+
+   Un plateau est détecté **à une tolérance lue sur le bruit de la courbe
+   elle-même**, non par égalité exacte : des mesures réelles ne sont jamais
+   identiques au bit près, si bien qu'un test exact ferait s'évaporer la
+   protection dès la moindre présence de bruit. La tolérance est plafonnée à
+   2 % de l'étendue totale : elle ne peut donc jamais devenir assez grande
+   pour fusionner une vraie tendance puis relâcher le filtre qu'elle alimente.
 2. **Recherche en espace d'échelles.** Le repéreur balaie une grille de fenêtres de lissage gaussien et de sensibilités et retient chaque candidat proposé.
 3. **Filtres de base.** Les coudes en bordure, ceux de faible proéminence et ceux dont le rapport proéminence sur bruit est trop bas sont écartés.
 4. **Regroupement par persistance.** Seuls survivent les coudes qui réapparaissent à un emplacement stable sur plusieurs échelles de lissage consécutives et sur la plupart des sensibilités testées. Le pipeline s'abstient si deux coudes paraissent également plausibles (`MULTIPLE_PLAUSIBLE_KNEES`).

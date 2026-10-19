@@ -326,6 +326,58 @@ def prepare_curve_unconstrained(x, y, min_samples: int) -> PreparedCurve:
     )
 
 
+#: Hard cap on the plateau tolerance, as a fraction of the curve's total
+#: range. Keeps a noise-derived tolerance from ever growing big enough to
+#: collapse a genuine trend, which would loosen the very gate this feeds.
+PLATEAU_TOLERANCE_SPAN_FRACTION = 0.02
+
+
+def _plateau_tolerance(y: np.ndarray) -> float:
+    """How far two readings may differ and still belong to the same plateau.
+
+    Derived from the curve's own typical step rather than fixed, because
+    "flat" is only meaningful relative to how noisy the measurements are.
+    ``median(|diff|)`` is the robust choice: on a saturating curve the median
+    step is taken from the long tail, so it reads the noise level and not the
+    drop.
+
+    Capped at a small fraction of the total range so the tolerance can never
+    grow large enough to swallow a real trend -- the collapse must not be able
+    to loosen the gate it feeds.
+    """
+    steps = np.abs(np.diff(y))
+    if steps.size == 0:
+        return 0.0
+    span = float(np.ptp(y))
+    # Exactly-equal plateaus give a median step of 0, which collapses to the
+    # previous exact-equality behaviour. That is the right answer there.
+    return float(
+        min(2.0 * float(np.median(steps)), PLATEAU_TOLERANCE_SPAN_FRACTION * span)
+    )
+
+
+def _plateau_starts(y: np.ndarray) -> np.ndarray:
+    """Index where each plateau begins, tolerating measurement noise.
+
+    A run is extended while every member stays within
+    :func:`_plateau_tolerance` **of the run's first value**, not of its
+    predecessor. Chaining neighbour-to-neighbour would let a slow drift of
+    many tiny steps collapse into one run however far it travelled in total;
+    anchoring bounds each run's extent by construction.
+    """
+    tol = _plateau_tolerance(y)
+    if tol <= 0.0:
+        # No tolerance to apply: exact runs, as before.
+        return np.concatenate([[0], np.flatnonzero(np.diff(y) != 0) + 1])
+    starts = [0]
+    anchor = y[0]
+    for i in range(1, y.size):
+        if abs(y[i] - anchor) > tol:
+            starts.append(i)
+            anchor = y[i]
+    return np.asarray(starts, dtype=int)
+
+
 def _plateau_aware_spearman(x: np.ndarray, y: np.ndarray) -> float:
     """Rank correlation that a long flat tail cannot crush.
 
@@ -357,7 +409,7 @@ def _plateau_aware_spearman(x: np.ndarray, y: np.ndarray) -> float:
     """
     if y.size < 3:
         return spearman(x, y)
-    starts = np.concatenate([[0], np.flatnonzero(np.diff(y) != 0) + 1])
+    starts = _plateau_starts(y)
     if starts.size < 3 or starts.size == y.size:
         return spearman(x, y)
     ends = np.concatenate([starts[1:], [y.size]])

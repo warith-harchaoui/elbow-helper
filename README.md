@@ -88,6 +88,10 @@ You are forced to handle abstention explicitly: there is no silent fallback to a
 ## How it decides: the pipeline
 
 1. **Preprocess.** Clean, sort, deduplicate, and robustly normalise the data to the unit square, then screen its global shape with a Spearman correlation (a rank-based measure of how monotonic the curve is) and a magnitude-weighted monotonicity check.
+
+   The Spearman is measured over *plateau-collapsed* values, and that detail matters more than it looks. A saturating curve is mostly flat tail, and under a rank correlation a flat tail is one big block of tied ranks — so the sharper the knee, the worse its plain Spearman, and the screen ends up anti-correlated with the thing it screens for. Collapsing each plateau to one representative removes the artefact.
+
+   A plateau is detected **within a tolerance read from the curve's own noise**, not by exact equality: real measurements are never bit-identical, so an exact test would make the protection evaporate the moment any noise was present. The tolerance is capped at 2 % of the total range, so it can never grow large enough to collapse a genuine trend and loosen the gate it feeds.
 2. **Scale-space search.** Run the from-scratch locator across a grid of Gaussian smoothing windows and sensitivities; collect every candidate it proposes.
 3. **Basic filters.** Reject boundary knees, weak prominence, and a low prominence-to-noise ratio.
 4. **Persistence clustering.** Keep only knees that recur at a stable location across consecutive smoothing scales and most sensitivities. Abstain if two knees look equally plausible (`MULTIPLE_PLAUSIBLE_KNEES`).

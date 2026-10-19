@@ -4,6 +4,58 @@ All notable changes to `elbow-helper` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] — 2026-10-19
+
+### Fixed
+
+- **The plateau protection only worked on data that does not occur.**
+
+  `_plateau_aware_spearman` exists because a saturating curve is mostly flat
+  tail, a flat tail is a block of tied ranks under a rank correlation, and so
+  **the sharper the knee the worse its plain Spearman** — the shape gate ends
+  up anti-correlated with the thing it screens for. The remedy is to collapse
+  each plateau to one representative, and the function did exactly that, using
+  `np.diff(y) != 0`.
+
+  That is an *exact* inequality. Real measurements are never bit-identical, so
+  with any noise at all every neighbour differs, the collapse finds no runs,
+  and the function falls back to the plain Spearman it exists to avoid.
+
+  Measured on a hard knee — an 8-unit drop at x=10, then a flat tail:
+
+  | σ | before | after |
+  |---|---|---|
+  | 0 | knee at 10 | knee at 10 |
+  | **0.005** | **abstains** | knee at 10 |
+  | 0.01 | abstains | knee at 10 |
+  | 0.05 | abstains | knee at 9 |
+
+  σ=0.005 against an 8-unit drop is a signal-to-noise ratio of 1600. ρ fell
+  from −1.000 to −0.225 and the 0.60 gate rejected the curve. For a package
+  whose first claim is noise-robustness, that was the mirror image of the
+  failure it was built to prevent: not guessing on nothing, but refusing
+  something obvious.
+
+  Plateaus are now detected within a tolerance read from the curve's own
+  noise (`2 × median(|diff|)`, which on a saturating curve is measured from
+  the tail and so reads the noise rather than the drop), with two guards:
+
+  - **capped at 2 % of the total range**, so a noise-derived tolerance can
+    never grow large enough to collapse a genuine trend and thereby loosen
+    the gate it feeds;
+  - **runs anchored to their first value, not chained neighbour-to-neighbour**,
+    so a slow drift of many tiny steps cannot accumulate into one plateau
+    spanning the whole curve.
+
+  Exactly-equal plateaus give a median step of 0, so the tolerance is 0 and the
+  previous behaviour is recovered unchanged.
+
+  Verified in both directions: the knee is now found at σ = 0 … 0.1, the
+  docstring's own motivating case (a scree spectrum breaking at index 10 of
+  200) passes at σ = 0, 0.02 and 0.05, and every curve that must still abstain
+  — straight line, pure noise, constant, noisy ramp, two competing knees —
+  still does, with the same reason codes.
+
 ## [0.2.0] — 2026-10-18
 
 ### Added
