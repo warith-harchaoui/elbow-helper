@@ -3,30 +3,126 @@
 # local state never even reaches CI. One-time setup per clone:
 #   git config core.hooksPath .githooks
 # Bypass (rare, deliberate only): git push --no-verify
+#
+# ---------------------------------------------------------------------------
+# What this gate judges, and why it changed
+# ---------------------------------------------------------------------------
+# It checks out the commit being pushed into a throwaway worktree and runs the
+# gate there, instead of running it against the working directory.
+#
+# The earlier version ran `ruff check .` and pytest against the working tree,
+# which walks the filesystem rather than git. That was wrong in both
+# directions, and both were observed rather than theorised:
+#
+#   False failures. Untracked files belonging to somebody else fail your push,
+#   for a commit that does not contain them. On 2026-10-19 three concurrent
+#   sessions in one tree blocked each other this way. The escape hatch people
+#   reach for is `--no-verify`, which skips the lint AND the tests together --
+#   so a gate that fires wrongly is not merely annoying, it trains people to
+#   disable the whole thing. That is the failure mode worth designing against.
+#
+#   False passes. A lint error that is committed, but already fixed in the
+#   working tree, passes: ruff reads the fixed file on disk while the broken
+#   version is what gets pushed. Demonstrated directly -- a repo whose HEAD
+#   has an unused import and whose working copy does not passes `ruff check .`
+#   and pushes the breakage.
+#
+# A pre-push hook exists to answer one question: "is what I am about to
+# publish clean?". The working tree is not what is about to be published, so
+# narrowing to tracked files would fix only the first failure and leave the
+# second. Checking out the pushed commit answers the actual question, and
+# gets isolation from concurrent sessions for free: a fresh worktree contains
+# nobody else's untracked files by construction rather than by filtering.
+#
+# Cost: one detached checkout per push. Before this hook was installed here,
+# the full sweep was run inside a throwaway worktree and compared against the
+# working-tree run, to confirm no gitignored artifact is needed to run the
+# tests. If that ever stops holding -- a fixture that is ignored, a generated
+# file the tests read -- this gate will fail loudly rather than quietly skip,
+# which is the right way round.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-echo "[pre-push] ruff check..."
-ruff check . || { echo "[pre-push] ruff check failed - push aborted."; exit 1; }
+ZERO="0000000000000000000000000000000000000000"
+WORKTREE=""
 
-echo "[pre-push] ruff format --check..."
-ruff format --check . || { echo "[pre-push] ruff format failed - push aborted."; exit 1; }
+cleanup() {
+  if [ -n "$WORKTREE" ] && [ -d "$WORKTREE" ]; then
+    git worktree remove --force "$WORKTREE" >/dev/null 2>&1 || rm -rf "$WORKTREE"
+    git worktree prune >/dev/null 2>&1 || true
+  fi
+}
+trap cleanup EXIT
 
-echo "[pre-push] full pytest sweep (unit + integration)..."
-# A gate must never hang. This sweep deliberately clears the marker filter with -m "",
-# which wakes integration tests that reach the network; yt-dlp and friends inherit
-# Python's default socket timeout, i.e. none at all. A vocal-helper run sat at 0 % CPU
-# for nine minutes on half-closed sockets and had to be killed -- a push that never
-# finishes is worse than one that fails, because the only way out is --no-verify, which
-# skips the lint and the tests together.
-#
-# pytest-timeout turns that stall into a failure naming the test. It is in each project's
-# dev extra, but the gate must still work in an environment that lacks it, so the flag is
-# only passed when the plugin is importable.
-TIMEOUT_ARGS=""
-if python -c "import pytest_timeout" 2>/dev/null; then
-  TIMEOUT_ARGS="--timeout=600"
+# git feeds the hook "<local ref> <local sha> <remote ref> <remote sha>" per
+# ref. Collect the shas actually being published, skipping deletions (whose
+# local sha is all zeros): there is no content to check in a deletion.
+SHAS=""
+while read -r _local_ref local_sha _remote_ref _remote_sha; do
+  [ -z "${local_sha:-}" ] && continue
+  [ "$local_sha" = "$ZERO" ] && continue
+  case " $SHAS " in *" $local_sha "*) continue ;; esac
+  SHAS="$SHAS $local_sha"
+done
+
+if [ -z "${SHAS// /}" ]; then
+  echo "[pre-push] nothing to publish - skipping the gate."
+  exit 0
 fi
-python -m pytest -q -m "" $TIMEOUT_ARGS || { echo "[pre-push] tests failed - push aborted."; exit 1; }
+
+for sha in $SHAS; do
+  short="$(git rev-parse --short "$sha")"
+  echo "[pre-push] gating $short (the commit being pushed, not the working tree)"
+
+  # Say it out loud when the two differ, so a green gate on a dirty tree is
+  # not a surprise: the result describes the commit, not what the editor shows.
+  if ! git diff --quiet "$sha" -- 2>/dev/null; then
+    echo "[pre-push]   note: your working tree differs from $short; the gate judges $short."
+  fi
+
+  WORKTREE="$(mktemp -d "${TMPDIR:-/tmp}/prepush-XXXXXX")"
+  rmdir "$WORKTREE"
+  git worktree add --detach --quiet "$WORKTREE" "$sha" || {
+    echo "[pre-push] could not check out $short for inspection - push aborted."
+    exit 1
+  }
+
+  (
+    cd "$WORKTREE"
+
+    echo "[pre-push]   ruff check..."
+    ruff check . || { echo "[pre-push] ruff check failed - push aborted."; exit 1; }
+
+    echo "[pre-push]   ruff format --check..."
+    ruff format --check . || { echo "[pre-push] ruff format failed - push aborted."; exit 1; }
+
+    echo "[pre-push]   full pytest sweep (unit + integration)..."
+    # A gate must never hang. This sweep deliberately clears the marker filter
+    # with -m "", which wakes integration tests that reach the network; yt-dlp
+    # and friends inherit Python's default socket timeout, i.e. none at all. A
+    # vocal-helper run sat at 0 % CPU for nine minutes on half-closed sockets
+    # and had to be killed -- a push that never finishes is worse than one that
+    # fails, because the only way out is --no-verify, which skips the lint and
+    # the tests together.
+    #
+    # pytest-timeout turns that stall into a failure naming the test. It is in
+    # each project's dev requirements, but the gate must still work in an
+    # environment that lacks it, so the flag is only passed when the plugin is
+    # importable -- and the absence is announced, because a silent downgrade
+    # here is how a hung push becomes ten minutes of unexplained waiting.
+    TIMEOUT_ARGS=""
+    if python -c "import pytest_timeout" 2>/dev/null; then
+      TIMEOUT_ARGS="--timeout=600"
+    else
+      echo "[pre-push]   note: pytest-timeout not installed; a hung test will not be named."
+    fi
+    python -m pytest -q -m "" $TIMEOUT_ARGS || {
+      echo "[pre-push] tests failed - push aborted."; exit 1;
+    }
+  ) || exit 1
+
+  cleanup
+  WORKTREE=""
+done
 
 echo "[pre-push] all green - pushing."
