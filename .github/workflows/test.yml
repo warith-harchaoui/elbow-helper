@@ -62,3 +62,27 @@ jobs:
           cache: pip
       - run: pip install -e ".[cli,api,mcp,dev]"
       - run: pytest -v
+
+  floor:
+    name: Floor (py3.10 installs and imports)
+    runs-on: ubuntu-latest
+    # `requires-python = ">=3.10"` is a promise to anyone running `pip install`:
+    # on 3.10 this package installs and imports. Nothing in the suite checked
+    # it -- sixteen members made the promise and only speaker-helper ran the
+    # version, so the rest was a claim with no evidence behind it. Verified by
+    # hand across all seventeen before this job was added, so it starts green.
+    #
+    # Install and import, deliberately not the test suite. The tests use 3.11
+    # features legitimately (`tomllib`, behind a `tomli` fallback), and gating
+    # the floor on dev-only concerns would fail this job for reasons that have
+    # nothing to do with the promise. No member carries torch in its base
+    # dependencies, so this is a cached-wheel install: well under a minute,
+    # which is the point.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+      - run: pip install .
+      - run: python -c "import elbow_helper"
