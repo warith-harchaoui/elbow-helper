@@ -43,7 +43,7 @@ pip install -e ".[dev]"     # + pytest
 
 Prefer conda? `conda env create -f environment.yaml && conda activate elbow-helper` sets up Python and pip, then installs from `requirements.txt`, the same dependency list `pyproject.toml` declares.
 
-## Quickstart
+## Quick start
 
 See [`EXAMPLES.md`](https://github.com/warith-harchaoui/elbow-helper/blob/main/EXAMPLES.md) for more recipes: the k-means elbow, an explicit abstention, an exponential-saturation curve, the diagnostic figure, the standalone locator, and configuration tuning.
 
