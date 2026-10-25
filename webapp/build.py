@@ -51,13 +51,14 @@ The Pyodide runtime itself is loaded from the jsDelivr CDN at page load (see
 
 from __future__ import annotations
 
-import argparse
 import json
 import shutil
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
+
+import click
 
 # Repo layout anchors: this file lives in <repo>/webapp/.
 WEBAPP = Path(__file__).resolve().parent
@@ -366,51 +367,65 @@ def site_indexes(base_url: str) -> None:
                 print(f"{name} written")
 
 
-def main() -> None:
-    """Build the bundle end to end; ``--clean`` wipes a previous build first."""
+@click.command(context_settings={"help_option_names": ["-h", "--help"]})
+@click.option("--clean", is_flag=True, help="Remove dist/ before building.")
+@click.option(
+    "--base-url",
+    default=BASE_URL,
+    show_default=True,
+    help="Deployment URL for canonical/OG/sitemap.",
+)
+@click.option(
+    "--gate",
+    is_flag=True,
+    help="Legacy: re-install the professional-email gate (needs PHP).",
+)
+@click.option(
+    "--out",
+    default=str(DIST),
+    show_default=True,
+    help="Output folder.",
+)
+def main(clean: bool, base_url: str, gate: bool, out: str) -> None:
+    """Build the static elbow-helper web app.
+
+    \f
+
+    ``--clean`` wipes a previous build first. Everything after the form feed is
+    for readers of the source: click truncates ``--help`` there, so the numpydoc
+    block below never reaches the terminal.
+
+    Parameters
+    ----------
+    clean : bool
+        Remove dist/ before building.
+    base_url : str
+        Deployment URL used for canonical/OG/sitemap.
+    gate : bool
+        Re-install the retired professional-email gate (needs PHP).
+    out : str
+        Output folder; resolved and bound to the module-level ``DIST``.
+    """
     # Every helper above writes into the module-level DIST, so redirecting the
     # build with --out is a single rebinding rather than an argument threaded
     # through each one.
     global DIST
+    DIST = Path(out).resolve()
 
-    parser = argparse.ArgumentParser(
-        description="Build the static elbow-helper web app."
-    )
-    parser.add_argument(
-        "--clean", action="store_true", help="remove dist/ before building"
-    )
-    parser.add_argument(
-        "--base-url",
-        default=BASE_URL,
-        help="deployment URL for canonical/OG/sitemap (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--gate",
-        action="store_true",
-        help="legacy: re-install the professional-email gate (needs PHP)",
-    )
-    parser.add_argument(
-        "--out",
-        default=str(DIST),
-        help="output folder (default: %(default)s)",
-    )
-    args = parser.parse_args()
-    DIST = Path(args.out).resolve()
-
-    if args.clean and DIST.exists():
+    if clean and DIST.exists():
         shutil.rmtree(DIST)
     DIST.mkdir(parents=True, exist_ok=True)
 
     wheels = build_wheel()
-    compose_app(args.base_url, gated=args.gate)
+    compose_app(base_url, gated=gate)
     copy_assets(wheels)
-    if args.gate:
-        gate_assets(args.base_url)
+    if gate:
+        gate_assets(base_url)
     else:
-        compose_landing(args.base_url)
-    site_indexes(args.base_url)
+        compose_landing(base_url)
+    site_indexes(base_url)
     total = sum(f.stat().st_size for f in DIST.rglob("*") if f.is_file())
-    shape = "gated (legacy)" if args.gate else "open"
+    shape = "gated (legacy)" if gate else "open"
     print(
         f"\n{DIST.name}/ ready, {shape} "
         f"({total / 1e6:.1f} MB before the CDN-served Pyodide runtime)."
