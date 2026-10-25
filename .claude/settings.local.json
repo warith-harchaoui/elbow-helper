@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \"import matplotlib\")",
+      "Bash(python3 -c \"import numpy\")"
+    ]
+  }
+}

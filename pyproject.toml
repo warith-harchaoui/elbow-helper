@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "elbow-helper"
-version = "0.3.0"
+version = "0.4.0"
 description = "Noise-robust knee/elbow detection: a conservative wrapper around a from-scratch locator that either returns a knee with uncertainty or explicitly abstains."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -23,15 +23,14 @@ classifiers = [
 # is allowed to move the logging / path helpers this package calls, so resolving
 # into it unseen would break elbow-helper silently rather than at install time.
 dependencies = [
+    "click>=8.1,<9",
     "numpy>=1.24",
-    "os-helper>=2.0.0,<3",
+    "os-helper>=2.0.0,<4",
 ]
 
 [project.optional-dependencies]
 # Diagnostic plotting (elbow_helper.plotting) is hand-written SVG, stdlib +
 # numpy only — no extra to install, no matplotlib. See CHANGELOG [Unreleased].
-# The other three "doors" beyond the library + argparse CLI.
-cli = ["click>=8.1,<9"]                     # optional click twin (argparse is always on)
 api = ["fastapi>=0.111,<1", "uvicorn>=0.30,<1"]
 # fastapi-mcp mounts the MCP server onto a FastAPI app (see mcp_server.py), so
 # this extra needs the api extra's own deps too. `mcp<2` is pinned because
@@ -47,9 +46,7 @@ dev = ["pytest>=7", "pytest-timeout>=2.3", "httpx>=0.27", "ruff>=0.6"]
 
 [project.scripts]
 # argparse CLI — no runtime dependency beyond the stdlib + core package.
-elbow-helper = "elbow_helper.cli_argparse:main"
-# click twin — install with the [cli] extra.
-elbow-helper-click = "elbow_helper.cli_click:main"
+elbow-helper = "elbow_helper.cli:main"
 # HTTP API + MCP server (needs [mcp]) — fastapi-mcp mounts /mcp on the same
 # FastAPI app api.py serves, so one entry point covers both doors.
 elbow-helper-mcp = "elbow_helper.mcp_server:main"

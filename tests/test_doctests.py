@@ -2,7 +2,7 @@
 
 ``pyproject.toml`` scopes ``pytest`` to ``testpaths = ["tests"]`` with no
 ``--doctest-modules``, so the ``>>> ...`` examples embedded in
-``_core_cli.py``, ``cli_argparse.py``, ``plotting.py``, ``api.py`` and
+``_core_cli.py``, ``cli.py``, ``plotting.py``, ``api.py`` and
 ``mcp_server.py`` were never actually executed by CI: they could drift from
 real behaviour (the same failure mode CHANGELOG's 0.1.2 entry already fixed
 once for ``EXAMPLES.md``) without anything catching it. This module closes
@@ -35,9 +35,9 @@ def test_every_module_with_doctests_stays_accurate() -> None:
     """
     import importlib.util
 
-    from elbow_helper import _core_cli, cli_argparse, plotting
+    from elbow_helper import _core_cli, cli, plotting
 
-    for module in (_core_cli, cli_argparse, plotting):
+    for module in (_core_cli, cli, plotting):
         _assert_doctests_pass(module)
 
     if importlib.util.find_spec("fastapi") is not None:

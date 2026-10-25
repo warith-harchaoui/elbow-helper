@@ -49,7 +49,6 @@ Install:
 
 ```bash
 pip install elbow-helper                   # numpy + os-helper, diagnostics included
-pip install 'elbow-helper[cli]'            # + the click twin
 pip install 'elbow-helper[api]'            # + FastAPI HTTP surface
 pip install 'elbow-helper[mcp]'            # + MCP tools over the same app
 ```

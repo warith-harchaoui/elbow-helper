@@ -24,7 +24,7 @@ forecasting.
 | SVG explaining the verdict | `elbow-helper diagnostics` | `elbow_helper.plotting` | `POST /diagnostics` |
 | Tune the decision procedure | `--config` flags | `RobustKneeConfig`, `RobustKneesConfig` | request body |
 
-Every command is also reachable through the click CLI (`elbow-helper-click …`,
+Every command is also reachable through the CLI (`elbow-helper …`,
 same flags), and the MCP surface mounts on the same FastAPI app at `/mcp`.
 
 ## Natural-language phrasings that should fire
@@ -44,7 +44,7 @@ same flags), and the MCP surface mounts on the same FastAPI app at `/mcp`.
 - **Doubting the knee**: "is there even an elbow here", "the elbow method
   gives nonsense on this curve", "I don't trust this knee", "is this knee
   real", "how confident is that elbow", "my curve is noisy".
-- **Explicit mentions**: `elbow-helper`, `elbow-helper-click`,
+- **Explicit mentions**: `elbow-helper`,
   `elbow-helper-mcp`, `import elbow_helper`, `robust_knee`, `robust_elbow`,
   `robust_knees`, `KneeLocator`, `KneeResult`, `ClearKnee`, `NoClearKnee`,
   `MultiKneeResult`, `RobustKneeConfig`, `kneedle`, "the Kneedle algorithm",

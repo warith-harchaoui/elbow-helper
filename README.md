@@ -259,21 +259,17 @@ the validation behind this design.
 
 ## CLI / API / MCP
 
-Beyond the Python library, `elbow-helper` exposes three more doors onto the same pipeline: an argparse CLI (always installed), a click CLI twin, and an HTTP API with an MCP server mounted on it. All four are thin adapters over the same shared core (`elbow_helper._core_cli`), so none of them can drift from what the library itself returns.
+Beyond the Python library, `elbow-helper` exposes two more doors onto the same pipeline: a click CLI, and an HTTP API with an MCP server mounted on it. All three are thin adapters over the same shared core (`elbow_helper._core_cli`), so none of them can drift from what the library itself returns.
 
 ```bash
-pip install -e .                 # library + argparse CLI
-pip install -e ".[cli]"          # + the click twin
+pip install -e .                 # library + click CLI
 pip install -e ".[api]"          # + the FastAPI HTTP surface
 pip install -e ".[mcp]"          # + the MCP server (pulls in [api] too)
 ```
 
 ```bash
-# argparse (always available)
+# CLI
 elbow-helper knee --y-values 0,0.1,0.3,0.6,0.85,0.9,0.92,0.93,0.94,0.95
-
-# click twin
-elbow-helper-click knee --y-values 0,0.1,0.3,0.6,0.85,0.9,0.92,0.93,0.94,0.95
 
 # HTTP API
 uvicorn elbow_helper.api:app --reload

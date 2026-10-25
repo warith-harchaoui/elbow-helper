@@ -4,6 +4,52 @@ All notable changes to `elbow-helper` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] - 2026-10-25
+
+### Changed
+- **One command line, built with click.** `elbow-helper` now runs the click
+  implementation; the argparse CLI and the `elbow-helper-click` twin are gone,
+  with the `[cli]` extra. `click` is a core dependency, the CLI no longer being
+  optional.
+
+  `_load_series` moved from the deleted argparse module into `cli.py`: it is
+  pure input parsing with no argparse in it, and the click CLI was already
+  importing it across the module boundary — so deleting the file would have
+  broken the surviving CLI.
+
+- `cli_click.py` is now `cli.py`; `cli_argparse.py` is deleted.
+- `os-helper` cap widened to `<4` (os-helper 3.0.0 dropped its own CLI).
+
+### Fixed
+- **A malformed `--y-csv` spec, and naming one side twice, were not usage
+  errors.** `_load_series` raises a plain `ValueError` for both, and it escaped
+  the command group: only the top-level `main()` wrapper caught it, so the
+  mistake exited 1 with no usage line — and printed *nothing at all* under
+  click's own test runner, which is how it stayed invisible. Both are
+  `click.UsageError` now, exit 2 with the usage line, like the "no data given"
+  case beside them.
+- `--help` offered no `-h`, and the group docstring's numpydoc block **leaked
+  into user-facing help**, rendered as one reflowed `"Parameters ----------
+  verbose : int"` paragraph. A `\f` truncates the help where it should stop.
+- `-V` had no short form.
+
+### Tests
+`ArgparseDoor` is gone from the cross-door suite, which now runs CLI + HTTP +
+MCP. Three cases lived only on that door and were carried over rather than
+deleted: the three file input formats (`--y-npy`, `--y-csv` with and without a
+header), the two input-mistake errors above, and `--no-online` genuinely
+clearing the flag — itself a regression test, from when argparse declared
+`--online` as `store_true, default=True` and left no way to ask for `False`.
+
+The `main()` wrapper test had to change trigger: it used bad input, which is a
+usage error now and no longer reaches the wrapper. It fakes a failing core
+instead, which is what the wrapper is actually for.
+
+### Migration
+`elbow-helper-click <cmd>` becomes `elbow-helper <cmd>`. `pip install
+"elbow-helper[cli]"` fails on the unknown extra; plain `pip install
+elbow-helper` carries the CLI.
+
 ## [0.3.0] — 2026-10-19
 
 ### Fixed

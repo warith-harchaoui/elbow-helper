@@ -61,68 +61,13 @@ class DoorResult:
     error_text: str = ""
 
 
-class ArgparseDoor:
-    name = "argparse"
-
-    def __init__(self, capsys):
-        self._capsys = capsys
-
-    def _run(self, argv: list[str]) -> tuple[int, str, str]:
-        from elbow_helper import cli_argparse
-
-        code = cli_argparse.main(argv)
-        out = self._capsys.readouterr()
-        return code, out.out, out.err
-
-    def knee(self, x=None, y=None, config_overrides=None) -> DoorResult:
-        argv = ["knee"]
-        if x is not None:
-            argv += ["--x-values", _values_flag(x)]
-        if y is not None:
-            argv += ["--y-values", _values_flag(y)]
-        if config_overrides:
-            argv += ["--config-json", json.dumps(config_overrides)]
-        code, out, err = self._run(argv)
-        return DoorResult(code == 0, json.loads(out) if code == 0 else None, err)
-
-    def elbow(self, x, y=None, config_overrides=None) -> DoorResult:
-        argv = ["elbow", "--x-values", _values_flag(x)]
-        if y is not None:
-            argv += ["--y-values", _values_flag(y)]
-        if config_overrides:
-            argv += ["--config-json", json.dumps(config_overrides)]
-        code, out, err = self._run(argv)
-        return DoorResult(code == 0, json.loads(out) if code == 0 else None, err)
-
-    def diagnostics(self, x, y) -> DoorResult:
-        argv = [
-            "diagnostics",
-            "--x-values",
-            _values_flag(x),
-            "--y-values",
-            _values_flag(y),
-        ]
-        code, out, err = self._run(argv)
-        return DoorResult(code == 0, out if code == 0 else None, err)
-
-    def locator(self, x=None, y=None) -> DoorResult:
-        argv = ["locator"]
-        if x is not None:
-            argv += ["--x-values", _values_flag(x)]
-        if y is not None:
-            argv += ["--y-values", _values_flag(y)]
-        code, out, err = self._run(argv)
-        return DoorResult(code == 0, json.loads(out) if code == 0 else None, err)
-
-
 class ClickDoor:
     name = "click"
 
     def __init__(self, capsys):
-        pytest.importorskip("click")
         from click.testing import CliRunner
 
-        from elbow_helper.cli_click import cli
+        from elbow_helper.cli import cli
 
         self._runner = CliRunner()
         self._cli = cli
@@ -306,12 +251,15 @@ class McpDoor:
 
 
 def _all_doors(capsys) -> list:
-    """Every installed door (argparse is always available; the rest are
-    skipped by their constructor's ``importorskip`` when the optional
-    extra is absent, so this list shrinks gracefully in a minimal install).
+    """Every installed door.
+
+    The CLI is always available (``click`` is a core dependency); the HTTP and
+    MCP doors are skipped by their constructor's ``importorskip`` when their
+    optional extra is absent, so this list shrinks gracefully in a minimal
+    install.
     """
-    doors = [ArgparseDoor(capsys)]
-    for cls in (ClickDoor, ApiDoor, McpDoor):
+    doors = [ClickDoor(capsys)]
+    for cls in (ApiDoor, McpDoor):
         try:
             doors.append(cls(capsys))
         except pytest.skip.Exception:
@@ -391,23 +339,11 @@ def test_locator_returns_knee_and_all_knees_across_every_door(capsys) -> None:
 # --- Door-specific mechanics: not generalizable across all four doors -----
 
 
-def test_root_help_lists_every_subcommand(capsys) -> None:
-    """``--help`` on both CLI twins lists every subcommand (argparse and
-    click each render help text their own way, so this stays CLI-only)."""
-    from elbow_helper import cli_argparse
-
-    with pytest.raises(SystemExit) as exc:
-        cli_argparse.main(["--help"])
-    assert exc.value.code == 0
-    out = capsys.readouterr().out
-    for cmd in ("knee", "elbow", "diagnostics", "locator"):
-        assert cmd in out
-
-    click = pytest.importorskip("click")
-    _ = click
+def test_root_help_lists_every_subcommand() -> None:
+    """``--help`` lists every subcommand — stays CLI-only, help is a CLI thing."""
     from click.testing import CliRunner
 
-    from elbow_helper.cli_click import cli
+    from elbow_helper.cli import cli
 
     result = CliRunner().invoke(cli, ["--help"])
     assert result.exit_code == 0
@@ -415,80 +351,45 @@ def test_root_help_lists_every_subcommand(capsys) -> None:
         assert cmd in result.output
 
 
-def test_argparse_loads_series_from_every_file_format(tmp_path, capsys) -> None:
+def test_cli_loads_series_from_every_file_format(tmp_path, capsys) -> None:
     """``--y-npy``, and ``--y-csv`` with or without a header row, all load
     the same series (three input formats beyond the plain ``--y-values``
     comma list already covered by the cross-door scenarios above)."""
-    from elbow_helper import cli_argparse
+    door = ClickDoor(capsys)
 
     _, y = clear_knee_curve(seed=1, noise=0.0, n=60)
 
     npy_path = tmp_path / "y.npy"
     np.save(npy_path, y)
-    assert cli_argparse.main(["knee", "--y-npy", str(npy_path)]) == 0
-    assert "is_clear" in json.loads(capsys.readouterr().out)
+    code, out = door._run(["knee", "--y-npy", str(npy_path)])
+    assert code == 0, out
+    assert "is_clear" in json.loads(out)
 
     csv_header = tmp_path / "y_header.csv"
-    csv_header.write_text(
-        "value\n" + "\n".join(f"{v:.6g}" for v in y), encoding="utf-8"
-    )
-    assert cli_argparse.main(["knee", "--y-csv", f"{csv_header}:0"]) == 0
-    assert "is_clear" in json.loads(capsys.readouterr().out)
+    csv_header.write_text("value\n" + "\n".join(f"{v:.6g}" for v in y), encoding="utf-8")
+    code, out = door._run(["knee", "--y-csv", f"{csv_header}:0"])
+    assert code == 0, out
+    assert "is_clear" in json.loads(out)
 
     csv_plain = tmp_path / "y_plain.csv"
     csv_plain.write_text("\n".join(f"{v:.6g}" for v in y), encoding="utf-8")
-    assert cli_argparse.main(["knee", "--y-csv", f"{csv_plain}:0"]) == 0
-    assert "is_clear" in json.loads(capsys.readouterr().out)
+    code, out = door._run(["knee", "--y-csv", f"{csv_plain}:0"])
+    assert code == 0, out
+    assert "is_clear" in json.loads(out)
 
 
-def test_argparse_input_edge_cases_are_clear_errors(capsys) -> None:
-    """A malformed ``--y-csv`` spec, no data at all, and two data flags at
-    once are each a clear ``Error: ...`` on stderr, exit 1 — never a raw
-    traceback. Building the parser itself has no side effects."""
-    from elbow_helper import cli_argparse
+def test_cli_no_online_really_disables_the_online_locator(capsys) -> None:
+    """``--no-online`` clears the flag and the locator still dispatches.
 
-    assert cli_argparse.main(["knee", "--y-csv", "data.csv"]) == 1
-    err = capsys.readouterr().err
-    assert "Error:" in err and "PATH:COLUMN_INDEX" in err
-
-    assert cli_argparse.main(["knee"]) == 1
-    err = capsys.readouterr().err
-    assert "Error:" in err and "no data given" in err
-
-    assert cli_argparse.main(["knee", "--y-values", "1,2,3", "--y-npy", "x.npy"]) == 1
-    err = capsys.readouterr().err
-    assert "Error:" in err and "at most one" in err
-
-    parser = cli_argparse.build_parser()
-    ns = parser.parse_args(["knee", "--y-values", "1,2,3"])
-    assert ns.command == "knee"
-
-
-def test_argparse_online_flag_defaults_true_and_no_online_disables_it(
-    capsys,
-) -> None:
-    """``--online`` defaults to True; ``--no-online`` actually clears it and
-    the locator still dispatches successfully with ``online=False``.
-
-    Regression test: ``--online`` used to be declared with
-    ``action="store_true", default=True``, which can only ever leave the
-    value True; there was no way to pass ``online=False`` through this CLI,
-    unlike the click twin's ``--online/--no-online`` pair.
+    Kept from the deleted argparse door, where it was a regression test:
+    ``--online`` had been declared ``action="store_true", default=True``, which
+    can only ever leave the value True, so there was no way to ask for
+    ``online=False`` at all. click's ``--online/--no-online`` pair is what fixed
+    it, and this is what holds the fix.
     """
-    from elbow_helper import cli_argparse
-
-    parser = cli_argparse.build_parser()
-    default_ns = parser.parse_args(
-        ["locator", "--x-values", "1,2", "--y-values", "1,2"]
-    )
-    assert default_ns.online is True
-    off_ns = parser.parse_args(
-        ["locator", "--x-values", "1,2", "--y-values", "1,2", "--no-online"]
-    )
-    assert off_ns.online is False
-
+    door = ClickDoor(capsys)
     x, y = clear_knee_curve(seed=1, noise=0.0, n=60)
-    code = cli_argparse.main(
+    code, out = door._run(
         [
             "locator",
             "--x-values",
@@ -498,18 +399,34 @@ def test_argparse_online_flag_defaults_true_and_no_online_disables_it(
             "--no-online",
         ]
     )
-    assert code == 0
-    assert "all_knees" in json.loads(capsys.readouterr().out)
+    assert code == 0, out
+    assert "all_knees" in json.loads(out)
 
 
-def test_click_input_edge_cases(capsys) -> None:
-    """click's own ``_resolve_xy`` mirrors argparse's ``_xy_from_args`` (same
-    "no data given" usage error, same y-only shorthand branch), on its own
-    code path -- worth its own check since the two never share code."""
+def test_cli_input_edge_cases_are_clear_errors(capsys) -> None:
+    """Every bad way to name a series is a clear message, never a traceback.
+
+    No data at all, a malformed ``--y-csv`` spec, and two data flags at once.
+    The last two lived only on the deleted argparse door; they are the real
+    coverage, so they moved here rather than going away with it.
+    """
     door = ClickDoor(capsys)
+
     no_data = door._run(["knee"])
     assert no_data[0] == 2
     assert "no data given" in no_data[1]
+
+    # Exit 2 with the usage line, like "no data given" above: all three are
+    # the user mistyping the command. The malformed spec and the two-flags
+    # case used to let a bare ValueError escape the group instead, so they
+    # exited 1 with no usage hint -- and printed nothing under CliRunner.
+    malformed = door._run(["knee", "--y-csv", "data.csv"])
+    assert malformed[0] == 2
+    assert "PATH:COLUMN_INDEX" in malformed[1]
+
+    ambiguous = door._run(["knee", "--y-values", "1,2,3", "--y-npy", "x.npy"])
+    assert ambiguous[0] == 2
+    assert "at most one" in ambiguous[1]
 
     _, y = clear_knee_curve(seed=1, noise=0.0, n=60)
     r = door.knee(y=y)
@@ -517,25 +434,36 @@ def test_click_input_edge_cases(capsys) -> None:
     assert "is_clear" in r.payload
 
 
-def test_click_main_wraps_a_library_exception_as_a_clean_error(
+def test_cli_main_wraps_a_library_exception_as_a_clean_error(
     capsys, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # CliRunner.invoke (used everywhere above) catches exceptions itself, so
-    # it never exercises main() -- the actual `elbow-helper-click` console-
-    # script entry point. Drive main() directly: an unparseable --x-values
-    # raises a plain ValueError from float(), which used to propagate as a
-    # raw Python traceback instead of a clean "Error: ..." + exit 1.
-    pytest.importorskip("click")
-    from elbow_helper.cli_click import main
+    """An unexpected library failure becomes one ``Error: …`` line + exit 1.
 
+    ``CliRunner.invoke`` (used everywhere above) catches exceptions itself, so
+    it never exercises ``main()`` — the actual console-script entry point, and
+    the only place this translation happens.
+
+    The trigger is a monkeypatched core rather than bad input: every way of
+    mistyping the input is a ``click.UsageError`` now (exit 2, with the usage
+    line), so bad input no longer reaches this wrapper at all. What the wrapper
+    is for is the *unforeseen* failure deeper down, which is what this fakes.
+    """
+    from elbow_helper import cli as cli_mod
+
+    def _explode(*_a, **_kw):
+        raise RuntimeError("the solver gave up")
+
+    monkeypatch.setattr(cli_mod.core, "do_locator", _explode)
     monkeypatch.setattr(
         "sys.argv",
-        ["elbow-helper-click", "locator", "--x-values", "", "--y-values", ""],
+        ["elbow-helper", "locator", "--x-values", "1,2,3", "--y-values", "1,4,9"],
     )
     with pytest.raises(SystemExit) as exc:
-        main()
+        cli_mod.main()
     assert exc.value.code == 1
-    assert "Error:" in capsys.readouterr().err
+    err = capsys.readouterr().err
+    assert "Error: the solver gave up" in err
+    assert "Traceback" not in err
 
 
 def test_api_diagnostics_language_fr_and_validation_errors(capsys) -> None:

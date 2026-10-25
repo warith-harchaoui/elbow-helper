@@ -1,7 +1,7 @@
 # elbow-helper CLI reference
 
-Two CLIs over the same operations. `elbow-helper` (argparse) ships with the
-core package; `elbow-helper-click` (needs `[cli]`) is the click twin. Both
+One CLI, `elbow-helper`, built with click and shipped with the core package.
+It
 dispatch to the same `_core_cli` implementation, so flags match exactly.
 
 ## The four commands

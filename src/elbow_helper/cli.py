@@ -1,14 +1,17 @@
-"""click command-line interface — the optional, ergonomic CLI twin.
+"""The elbow-helper command line, built with click.
 
-Identical behaviour to :mod:`elbow_helper.cli_argparse`, but built on click
-for a nicer help/UX. click is an *optional* dependency (``pip install
-'elbow-helper[cli]'``): the argparse CLI is the always-available one, so
-importing this module lazily requires click and fails with an actionable
-message if it is missing. Every command delegates to the shared
-:mod:`elbow_helper._core_cli`, so the two CLIs can never drift apart.
+The one command-line surface. It used to be the optional twin of an argparse
+CLI, reachable under a ``-click`` suffix that named the parsing library rather
+than the interface; both are gone and ``click`` is a core dependency now.
+Every command still delegates to the shared :mod:`elbow_helper._core_cli`,
+which the HTTP and MCP doors also call, so no door can answer differently
+from another.
 
-Consumes: ``click`` (optional), ``elbow_helper._core_cli``, ``os_helper``.
-Produces: :func:`cli` (the ``elbow-helper-click`` console-script entry point).
+:func:`_load_series` moved here from the deleted argparse module: it is pure
+input parsing with no argparse in it, and the CLI is its only caller.
+
+Consumes: ``click``, ``elbow_helper._core_cli``, ``os_helper``.
+Produces: :func:`cli` (the ``elbow-helper`` console-script entry point).
 
 Author
 ------
@@ -22,18 +25,69 @@ import logging
 import sys
 from typing import Optional
 
-try:
-    import click
-except ImportError as exc:  # pragma: no cover - exercised only without the extra
-    raise ImportError(
-        "the click CLI needs the [cli] extra. Run: pip install 'elbow-helper[cli]' "
-        "(the argparse CLI `elbow-helper` is always available without it)."
-    ) from exc
-
+import click
+import numpy as np
 import os_helper as oh
 
+from . import __version__
 from . import _core_cli as core
-from .cli_argparse import _load_series
+
+
+def _load_series(
+    values: Optional[str], npy: Optional[str], csv_column: Optional[str]
+) -> Optional[list]:
+    """Load one numeric series from whichever of three flags was given.
+
+    Parameters
+    ----------
+    values : str, optional
+        Comma-separated inline floats, e.g. ``"1,2,3.5"``.
+    npy : str, optional
+        Path to a 1-D ``.npy`` array.
+    csv_column : str, optional
+        A ``path:column_index`` pair (0-based) into a CSV file.
+
+    Returns
+    -------
+    list of float or None
+        The loaded series, or ``None`` if all three inputs were omitted.
+
+    Raises
+    ------
+    ValueError
+        If more than one of the three inputs was given (ambiguous), or a
+        ``csv_column`` spec is malformed.
+
+    Examples
+    --------
+    >>> _load_series("1,2,3", None, None)
+    [1.0, 2.0, 3.0]
+    """
+    given = [v for v in (values, npy, csv_column) if v is not None]
+    if len(given) > 1:
+        raise ValueError("give at most one of --values / --npy / --csv, not several")
+    if values is not None:
+        return [float(v) for v in values.split(",")]
+    if npy is not None:
+        return np.load(npy).astype(float).ravel().tolist()
+    if csv_column is not None:
+        path, _, col = csv_column.partition(":")
+        if not col:
+            raise ValueError("--csv expects PATH:COLUMN_INDEX, e.g. data.csv:1")
+        col_idx = int(col)
+        # Plain stdlib CSV read (no pandas dependency for a one-column pull).
+        import csv as csv_module
+
+        with open(path, newline="", encoding="utf-8") as fh:
+            rows = list(csv_module.reader(fh))
+        # Skip a header row if the first cell in the target column isn't numeric.
+        start = 0
+        try:
+            float(rows[0][col_idx])
+        except (ValueError, IndexError):
+            start = 1
+        return [float(row[col_idx]) for row in rows[start:]]
+    return None
 
 
 def _emit(result: dict | str) -> None:
@@ -58,7 +112,7 @@ def _resolve_xy(
 ) -> tuple[list, Optional[list]]:
     """Resolve x/y series from the click data options, with the y-only shorthand.
 
-    Mirrors :func:`elbow_helper.cli_argparse._xy_from_args` for the click
+    Resolves the x / y inputs for the click
     surface, reusing the same three-way loader so both CLIs read identical
     inputs identically.
 
@@ -77,10 +131,21 @@ def _resolve_xy(
     Raises
     ------
     click.UsageError
-        If neither side had any input.
+        If neither side had any input, if a ``--*-csv`` spec is malformed, or
+        if one side was named twice.
     """
-    x = _load_series(x_values, x_npy, x_csv)
-    y = _load_series(y_values, y_npy, y_csv)
+    # _load_series raises a plain ValueError for a malformed PATH:COLUMN_INDEX
+    # or for two inputs naming the same side. Those are the user mistyping the
+    # command, which is what UsageError is for: it prints the message with the
+    # usage line and exits 2, exactly like "no data given" below. Left bare,
+    # the ValueError escaped the group and only the top-level main() wrapper
+    # caught it -- so the same class of mistake exited 1 with no usage hint,
+    # and nothing at all under click's own test runner.
+    try:
+        x = _load_series(x_values, x_npy, x_csv)
+        y = _load_series(y_values, y_npy, y_csv)
+    except ValueError as err:
+        raise click.UsageError(str(err)) from err
     if x is None and y is None:
         raise click.UsageError(
             "no data given: pass --y-values/--y-npy/--y-csv (shorthand: y "
@@ -134,11 +199,20 @@ def _data_options(func):
     return func
 
 
-@click.group()
-@click.version_option(package_name="elbow-helper")
+# ``-h`` beside ``--help``: the short form is the one people type.
+@click.group(context_settings={"help_option_names": ["-h", "--help"]})
+# ``-V`` beside ``--version``, as the argparse door offered. ``-v`` is already
+# --verbose, hence the capital.
+@click.version_option(__version__, "-V", "--version", package_name="elbow-helper")
 @click.option("-v", "--verbose", count=True, help="repeat for more logs")
 def cli(verbose: int) -> None:
     """Noise-robust knee/elbow detection: a knee with uncertainty, or an explicit abstention.
+
+    \f
+
+    Everything past the form feed is for readers of the source: click truncates
+    ``--help`` there. Without it the numpydoc block below reaches users as one
+    reflowed paragraph of "Parameters ---------- verbose : int".
 
     Parameters
     ----------
@@ -312,7 +386,7 @@ def locator_cmd(
 
 
 def main() -> None:
-    """Console entry point (``elbow-helper-click``).
+    """Console entry point (``elbow-helper``).
 
     click's own ``main()`` only special-cases ``ClickException``/``Abort``
     (and a broken pipe); a plain library exception (e.g. ``ValueError`` from

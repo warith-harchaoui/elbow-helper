@@ -269,21 +269,17 @@ pour la validation derrière ce choix.
 
 ## CLI / API / MCP
 
-Au-delà de la bibliothèque Python, `elbow-helper` ouvre trois autres portes sur le même pipeline : une CLI argparse (toujours installée), une CLI click jumelle et une API HTTP avec un serveur MCP monté dessus. Les quatre restent de simples adaptateurs autour du même cœur partagé (`elbow_helper._core_cli`), donc aucune ne peut dériver de ce que renvoie la bibliothèque elle-même.
+Au-delà de la bibliothèque Python, `elbow-helper` ouvre deux autres portes sur le même pipeline : une CLI click et une API HTTP avec un serveur MCP monté dessus. Les trois restent de simples adaptateurs autour du même cœur partagé (`elbow_helper._core_cli`), donc aucune ne peut dériver de ce que renvoie la bibliothèque elle-même.
 
 ```bash
-pip install -e .                 # bibliothèque + CLI argparse
-pip install -e ".[cli]"          # + la CLI click
+pip install -e .                 # bibliothèque + CLI click
 pip install -e ".[api]"          # + la surface HTTP FastAPI
 pip install -e ".[mcp]"          # + le serveur MCP (inclut [api])
 ```
 
 ```bash
-# argparse (toujours disponible)
+# CLI
 elbow-helper knee --y-values 0,0.1,0.3,0.6,0.85,0.9,0.92,0.93,0.94,0.95
-
-# CLI click
-elbow-helper-click knee --y-values 0,0.1,0.3,0.6,0.85,0.9,0.92,0.93,0.94,0.95
 
 # API HTTP
 uvicorn elbow_helper.api:app --reload

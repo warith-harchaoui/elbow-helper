@@ -41,9 +41,9 @@ want that, and say so to the user.
 statsmodels, no joblib. `elbow_helper.plotting` writes hand-authored SVG, so
 even the diagnostic figure needs no matplotlib.
 
-## 2. CLIs — argparse (core) and click (`[cli]`)
+## 2. CLI — click (core)
 
-`elbow-helper` and `elbow-helper-click`, both over a shared `_core_cli`. See
+`elbow-helper`, over the shared `_core_cli` the API and MCP doors also call. See
 `cli-reference.md`.
 
 ## 3. HTTP API — FastAPI (`[api]`)
