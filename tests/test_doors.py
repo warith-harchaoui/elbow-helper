@@ -366,7 +366,9 @@ def test_cli_loads_series_from_every_file_format(tmp_path, capsys) -> None:
     assert "is_clear" in json.loads(out)
 
     csv_header = tmp_path / "y_header.csv"
-    csv_header.write_text("value\n" + "\n".join(f"{v:.6g}" for v in y), encoding="utf-8")
+    csv_header.write_text(
+        "value\n" + "\n".join(f"{v:.6g}" for v in y), encoding="utf-8"
+    )
     code, out = door._run(["knee", "--y-csv", f"{csv_header}:0"])
     assert code == 0, out
     assert "is_clear" in json.loads(out)
