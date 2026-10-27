@@ -4,6 +4,53 @@ All notable changes to `elbow-helper` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Documentation
+- **Every example output was from 0.1.4 and none of it was still true.**
+  `EXAMPLES.md` / `EXEMPLES.md` were last touched before three detector
+  commits that moved where the knee lands, so the pasted numbers had drifted
+  release by release with nothing to catch it: the saturating knee read 0.3418
+  against a real 0.2785, the RC curve 1.98 tau against 1.644, the bug-discovery
+  knee 10.75 against 10.5, and the queueing and cache examples claimed located
+  knees at `rho = 0.605` and 691 items when the shipped defaults now abstain on
+  both. Every snippet was re-executed and every output block replaced with what
+  the run actually printed. Both files are now verified by running each block
+  in document order and diffing against the pasted text, so the next drift is
+  mechanically detectable rather than invisible.
+
+  The two abstaining examples keep their subject and gain the honest version:
+  the default verdict with its `detail`, then the single named threshold that
+  buys a point estimate, so the trade is in the config rather than in a
+  footnote. `examples/queueing_latency.py` and `examples/cache_hit_rate.py`
+  were brought into line — both had trailing comments asserting a knee their
+  own code no longer finds — and `examples/exponential_saturation.py`'s
+  knee/tau note corrected from 1.9 to 1.6.
+
+- **The spine of the three document pairs** now follows CODING.md rules 16-18.
+  `EXAMPLES.md` / `EXEMPLES.md` gained `Table of Contents`, `Setup`,
+  `Command line` and `Troubleshooting`; `LANDSCAPE.md` / `PAYSAGE.md` gained
+  `Positioning map`, `When to pick what` and `Sources and as-of date`, and the
+  star table now precedes the positioning prose rather than following it.
+
+- **The landscape's claims about other people's software are sourced and
+  dated.** Versions and declared dependencies for kneed, ruptures, kneebow,
+  Yellowbrick and R's `segmented` were checked against each project's own
+  published metadata on 2026-10-27. Two write-ups were wrong rather than
+  merely undated: kneebow was described as dependency-light when it declares
+  matplotlib and scikit-learn, and `KElbowVisualizer` was described as a
+  visualizer that leaves the locating to the reader when `locate_elbow=True`
+  is its default and runs the same Kneedle construction. `When to pick what`
+  states plainly where this package is the wrong choice, short applied curves
+  at the shipped defaults included.
+
+- `EXAMPLES.md` had no language-switch links; both files carry the pair now.
+
+### Fixed
+- The French `INSUFFICIENT_DATA` message joined two clauses with `, et `,
+  which the suite's writing charter forbids. It reads `, puis ` now. No reason
+  code, threshold or measurement changed.
+
 ## [0.4.0] - 2026-10-25
 
 ### Changed

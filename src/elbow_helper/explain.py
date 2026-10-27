@@ -236,8 +236,8 @@ _STRINGS = {
             "détecteur est calibré. Ses portes de persistance et de bootstrap "
             "ont besoin d'un espace d'échelles où travailler ; en dessous, "
             "elles mesurent du bruit. Passez une configuration avec un "
-            "min_samples plus bas pour tenter quand même, et lisez le résultat "
-            "comme une indication plutôt que comme une confirmation"
+            "min_samples plus bas pour tenter quand même, puis lisez le "
+            "résultat comme une indication plutôt que comme une confirmation"
         ),
     },
 }

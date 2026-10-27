@@ -41,13 +41,11 @@ if result.is_clear:
     print(f"  knee at t = {result.knee_x:.3f}  (tau = {tau}, knee/tau = {ratio:.2f})")
     print(f"  90% CI    = ({result.ci90[0]:.3f}, {result.ci90[1]:.3f})")
 
-# Note on the knee/tau ratio: it lands consistently around 1.9, not 1.0. The
-# textbook "time constant" tau marks 1 - e^-1 ~ 63% of the rise, which is a
+# Note on the knee/tau ratio: it lands around 1.6, not 1.0. The textbook
+# "time constant" tau marks 1 - e^-1 ~ 63% of the rise, which is a
 # mathematically clean but visually unsatisfying "knee" — a human eye (and
-# this locator) reads the curve as having genuinely flattened only once it
-# clears roughly 2 time constants (1 - e^-2 ~ 85%), the same "practically
-# settled" convention used informally in RC-circuit and control-theory
-# contexts. This ratio is also a property of the *observation window*, not
+# this locator) reads the curve as having genuinely flattened only well past
+# that, around 81% of the rise here. This ratio is also a property of the *observation window*, not
 # of the curve alone: it was measured here over t in [0, 5*tau]; a narrower
 # or wider window shifts it, since the locator's decision is about maximum
 # deviation from the chord spanning whatever range it is actually given.

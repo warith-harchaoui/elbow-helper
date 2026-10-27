@@ -30,12 +30,30 @@ cache_size = np.linspace(10, 2000, 150)
 hit_rate = cache_size / (cache_size + K)
 hit_rate = hit_rate + rng.normal(0, 0.01, cache_size.size)
 
+# At the shipped defaults this curve abstains, and for a different reason
+# than the queueing example: here the knee is precise whenever it appears,
+# it simply does not appear in enough resamples to clear
+# `min_bootstrap_detection_rate`.
+strict = RobustKneeConfig(random_seed=0)
+first = robust_knee(
+    cache_size,
+    hit_rate,
+    curve="concave",
+    direction="increasing",
+    config=strict,
+)
+print(first.reason)
+print(f"  {first.detail}")
+
+# Accepting a lower detection rate is a decision a reader can audit, so it
+# goes in the config rather than in a footnote.
+relaxed = strict.with_(min_bootstrap_detection_rate=0.80)
 result = robust_knee(
     cache_size,
     hit_rate,
     curve="concave",
     direction="increasing",
-    config=RobustKneeConfig(random_seed=0),
+    config=relaxed,
 )
 
 print(result)
@@ -47,8 +65,8 @@ if result.is_clear:
     print(f"  hit rate at knee   = {knee_hit_rate:.1%}")
     print(f"  90% CI             = ({result.ci90[0]:.0f}, {result.ci90[1]:.0f})")
 
-# Note: the knee lands around 3.5x K, not at K itself. K only marks the
+# Note: the knee lands around 2.5x K, not at K itself. K only marks the
 # 50%-hit-rate point, a property of the formula's algebra, not of where
 # the *marginal* return on cache size actually stops paying off. Buying
 # cache up to K leaves a lot of cheap hit-rate on the table; buying past
-# roughly 3.5x K is spending real memory for a shrinking sliver of hits.
+# roughly 2.5x K is spending real memory for a shrinking sliver of hits.

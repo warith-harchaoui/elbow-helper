@@ -30,12 +30,31 @@ rho = np.linspace(0.02, 0.90, 150)
 latency_ms = baseline_ms / (1.0 - rho)
 latency_ms = latency_ms + rng.normal(0, 0.6, rho.size)
 
+# At the shipped defaults this curve abstains, and the reason is worth
+# reading: the knee is found on every resample, but resampling slides it by
+# more of the x-range than `max_bootstrap_median_shift` allows. A smooth
+# hyperbola has no slope discontinuity to pin a knee to, so that is the
+# honest verdict rather than a defect.
+strict = RobustKneeConfig(random_seed=0)
+first = robust_knee(
+    rho,
+    latency_ms,
+    curve="convex",
+    direction="increasing",
+    config=strict,
+)
+print(first.reason)
+print(f"  {first.detail}")
+
+# Widening that one tolerance to 6% of the range is the explicit decision
+# that buys a point estimate here. It is a choice, so it is written down.
+relaxed = strict.with_(max_bootstrap_median_shift=0.06)
 result = robust_knee(
     rho,
     latency_ms,
     curve="convex",
     direction="increasing",
-    config=RobustKneeConfig(random_seed=0),
+    config=relaxed,
 )
 
 print(result)
@@ -49,8 +68,8 @@ if result.is_clear:
     )
     print(f"  90% CI              = ({result.ci90[0]:.3f}, {result.ci90[1]:.3f})")
 
-# Note: the knee lands around rho ~ 0.60, well before the mathematical
-# blow-up at rho = 1. A queue is already paying a real latency tax at 60%
+# Note: the knee lands around rho ~ 0.63, well before the mathematical
+# blow-up at rho = 1. A queue is already paying a real latency tax at 63%
 # utilization; the curve only *looks* fine up to there because 1/(1-rho)
 # is still small on an absolute scale. Sizing capacity off "is it still
 # roughly flat" instead of off this located knee is a common, avoidable
