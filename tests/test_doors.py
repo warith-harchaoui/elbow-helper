@@ -1,6 +1,6 @@
 """Cross-door behavioral parity tests.
 
-The argparse CLI, the click CLI, the HTTP API, and the MCP server are all
+The CLI, the HTTP API, and the MCP server are all
 thin adapters over :mod:`elbow_helper._core_cli` (see its module
 docstring): none of them implements its own decision logic. The old suite
 tested each door with its own near-identical copy of the same handful of
