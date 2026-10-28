@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1455 432" width="1455" height="432" role="img" aria-labelledby="eh-title eh-desc" font-family="Roboto, 'Helvetica Neue', Arial, sans-serif">
+  <title id="eh-title">How elbow-helper works: a curve in, a knee with its uncertainty out — or an honest refusal</title>
+  <desc id="eh-desc">A left-to-right plate. In: a curve, typically an error or inertia falling as some parameter grows. The work, in three numbered stages: a candidate knee is located from scratch rather than by calling a library whose assumptions you cannot see; its uncertainty is estimated under noise, because a knee read off a jagged curve is a guess wearing a number; and the result is gated, so a curve with no defensible knee returns an abstention instead of a plausible coordinate. Out: a knee with an interval around it, or an explicit refusal. The caption is the whole argument for the package: a confident wrong answer is worse than no answer.</desc>
+  <style>
+    .panel      { fill: #ffffff; stroke: #d6d6d6; stroke-width: 1.5; }
+    .panel-label{ fill: #6b6b6b; font-size: 13px; font-weight: 600; letter-spacing: .08em; }
+    .io         { fill: #F8F8F8; stroke: #9a9a9a; stroke-width: 1.5; }
+    .stage      { fill: #FFF4E0; stroke: #FF9500; stroke-width: 1.5; }
+    .core       { fill: #007AFF; stroke: #0062CC; stroke-width: 1.5; }
+    .surface    { fill: #EAF3FF; stroke: #007AFF; stroke-width: 1.5; }
+    .n-title    { font-size: 15px; font-weight: 600; fill: #111111; }
+    .n-sub      { font-size: 12px; fill: #5a5a5a; }
+    .on-dark    { fill: #ffffff; font-size: 15px; font-weight: 600; }
+    .on-dark-sub{ fill: #d8e8ff; font-size: 12px; }
+    .flow       { fill: none; stroke: #9a9a9a; stroke-width: 2; }
+    .tie        { fill: none; stroke: #007AFF; stroke-width: 1.5; }
+    .caption    { font-size: 12.5px; fill: #5a5a5a; font-style: italic; }
+    .step       { font-size: 11px; font-weight: 700; fill: #B26A00;
+                  font-family: 'Roboto Mono', ui-monospace, monospace; }
+    .surf-label { font-size: 13px; font-weight: 600; fill: #0062CC; }
+
+    @media (prefers-color-scheme: dark) {
+      .panel      { fill: #1b1b1d; stroke: #3a3a3d; }
+      .panel-label{ fill: #a0a0a6; }
+      .io         { fill: #2a2a2e; stroke: #6f6f76; }
+      .stage      { fill: #3a2d12; stroke: #FF9500; }
+      .surface    { fill: #10243d; stroke: #4da2ff; }
+      .n-title    { fill: #f2f2f4; }
+      .n-sub      { fill: #b4b4ba; }
+      .flow       { stroke: #7a7a82; }
+      .tie        { stroke: #4da2ff; }
+      .caption    { fill: #a0a0a6; }
+      .step       { fill: #FFCC00; }
+      .surf-label { fill: #4da2ff; }
+    }
+  </style>
+  <defs><marker id="ah-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#9a9a9a"/></marker></defs>
+  <text class="panel-label" x="28" y="40">IN</text>
+  <rect class="io" x="28" y="87" width="269" height="78" rx="10"/>
+  <text class="n-title" x="163" y="120" text-anchor="middle">a curve</text>
+  <text class="n-sub" x="163" y="139" text-anchor="middle">error or inertia against a parameter</text>
+  <path class="flow" d="M303 126 H319" marker-end="url(#ah-arrow)"/>
+  <rect class="panel" x="323" y="54" width="828" height="144" rx="12"/>
+  <text class="panel-label" x="343" y="76">WHAT IT DOES</text>
+  <rect class="stage" x="343" y="94" width="250" height="78" rx="10"/>
+  <text class="n-title" x="468" y="127" text-anchor="middle">locate a candidate</text>
+  <text class="n-sub" x="468" y="146" text-anchor="middle">from scratch, assumptions visible</text>
+  <text class="step" x="354" y="110">1</text>
+  <path class="flow" d="M597 133 H613" marker-end="url(#ah-arrow)"/>
+  <rect class="stage" x="619" y="94" width="243" height="78" rx="10"/>
+  <text class="n-title" x="741" y="127" text-anchor="middle">estimate the uncertainty</text>
+  <text class="n-sub" x="741" y="146" text-anchor="middle">under the noise actually present</text>
+  <text class="step" x="630" y="110">2</text>
+  <path class="flow" d="M867 133 H883" marker-end="url(#ah-arrow)"/>
+  <rect class="stage" x="889" y="94" width="243" height="78" rx="10"/>
+  <text class="n-title" x="1010" y="127" text-anchor="middle">gate it</text>
+  <text class="n-sub" x="1010" y="146" text-anchor="middle">no defensible knee means abstain</text>
+  <text class="step" x="900" y="110">3</text>
+  <path class="flow" d="M1158 126 H1174" marker-end="url(#ah-arrow)"/>
+  <text class="panel-label" x="1178" y="40">OUT</text>
+  <rect class="io" x="1178" y="87" width="250" height="78" rx="10"/>
+  <text class="n-title" x="1303" y="120" text-anchor="middle">a knee, with its interval</text>
+  <text class="n-sub" x="1303" y="139" text-anchor="middle">or an explicit abstention</text>
+  <rect class="core" x="512" y="232" width="431" height="54" rx="10"/>
+  <text class="on-dark" x="728" y="253" text-anchor="middle">one library, called the same way everywhere</text>
+  <text class="on-dark-sub" x="728" y="272" text-anchor="middle">os-helper underneath for logging and file management</text>
+  <path class="tie" d="M728 286 V314 H464 V332"/>
+  <path class="tie" d="M728 314 H992 V332"/>
+  <path class="tie" d="M464 314 V332"/>
+  <rect class="surface" x="389" y="332" width="150" height="46" rx="9"/>
+  <text class="surf-label" x="464" y="360" text-anchor="middle">Python API</text>
+  <path class="tie" d="M640 314 V332"/>
+  <rect class="surface" x="565" y="332" width="150" height="46" rx="9"/>
+  <text class="surf-label" x="640" y="360" text-anchor="middle">CLI (click)</text>
+  <path class="tie" d="M816 314 V332"/>
+  <rect class="surface" x="741" y="332" width="150" height="46" rx="9"/>
+  <text class="surf-label" x="816" y="360" text-anchor="middle">FastAPI + MCP</text>
+  <path class="tie" d="M992 314 V332"/>
+  <rect class="surface" x="917" y="332" width="150" height="46" rx="9"/>
+  <text class="surf-label" x="992" y="360" text-anchor="middle">agent skill</text>
+  <text class="caption" x="728" y="412" text-anchor="middle">A confident wrong knee is worse than no knee: this is the only member whose headline feature is refusing to answer.</text>
+</svg>

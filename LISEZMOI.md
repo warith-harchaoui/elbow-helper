@@ -34,6 +34,10 @@ Sur une courbe à rendements décroissants, le coude marque l'endroit où chaque
 
 Le paquet entier ne dépend que de `numpy` et de [`os-helper`](https://github.com/warith-harchaoui/os-helper), y compris pour la figure de diagnostic. Le repérage du coude est codé de zéro, en NumPy pur : aucune dépendance à `scipy`, `scikit-learn`, `statsmodels` ni `joblib`. `elbow_helper.plotting` dessine du SVG à la main (voir Diagnostics plus bas) au lieu de passer par matplotlib, donc rien à installer en plus pour tracer une figure. La section Remerciements, en bas de page, détaille l'implémentation dont s'inspire l'algorithme.
 
+## Comment ça marche
+
+![Comment elbow-helper fonctionne : une courbe en entrée, un coude avec son incertitude en sortie — ou un refus franc](https://raw.githubusercontent.com/warith-harchaoui/elbow-helper/main/assets/diagrams/comment-ca-marche.png)
+
 ## Installation
 
 ```bash

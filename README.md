@@ -34,6 +34,10 @@ A knee, on a curve of diminishing returns, marks the point past which extra inpu
 
 The whole package depends on `numpy` and [`os-helper`](https://github.com/warith-harchaoui/os-helper) only: nothing else, not even for the diagnostic figure. The knee-locating algorithm is implemented from scratch, in NumPy only, so there is no `scipy`, `scikit-learn`, `statsmodels`, or `joblib` runtime dependency. `elbow_helper.plotting` writes hand-authored SVG (see Diagnostics below) rather than reaching for matplotlib, so it needs no extra install. See Acknowledgements below for the implementation this algorithm follows.
 
+## How it works
+
+![How elbow-helper works: a curve in, a knee with its uncertainty out — or an honest refusal](https://raw.githubusercontent.com/warith-harchaoui/elbow-helper/main/assets/diagrams/how-it-works.png)
+
 ## Installation
 
 ```bash

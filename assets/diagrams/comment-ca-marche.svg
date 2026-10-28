@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1496 432" width="1496" height="432" role="img" aria-labelledby="eh-title eh-desc" font-family="Roboto, 'Helvetica Neue', Arial, sans-serif">
+  <title id="eh-title">Comment elbow-helper fonctionne : une courbe en entrée, un coude avec son incertitude en sortie — ou un refus franc</title>
+  <desc id="eh-desc">Une plaque de gauche à droite. Entrée : une courbe, typiquement une erreur ou une inertie qui descend quand un paramètre grandit. Le travail, en trois étapes numérotées : un coude candidat est localisé depuis zéro plutôt qu'en appelant une bibliothèque dont on ne voit pas les hypothèses ; son incertitude est estimée sous le bruit, parce qu'un coude lu sur une courbe dentelée est une supposition déguisée en nombre ; le résultat est filtré, donc une courbe sans coude défendable rend une abstention au lieu d'une coordonnée plausible. Sortie : un coude avec un intervalle autour, ou un refus explicite.</desc>
+  <style>
+    .panel      { fill: #ffffff; stroke: #d6d6d6; stroke-width: 1.5; }
+    .panel-label{ fill: #6b6b6b; font-size: 13px; font-weight: 600; letter-spacing: .08em; }
+    .io         { fill: #F8F8F8; stroke: #9a9a9a; stroke-width: 1.5; }
+    .stage      { fill: #FFF4E0; stroke: #FF9500; stroke-width: 1.5; }
+    .core       { fill: #007AFF; stroke: #0062CC; stroke-width: 1.5; }
+    .surface    { fill: #EAF3FF; stroke: #007AFF; stroke-width: 1.5; }
+    .n-title    { font-size: 15px; font-weight: 600; fill: #111111; }
+    .n-sub      { font-size: 12px; fill: #5a5a5a; }
+    .on-dark    { fill: #ffffff; font-size: 15px; font-weight: 600; }
+    .on-dark-sub{ fill: #d8e8ff; font-size: 12px; }
+    .flow       { fill: none; stroke: #9a9a9a; stroke-width: 2; }
+    .tie        { fill: none; stroke: #007AFF; stroke-width: 1.5; }
+    .caption    { font-size: 12.5px; fill: #5a5a5a; font-style: italic; }
+    .step       { font-size: 11px; font-weight: 700; fill: #B26A00;
+                  font-family: 'Roboto Mono', ui-monospace, monospace; }
+    .surf-label { font-size: 13px; font-weight: 600; fill: #0062CC; }
+
+    @media (prefers-color-scheme: dark) {
+      .panel      { fill: #1b1b1d; stroke: #3a3a3d; }
+      .panel-label{ fill: #a0a0a6; }
+      .io         { fill: #2a2a2e; stroke: #6f6f76; }
+      .stage      { fill: #3a2d12; stroke: #FF9500; }
+      .surface    { fill: #10243d; stroke: #4da2ff; }
+      .n-title    { fill: #f2f2f4; }
+      .n-sub      { fill: #b4b4ba; }
+      .flow       { stroke: #7a7a82; }
+      .tie        { stroke: #4da2ff; }
+      .caption    { fill: #a0a0a6; }
+      .step       { fill: #FFCC00; }
+      .surf-label { fill: #4da2ff; }
+    }
+  </style>
+  <defs><marker id="ah-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#9a9a9a"/></marker></defs>
+  <text class="panel-label" x="28" y="40">ENTRÉE</text>
+  <rect class="io" x="28" y="87" width="276" height="78" rx="10"/>
+  <text class="n-title" x="166" y="120" text-anchor="middle">une courbe</text>
+  <text class="n-sub" x="166" y="139" text-anchor="middle">erreur ou inertie contre un paramètre</text>
+  <path class="flow" d="M310 126 H326" marker-end="url(#ah-arrow)"/>
+  <rect class="panel" x="330" y="54" width="828" height="144" rx="12"/>
+  <text class="panel-label" x="350" y="76">CE QU'ELLE FAIT</text>
+  <rect class="stage" x="350" y="94" width="243" height="78" rx="10"/>
+  <text class="n-title" x="472" y="127" text-anchor="middle">localiser un candidat</text>
+  <text class="n-sub" x="472" y="146" text-anchor="middle">depuis zéro, hypothèses visibles</text>
+  <text class="step" x="361" y="110">1</text>
+  <path class="flow" d="M597 133 H613" marker-end="url(#ah-arrow)"/>
+  <rect class="stage" x="619" y="94" width="243" height="78" rx="10"/>
+  <text class="n-title" x="741" y="127" text-anchor="middle">estimer l'incertitude</text>
+  <text class="n-sub" x="741" y="146" text-anchor="middle">sous le bruit réellement présent</text>
+  <text class="step" x="630" y="110">2</text>
+  <path class="flow" d="M867 133 H883" marker-end="url(#ah-arrow)"/>
+  <rect class="stage" x="889" y="94" width="250" height="78" rx="10"/>
+  <text class="n-title" x="1013" y="127" text-anchor="middle">filtrer</text>
+  <text class="n-sub" x="1013" y="146" text-anchor="middle">sans coude défendable, s'abstenir</text>
+  <text class="step" x="900" y="110">3</text>
+  <path class="flow" d="M1164 126 H1180" marker-end="url(#ah-arrow)"/>
+  <text class="panel-label" x="1184" y="40">SORTIE</text>
+  <rect class="io" x="1184" y="87" width="284" height="78" rx="10"/>
+  <text class="n-title" x="1326" y="120" text-anchor="middle">un coude, avec son intervalle</text>
+  <text class="n-sub" x="1326" y="139" text-anchor="middle">ou une abstention explicite</text>
+  <rect class="core" x="538" y="232" width="420" height="54" rx="10"/>
+  <text class="on-dark" x="748" y="253" text-anchor="middle">une bibliothèque, appelée pareil partout</text>
+  <text class="on-dark-sub" x="748" y="272" text-anchor="middle">os-helper dessous pour la journalisation et les fichiers</text>
+  <path class="tie" d="M748 286 V314 H484 V332"/>
+  <path class="tie" d="M748 314 H1012 V332"/>
+  <path class="tie" d="M484 314 V332"/>
+  <rect class="surface" x="409" y="332" width="150" height="46" rx="9"/>
+  <text class="surf-label" x="484" y="360" text-anchor="middle">API Python</text>
+  <path class="tie" d="M660 314 V332"/>
+  <rect class="surface" x="585" y="332" width="150" height="46" rx="9"/>
+  <text class="surf-label" x="660" y="360" text-anchor="middle">CLI (click)</text>
+  <path class="tie" d="M836 314 V332"/>
+  <rect class="surface" x="761" y="332" width="150" height="46" rx="9"/>
+  <text class="surf-label" x="836" y="360" text-anchor="middle">FastAPI + MCP</text>
+  <path class="tie" d="M1012 314 V332"/>
+  <rect class="surface" x="937" y="332" width="150" height="46" rx="9"/>
+  <text class="surf-label" x="1012" y="360" text-anchor="middle">skill d'agent</text>
+  <text class="caption" x="748" y="412" text-anchor="middle">Un coude faux mais assuré est pire que pas de coude : c'est le seul membre dont la fonction phare est de refuser de répondre.</text>
+</svg>
