@@ -89,3 +89,15 @@ Deux lignes ne nomment aucun logiciel et ne portent donc aucune version : « Est
 - [Yellowbrick](https://pypi.org/project/yellowbrick/) — 1.5 ; déclare `matplotlib`, `scipy`, `scikit-learn`, `numpy` et `cycler`. La valeur par défaut de `locate_elbow` et les trois métriques prises en charge sont documentées sur la [page du KElbowVisualizer](https://www.scikit-yb.org/en/latest/api/cluster/elbow.html).
 - [segmented](https://cran.r-project.org/package=segmented) sur le CRAN — 2.2-2, publié le 2026-09-11 ; auteur et mainteneur Vito M. R. Muggeo.
 - `elbow-helper` lui-même — ce dépôt en 0.4.0. Les seuils cités plus haut sont les valeurs par défaut de `src/elbow_helper/config.py` ; le profil réajusté pour courbes courtes se trouve dans `tests/test_real_world_examples.py`.
+
+## Idées à reprendre
+
+Étudié plutôt que deviné : ce que chaque voisin fait mieux, puis ce que cette bibliothèque devrait changer pour l'égaler. Rien ici n'est un engagement : c'est la liste de lecture dont part la version suivante.
+
+- **Kneeliverse — un ensemble de détecteurs, leur accord servant de confiance** — Il met côte à côte la courbure discrète, DFDT, Kneedle, la L-method puis la courbure de Menger. Cette bibliothèque estime l'incertitude depuis la courbe ; faire tourner plusieurs détecteurs indépendants puis rapporter où ils s'accordent est une seconde estimation, moins chère, de la même chose — et le désaccord est lui-même le signal honnête.
+
+- **`kneed` — le paramètre de sensibilité, puis le mode multi-coudes en ligne** — `S` permet à l'appelant de dire à quel point la détection doit être agressive au lieu d'accepter une notion intégrée de l'« évident ». Le mode en ligne trouve plusieurs coudes dans une même courbe, ce qu'une API à réponse unique ne sait pas exprimer.
+
+- **`ruptures` — le cadrage général est la détection de rupture avec un modèle de coût** — Un coude est une rupture sous un coût donné. Le dire relie cette bibliothèque à une boîte à outils bien plus vaste puis bien étudiée, puis signale au lecteur quand son problème est en réalité le plus grand.
+
+- **Le `segmented` de R — des intervalles de confiance qui tombent de l'ajustement** — Ajuster deux droites jointes donne un point de rupture *puis* son erreur type depuis la régression elle-même. C'est l'incertitude que cette bibliothèque s'efforce d'estimer, obtenue comme sous-produit plutôt que comme étape séparée.

@@ -89,3 +89,15 @@ Two rows name no software and so carry no version: "Manual eyeballing" and "Ask 
 - [Yellowbrick](https://pypi.org/project/yellowbrick/) — 1.5; declares `matplotlib`, `scipy`, `scikit-learn`, `numpy` and `cycler`. The `locate_elbow` default and the three supported metrics are documented on the [KElbowVisualizer page](https://www.scikit-yb.org/en/latest/api/cluster/elbow.html).
 - [segmented](https://cran.r-project.org/package=segmented) on CRAN — 2.2-2, published 2026-09-11; author and maintainer Vito M. R. Muggeo.
 - `elbow-helper` itself — this repository at 0.4.0. The thresholds quoted above are the defaults in `src/elbow_helper/config.py`, and the retuned short-curve profile is in `tests/test_real_world_examples.py`.
+
+## Ideas worth stealing
+
+Researched rather than guessed: what each neighbour does better, and what this library would have to change to match it. Nothing here is a commitment — it is the reading list the next version starts from.
+
+- **Kneeliverse — an ensemble of detectors, with their agreement as the confidence** — It implements Discrete Curvature, DFDT, Kneedle, the L-method and Menger curvature side by side. This library estimates uncertainty from the curve; running several independent detectors and reporting where they agree is a second, cheaper estimate of the same thing — and disagreement is itself the honest signal.
+
+- **`kneed` — the sensitivity parameter, and online multi-knee mode** — `S` lets a caller say how aggressive detection should be instead of accepting one built-in notion of "obvious". Online mode finds several knees in one curve, which a single-answer API cannot express.
+
+- **`ruptures` — the general framing is change-point detection with a cost model** — An elbow is one change point under one cost. Saying so connects this library to a much larger, well-studied toolbox and tells a reader when their problem is actually the bigger one.
+
+- **R's `segmented` — confidence intervals that fall out of the fit** — Fitting two joined lines gives a breakpoint *and* its standard error from the regression itself. That is the same uncertainty this library works to estimate, obtained as a by-product rather than as a separate step.
