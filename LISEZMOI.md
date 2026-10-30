@@ -193,7 +193,19 @@ plot_diagnostics(x, y, curve="concave", direction="increasing", out="diag.svg", 
 
 ![Figure de diagnostic : une courbe qui monte puis s'aplatit, avec le coude repéré et sa bande de confiance à 90 % en surbrillance, à côté d'une légende compacte avec la probabilité de détection, la p-value du modèle nul, le contraste de pente, une probabilité a posteriori dérivée du BIC et un score de qualité d'ajustement normalisé contre un pire cas.](https://raw.githubusercontent.com/warith-harchaoui/elbow-helper/main/assets/diagnostics.svg)
 
-Le SVG est écrit à la main, sans matplotlib et sans rien à installer en plus : le diagnostic fait partie du cœur du paquet. La courbe et son coude repéré voisinent avec une légende compacte qui étaye l'estimation : la probabilité de détection, la p-value du modèle nul, le contraste de pente, une probabilité a posteriori dérivée du BIC (les chances, sous l'approximation du facteur de Bayes de Kass et Raftery, que le modèle à coude soit le bon) et un score de qualité d'ajustement normalisé contre un pire cas délibérément pessimiste plutôt que contre la moyenne d'échantillon, trop facile à battre (voir `doc/ELBOW-en.tex` pour la dérivation des deux). Quand les preuves sont trop faibles, la figure bascule dans un état d'abstention honnête plutôt que d'afficher un résultat trompeur : une courbe grisée en pointillés et la raison, jamais un marqueur qui laisserait croire à plus de confiance que les données n'en autorisent.
+Le SVG est écrit à la main : sans matplotlib, sans rien à installer en plus — le diagnostic fait partie du cœur du paquet, ce n'est pas une option.
+
+La courbe et son coude repéré voisinent avec une légende compacte, qui porte cinq nombres étayant l'estimation :
+
+- la **probabilité de détection** ;
+- la **p-value du modèle nul** ;
+- le **contraste de pente** ;
+- une **probabilité a posteriori dérivée du BIC** — les chances, sous l'approximation du facteur de Bayes de Kass puis Raftery, que le modèle à coude soit le bon ;
+- un **score de qualité d'ajustement**, normalisé contre un pire cas délibérément pessimiste plutôt que contre la moyenne d'échantillon, trop facile à battre.
+
+`doc/ELBOW-en.tex` démontre les deux derniers.
+
+Quand les preuves sont trop faibles, la figure bascule dans un état d'abstention honnête plutôt que d'afficher un résultat trompeur : une courbe grisée en pointillés avec la raison, jamais un marqueur qui laisserait croire à plus de confiance que les données n'en autorisent.
 
 ## Limites
 
@@ -216,22 +228,26 @@ kl.knee, kl.all_knees
 ## Plusieurs coudes : `robust_knees`
 
 `robust_knee` répond à « y a-t-il un coude ? ». Une courbe avec plusieurs vrais
-changements de régime, trois paliers de prix sur une courbe de demande par
-exemple, appelle une autre question : combien de ruptures cette courbe
-comporte-t-elle réellement et où ? C'est à cela que répond `robust_knees`
-(au pluriel). La recherche balaie tous les découpages possibles par
-programmation dynamique, note chaque candidat avec un BIC modifié (un score
-de qualité d'ajustement qui pénalise chaque rupture supplémentaire, donc
-en ajouter une doit se justifier), puis confirme le nombre gagnant par un
-test de permutation : les données sont mélangées au hasard des milliers de
-fois ; l'ajustement réel doit se démarquer de presque tous ces mélanges,
-qui eux ne comportent aucune vraie rupture. Tester plus de nombres de
-ruptures revient à faire tourner plus de ces tests ; chaque test
-supplémentaire augmente le risque qu'un résultat paraisse significatif par
-pur hasard. Une correction de Bonferroni compense en durcissant le seuil
-de signification que chaque test individuel doit franchir, à peu près en
-proportion du nombre de tests, ce qui maîtrise le taux de faux positifs
-global à mesure que l'espace de recherche grandit.
+changements de régime — trois paliers de prix sur une courbe de demande, par
+exemple — appelle une autre question : combien de ruptures cette courbe
+comporte-t-elle réellement puis où se trouvent-elles ? C'est à cela que répond
+`robust_knees` (au pluriel), en quatre temps.
+
+1. **Balayer tous les découpages.** Une programmation dynamique parcourt tous
+   les nombres de segments possibles, de sorte qu'aucun candidat n'est sauté.
+2. **Noter chaque candidat.** Un BIC modifié évalue la qualité d'ajustement
+   tout en pénalisant chaque rupture supplémentaire : en ajouter une doit se
+   justifier.
+3. **Confirmer le gagnant.** Un test de permutation mélange les données des
+   milliers de fois puis vérifie que l'ajustement réel se démarque de presque
+   tous ces mélanges — dont aucun ne comporte de vraie rupture.
+4. **Payer le prix de la recherche.** Tester plus de nombres de ruptures
+   revient à lancer plus de ces tests, puis chaque test supplémentaire augmente
+   le risque qu'un résultat paraisse significatif par pur hasard. Une
+   correction de Bonferroni compense en durcissant le seuil que chaque test
+   individuel doit franchir, à peu près en proportion du nombre de tests, ce
+   qui maîtrise le taux de faux positifs global à mesure que l'espace de
+   recherche grandit.
 
 ```python
 import numpy as np
@@ -265,7 +281,14 @@ pour la validation derrière ce choix.
 
 ## Mathématiques
 
-`doc/ELBOW-en.tex` démontre, depuis les premiers principes, chaque formule que ce paquet met en œuvre : la normalisation du pipeline à coude unique, le filtre de Spearman, la recherche de coude par courbe de différence, le regroupement par persistance, la pente de Theil-Sen, le BIC, la validation croisée par blocs, le bootstrap et le test nul, jusqu'à la recherche multi-coudes derrière `robust_knees` (voir aussi `research/multiknee/RESULTS.md`). Son socle de vraisemblance gaussienne, la théorie générale de pourquoi `L := exp(E[log p])` plutôt qu'un produit brut et comment cette même construction se lit sur un modèle de classification, est isolé dans une note compagne, `doc/LIKELIHOOD-en.tex`, puisque ce socle ne dépend en rien de l'ajustement de courbes. Le texte privilégie l'intuition, avec un exemple travaillé avant chaque formule, pour des lecteurs allant de la fin du lycée jusqu'à un doctorat en mathématiques appliquées. Les références se trouvent dans `doc/references.bib`, avec quelques renvois vers mes [livres IA préférés](https://deraison.ai/ai-books) là où une technique méritait un traitement plus long. Le document est en LaTeX natif, pas en Markdown, vu le public visé : compilez-le avec `latexmk -pdf ELBOW-en.tex` (ou `LIKELIHOOD-en.tex`) depuis `doc/` ou lisez directement les copies déjà compilées, `doc/ELBOW-en.pdf` / `doc/LIKELIHOOD-en.pdf`. Ces deux notes mathématiques sont uniquement en anglais ; le reste des documents du projet (ce fichier, `EXEMPLES.md`, `PAYSAGE.md`) garde sa version française.
+`doc/ELBOW-en.tex` démontre, depuis les premiers principes, chaque formule que ce paquet met en œuvre : la normalisation du pipeline à coude unique, le filtre de Spearman, la recherche de coude par courbe de différence, le regroupement par persistance, la pente de Theil-Sen, le BIC, la validation croisée par blocs, le bootstrap puis le test nul, jusqu'à la recherche multi-coudes derrière `robust_knees` (voir aussi `research/multiknee/RESULTS.md`).
+
+- **L'intuition d'abord.** Un exemple travaillé précède chaque formule, pour des lecteurs allant de la fin du lycée jusqu'à un doctorat en mathématiques appliquées.
+- **Le socle de vraisemblance est à côté.** Pourquoi `L := exp(E[log p])` plutôt qu'un produit brut, puis comment cette même construction se lit sur un modèle de classification, est isolé dans une note compagne, `doc/LIKELIHOOD-en.tex` — ce socle ne dépend en rien de l'ajustement de courbes.
+- **Les références** se trouvent dans `doc/references.bib`, avec quelques renvois vers mes [livres IA préférés](https://deraison.ai/ai-books) là où une technique méritait un traitement plus long.
+- **Du LaTeX natif, pas du Markdown**, vu le public visé. Compilez avec `latexmk -pdf ELBOW-en.tex` (ou `LIKELIHOOD-en.tex`) depuis `doc/`. Les copies déjà compilées se lisent aussi telles quelles : `doc/ELBOW-en.pdf` puis `doc/LIKELIHOOD-en.pdf`.
+
+Ces deux notes mathématiques sont uniquement en anglais. Le reste des documents du projet (ce fichier, `EXEMPLES.md`, `PAYSAGE.md`) garde sa version française.
 
 ## Paysage
 

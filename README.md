@@ -186,7 +186,19 @@ plot_diagnostics(x, y, curve="concave", direction="increasing", out="diag.svg")
 
 ![Diagnostic figure: a curve rising then flattening, with the located knee marked and its 90% confidence band shaded, next to a compact evidence legend with detection probability, null-model p-value, slope contrast, a BIC-derived posterior model probability, and a worst-case-normalized fit-quality score.](https://raw.githubusercontent.com/warith-harchaoui/elbow-helper/main/assets/diagnostics.svg)
 
-Hand-authored SVG, no matplotlib, no extra to install: the diagnostic is a core feature. The curve and its located knee sit next to a compact evidence legend backing the point estimate: the detection probability, the null-model p-value, the slope contrast, a BIC-derived posterior probability (the odds, under Kass & Raftery's Bayes-factor approximation, that the knee model is correct), and a fit-quality score normalized against a deliberately pessimistic worst case rather than the easily-beaten sample mean (see `doc/ELBOW-en.tex` for the derivation of both). When the evidence is too weak, the figure switches to an honest abstention state instead: a greyed, dashed curve and the reason, never a marker implying more confidence than the data supports. Pass `language="fr"` for the French chrome text.
+Hand-authored SVG: no matplotlib, nothing extra to install — the diagnostic is a core feature rather than an add-on.
+
+The curve and its located knee sit next to a compact evidence legend, which carries five numbers backing the point estimate:
+
+- the **detection probability**;
+- the **null-model p-value**;
+- the **slope contrast**;
+- a **BIC-derived posterior probability** — the odds, under Kass & Raftery's Bayes-factor approximation, that the knee model is the correct one;
+- a **fit-quality score**, normalised against a deliberately pessimistic worst case rather than against the easily-beaten sample mean.
+
+`doc/ELBOW-en.tex` derives the last two.
+
+When the evidence is too weak, the figure switches to an honest abstention state instead: a greyed, dashed curve and the reason, never a marker implying more confidence than the data supports. Pass `language="fr"` for the French chrome text.
 
 ## Limitations
 
@@ -209,20 +221,22 @@ kl.knee, kl.all_knees
 ## Multiple knees: `robust_knees`
 
 `robust_knee` answers "is there one knee?". A curve with several genuine
-regime changes, three pricing tiers on a demand curve, say, needs a
-different question: how many breakpoints does this curve actually have and
-where are they? `robust_knees` (plural) answers that one. It searches over every
-possible number of segments with a dynamic program, scores each candidate
-with a modified BIC (a fit-quality score that penalises extra breakpoints,
-so adding one has to earn its keep), then confirms the winning count with a
-permutation test: reshuffling the data thousands of times and checking that
-the real fit stands out from nearly all of those random reshuffles, none of
-which have any true breakpoint structure. Trying more breakpoint counts
-means running more such tests; running more tests raises the odds that
-one looks significant by pure chance. A Bonferroni correction counters this
-by tightening the significance bar each individual test must clear, roughly
-in proportion to how many are run, holding the overall false-positive rate
-down as the search space grows.
+regime changes — three pricing tiers on a demand curve, say — asks a different
+question: how many breakpoints does this curve actually have, and where?
+`robust_knees` (plural) answers that one, in four steps.
+
+1. **Search every segmentation.** A dynamic program walks over every possible
+   number of segments, so no candidate count is skipped.
+2. **Score each candidate.** A modified BIC rates how well a segmentation fits
+   while penalising extra breakpoints, so adding one has to earn its keep.
+3. **Confirm the winner.** A permutation test reshuffles the data thousands of
+   times and checks that the real fit stands out from nearly all of those
+   reshuffles — none of which has any true breakpoint structure.
+4. **Pay for the search.** Trying more breakpoint counts means running more
+   such tests, and more tests raise the odds that one looks significant by pure
+   chance. A Bonferroni correction tightens the bar each individual test must
+   clear, roughly in proportion to how many are run, holding the overall
+   false-positive rate down as the search space grows.
 
 ```python
 import numpy as np
@@ -255,7 +269,14 @@ the validation behind this design.
 
 ## Mathematics
 
-`doc/ELBOW-en.tex` derives every formula this package runs: the single-knee pipeline's normalisation, Spearman screen, difference-curve knee search, persistence clustering, Theil-Sen slope, BIC, blocked cross-validation, bootstrap and null test, and the multi-knee research behind `robust_knees` (see also `research/multiknee/RESULTS.md`). It is written intuition-first, with a worked example before every formula, for readers anywhere from the end of high school to a Ph.D. in applied mathematics. Its Gaussian likelihood foundation, the general theory behind why `L := exp(E[log p])` rather than a raw product, and how the same construction reads on a classification model, is factored out into a companion note, `doc/LIKELIHOOD-en.tex`, since that foundation doesn't depend on curve-fitting at all. Citations are in `doc/references.bib`, including a few pointers into my own [Favourite AI books](https://deraison.ai/ai-books) where a technique used here deserves a book-length treatment. Native LaTeX (not Markdown), given the audience: compile with `latexmk -pdf ELBOW-en.tex` (or `LIKELIHOOD-en.tex`) from inside `doc/`, or read the compiled copies directly, `doc/ELBOW-en.pdf` / `doc/LIKELIHOOD-en.pdf`. Both math notes are English-only; the rest of this project's docs (this README, `EXAMPLES.md`, `LANDSCAPE.md`) still ship a French twin.
+`doc/ELBOW-en.tex` derives, from first principles, every formula this package runs: the single-knee pipeline's normalisation, Spearman screen, difference-curve knee search, persistence clustering, Theil-Sen slope, BIC, blocked cross-validation, bootstrap and null test, through to the multi-knee research behind `robust_knees` (see also `research/multiknee/RESULTS.md`).
+
+- **Intuition first.** A worked example comes before every formula, for readers anywhere from the end of high school to a Ph.D. in applied mathematics.
+- **The likelihood foundation lives next door.** Why `L := exp(E[log p])` rather than a raw product, and how the same construction reads on a classification model, is factored out into a companion note, `doc/LIKELIHOOD-en.tex` — that foundation does not depend on curve-fitting at all.
+- **Citations** are in `doc/references.bib`, including a few pointers into my own [Favourite AI books](https://deraison.ai/ai-books) where a technique used here deserves a book-length treatment.
+- **Native LaTeX, not Markdown**, given the audience. Compile with `latexmk -pdf ELBOW-en.tex` (or `LIKELIHOOD-en.tex`) from inside `doc/`, or read the compiled copies directly: `doc/ELBOW-en.pdf` and `doc/LIKELIHOOD-en.pdf`.
+
+Both math notes are English-only. The rest of this project's documents (this README, `EXAMPLES.md`, `LANDSCAPE.md`) still ship a French twin.
 
 ## Landscape
 
