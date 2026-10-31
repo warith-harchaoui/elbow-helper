@@ -6,6 +6,28 @@ All notable changes to `elbow-helper` are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-10-31
+
+### Fixed
+
+- **The published metadata capped `os-helper<4`, so nobody installing from
+  the index could reach 4.0.0.** The ceiling was raised in the repository on
+  2026-10-31, but a wheel's `Requires-Dist` is frozen at upload: until this
+  release the raised ceiling reached no installer at all, and a fresh resolve
+  still pulled os-helper 3.1.0. This release is what carries the `<5` to the
+  index. This package never calls `hashfile` or `hashfolder`, the two functions
+  whose contract 4.0.0 changes, so the ceiling was the only thing in the
+  way.
+
+- **`requirements.txt` and the package metadata disagreed, and nothing
+  compared them.** `click` was absent from `requirements.txt` although the command line
+  has been core since the argparse door was dropped, so
+  `pip install -r requirements.txt` built an environment whose CLI could
+  not start; the `os-helper` floor there read `>=1.8` against the `>=2.0.0`
+  the package demands.
+  `tests/test_requirements_mirror_pyproject.py` now holds the two lists
+  equal, and was checked red before it was committed.
+
 ### Documentation
 - **Every example output was from 0.1.4 and none of it was still true.**
   `EXAMPLES.md` / `EXEMPLES.md` were last touched before three detector
