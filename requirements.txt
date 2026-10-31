@@ -2,4 +2,5 @@
 # Optional extras (cli/api/mcp) live behind pyproject.toml's
 # [project.optional-dependencies] -- install with `pip install -e ".[cli,api,mcp]"`.
 numpy>=1.24
-os-helper>=1.8
+os-helper>=2.0.0,<5
+click>=8.1,<9        # the CLI is click-built and not optional since the argparse door was dropped
