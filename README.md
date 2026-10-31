@@ -78,7 +78,12 @@ result = robust_elbow(k_values, inertia)   # curve/direction fixed to convex/dec
 
 ## Automatic shape and direction
 
-Leaving `curve` or `direction` unset infers them from the cleaned, normalised data. `direction` comes from the sign of the trend between `x` and `y`. `curve` comes from whether the (lightly smoothed) curve lies above or below the straight chord connecting its first and last point: above is concave, below is convex, the mathematical definition, holding for both increasing and decreasing curves. This covers all four concave/convex × increasing/decreasing combinations without asking the caller to name the shape up front. Passing `curve` or `direction` explicitly always overrides the inferred value.
+Leaving `curve` or `direction` unset infers them from the cleaned, normalised data.
+
+- `direction` comes from the sign of the trend between `x` and `y`.
+- `curve` comes from whether the (lightly smoothed) curve lies above or below the straight chord connecting its first and last point: above is concave, below is convex. That is the mathematical definition, and it holds for increasing and decreasing curves alike.
+
+This covers all four concave/convex × increasing/decreasing combinations without asking the caller to name the shape up front. Passing `curve` or `direction` explicitly always overrides the inferred value.
 
 ## The contract: a tagged union
 
@@ -99,7 +104,9 @@ You are forced to handle abstention explicitly: there is no silent fallback to a
 2. **Scale-space search.** Run the from-scratch locator across a grid of Gaussian smoothing windows and sensitivities; collect every candidate it proposes.
 3. **Basic filters.** Reject boundary knees, weak prominence, and a low prominence-to-noise ratio.
 4. **Persistence clustering.** Keep only knees that recur at a stable location across consecutive smoothing scales and most sensitivities. Abstain if two knees look equally plausible (`MULTIPLE_PLAUSIBLE_KNEES`).
-5. **Model confirmation.** Require a robust slope change, via a Theil-Sen estimator (a regression method that stays accurate even with outliers), plus a continuous broken-line fit that beats a single straight line on blocked cross-validation (holding out whole contiguous chunks of the curve rather than scattered points, so a held-out stretch cannot leak information from the smooth neighbours right next to it, the way a single held-out point could) and on the BIC (Bayesian Information Criterion, a score that rewards fit while penalising extra parameters).
+5. **Model confirmation.** Two independent requirements, and a candidate has to clear both:
+   - a **robust slope change**, via a Theil-Sen estimator — a regression method that stays accurate even with outliers;
+   - a **continuous broken-line fit** that beats a single straight line twice over: on blocked cross-validation (whole contiguous chunks of the curve are held out rather than scattered points, so a held-out stretch cannot leak information from the smooth neighbours right next to it, the way a single held-out point could) and on the BIC (Bayesian Information Criterion, a score that rewards fit while penalising extra parameters).
 6. **Bootstrap.** Re-run the whole search on an IID residual bootstrap (independent, identically distributed resampling of the leftover noise). The knee must be redetected at least 90% of the time, with a tight, unimodal interval.
 7. **No-knee null test.** Run a Monte Carlo test against a straight-line null model that carries the accepted model's noise scale. The observed knee must be significant at p ≤ 0.01.
 
@@ -152,12 +159,12 @@ into the bottom percent of that square. The corner of the normalised shape is
 then not the corner you read off the plot, and the detector will faithfully
 report the former.
 
-k-means inertia is the common case: on eight well-separated blobs it drops
-from about 80000 to about 500 before the tail even begins. Run on the raw
-curve, `robust_elbow` returns k = 6 or 7 (which is also where the Kneedle
-construction puts it). Run on `log(inertia)`, it returns exactly 8, the true
-cluster count, on every seed tested. Plot such a curve on a log axis and you
-are already looking at the transformed shape: hand the detector the same one.
+k-means inertia is the common case: on eight well-separated blobs it drops from about 80000 to about 500 before the tail even begins.
+
+- Run on the raw curve, `robust_elbow` returns k = 6 or 7 — which is also where the Kneedle construction puts it.
+- Run on `log(inertia)`, it returns exactly 8, the true cluster count, on every seed tested.
+
+Plot such a curve on a log axis and you are already looking at the transformed shape: hand the detector the same one.
 
 ```python
 result = robust_elbow(k_values, np.log(inertia))
@@ -173,7 +180,11 @@ RobustKneeConfig(bootstrap_replicates=100, null_replicates=200)
 config.with_(bootstrap_replicates=500, null_replicates=1000)
 ```
 
-`min_samples` defaults to 20, and that is a deliberate floor rather than an arbitrary one: the persistence and bootstrap gates need a scale space to work across, and below about twenty points they measure noise instead. A sixteen-point reconstruction-error curve is a legitimate thing to want a knee on, so the floor is not a wall — pass `config.with_(min_samples=8)` and the pipeline runs. Read what comes back as indicative rather than confirmed; the gates still apply, they are simply working with less to go on. The `INSUFFICIENT_DATA` abstention says all of this in its `detail`.
+`min_samples` defaults to 20, and that is a deliberate floor rather than an arbitrary one: the persistence and bootstrap gates need a scale space to work across, and below about twenty points they measure noise instead.
+
+A sixteen-point reconstruction-error curve is a legitimate thing to want a knee on, so the floor is not a wall — pass `config.with_(min_samples=8)` and the pipeline runs.
+
+Read what comes back as indicative rather than confirmed. The gates still apply; they are simply working with less to go on, and the `INSUFFICIENT_DATA` abstention says all of this in its `detail`.
 
 A note on these thresholds: they are calibrated, conservative defaults, not universal constants. `cluster_tolerance` and `max_neighbor_shift` sit slightly above the reference plan's 0.05 to absorb the locator's one- or two-sample discretisation jitter at modest sample sizes (n of about 60 to 100). Recalibrate them against your own curve and noise family if needed.
 
@@ -258,14 +269,11 @@ print(result)
 Knees(k=2, x=[0.2929, 0.6465])
 ```
 
-The two breakpoints land close to the curve's true regime changes at 0.3 and
-0.65. Unlike `robust_knee`, an empty result here is not an abstention: it is
-the pipeline's confident conclusion that the curve has no real breakpoint,
-having survived the same search and false-positive gates a nonempty result
-would have had to survive. Only a preprocessing failure (bad input, too
-little data, zero range) returns `InvalidKnees` instead of `Knees`. See
-`research/multiknee/RESULTS.md` and `doc/ELBOW-en.tex` (sections 5-20) for
-the validation behind this design.
+The two breakpoints land close to the curve's true regime changes at 0.3 and 0.65.
+
+Unlike `robust_knee`, an empty result here is **not** an abstention. It is the pipeline's confident conclusion that the curve has no real breakpoint, having survived the same search and false-positive gates a nonempty result would have had to survive. Only a preprocessing failure — bad input, too little data, zero range — returns `InvalidKnees` instead of `Knees`.
+
+See `research/multiknee/RESULTS.md` and `doc/ELBOW-en.tex` (sections 5-20) for the validation behind this design.
 
 ## Mathematics
 

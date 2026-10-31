@@ -28,7 +28,11 @@ Publié sur [PyPI](https://pypi.org/project/elbow-helper/), six versions numéro
 
 ## Pourquoi ce paquet existe
 
-Sur une courbe à rendements décroissants, le coude marque l'endroit où chaque unité supplémentaire investie rapporte de moins en moins : des groupes en plus pour un k-means, des itérations en plus pour un optimiseur, du budget en plus sur un canal publicitaire. Les outils de détection existants savent très bien proposer un point ; ce qui leur manque, c'est une notion de confiance. Sur une courbe bruitée, une estimation ponctuelle isolée s'avère trop facile à surinterpréter. `elbow-helper` transforme ce point en une décision appuyée sur des preuves et refuse de trancher quand ces preuves sont trop minces.
+Sur une courbe à rendements décroissants, le coude marque l'endroit où chaque unité supplémentaire investie rapporte de moins en moins : des groupes en plus pour un k-means, des itérations en plus pour un optimiseur, du budget en plus sur un canal publicitaire.
+
+Les outils de détection existants savent très bien proposer un point ; ce qui leur manque, c'est une notion de confiance. Sur une courbe bruitée, une estimation ponctuelle isolée s'avère trop facile à surinterpréter.
+
+`elbow-helper` transforme ce point en une décision appuyée sur des preuves, puis refuse de trancher quand ces preuves sont trop minces.
 
 ## Dépendances
 
@@ -78,7 +82,12 @@ result = robust_elbow(k_values, inertia)   # curve/direction fixés à convex/de
 
 ## Forme et sens : la déduction automatique
 
-Laisser `curve` ou `direction` vide revient à les déduire des données une fois nettoyées et normalisées. `direction` vient du signe de la tendance entre `x` et `y`. `curve` dépend de la position de la courbe (légèrement lissée) par rapport à la corde reliant son premier et son dernier point : au-dessus, elle est concave ; en dessous, convexe. C'est la définition mathématique du terme et elle s'applique aussi bien à une courbe croissante que décroissante. Les quatre combinaisons concave/convexe et croissant/décroissant sont ainsi couvertes sans jamais demander à l'appelant de nommer la forme à l'avance. Fixer `curve` ou `direction` explicitement l'emporte toujours sur la valeur déduite.
+Laisser `curve` ou `direction` vide revient à les déduire des données une fois nettoyées puis normalisées.
+
+- `direction` vient du signe de la tendance entre `x` puis `y`.
+- `curve` dépend de la position de la courbe (légèrement lissée) par rapport à la corde reliant son premier point au dernier : au-dessus, elle est concave ; en dessous, convexe. C'est la définition mathématique du terme, puis elle s'applique aussi bien à une courbe croissante qu'à une décroissante.
+
+Les quatre combinaisons concave/convexe × croissant/décroissant sont ainsi couvertes sans jamais demander à l'appelant de nommer la forme à l'avance. Fixer `curve` ou `direction` explicitement l'emporte toujours sur la valeur déduite.
 
 ## Le contrat : une union étiquetée
 
@@ -110,7 +119,9 @@ L'abstention doit être traitée explicitement : il n'existe aucun repli silenci
 2. **Recherche en espace d'échelles.** Le repéreur balaie une grille de fenêtres de lissage gaussien et de sensibilités et retient chaque candidat proposé.
 3. **Filtres de base.** Les coudes en bordure, ceux de faible proéminence et ceux dont le rapport proéminence sur bruit est trop bas sont écartés.
 4. **Regroupement par persistance.** Seuls survivent les coudes qui réapparaissent à un emplacement stable sur plusieurs échelles de lissage consécutives et sur la plupart des sensibilités testées. Le pipeline s'abstient si deux coudes paraissent également plausibles (`MULTIPLE_PLAUSIBLE_KNEES`).
-5. **Confirmation par un modèle.** Un changement de pente robuste est exigé, mesuré par un estimateur de Theil-Sen (une régression qui reste fiable même en présence de valeurs aberrantes) et confirmé par un ajustement en ligne brisée continue qui doit surpasser une simple droite, à la fois en validation croisée par blocs (on retire des tronçons entiers et contigus de la courbe plutôt que des points isolés, pour qu'un tronçon retiré ne se déduise pas de ses voisins immédiats et lisses, comme le ferait un simple point isolé) et selon le critère d'information bayésien (BIC), un score qui récompense la qualité de l'ajustement tout en pénalisant les paramètres superflus.
+5. **Confirmation par un modèle.** Deux exigences indépendantes, qu'un candidat doit franchir toutes les deux :
+   - un **changement de pente robuste**, mesuré par un estimateur de Theil-Sen — une régression qui reste fiable même en présence de valeurs aberrantes ;
+   - un **ajustement en ligne brisée continue** qui doit surpasser une simple droite deux fois : en validation croisée par blocs (on retire des tronçons entiers puis contigus de la courbe plutôt que des points isolés, pour qu'un tronçon retiré ne se déduise pas de ses voisins immédiats puis lisses, comme le ferait un simple point isolé) puis selon le critère d'information bayésien (BIC), un score qui récompense la qualité de l'ajustement tout en pénalisant les paramètres superflus.
 6. **Bootstrap.** Toute la recherche est rejouée sur un bootstrap des résidus supposés i.i.d. (indépendants et identiquement distribués). Le coude doit être redétecté dans au moins 90 % des tirages, avec un intervalle resserré et unimodal.
 7. **Test nul « sans coude ».** Un test de Monte-Carlo confronte le résultat à un modèle nul en ligne droite reprenant l'échelle de bruit du modèle accepté. Le coude observé doit rester significatif au seuil p ≤ 0,01.
 
@@ -158,13 +169,12 @@ chute de plusieurs décades voit donc tout ce qui suit ses premiers points
 n'est alors plus le coin que vous lisez sur le graphique. Le détecteur
 rapportera fidèlement le premier.
 
-L'inertie des k-moyennes est le cas courant : sur huit amas bien séparés, elle
-tombe d'environ 80000 à environ 500 avant même que la queue ne commence.
-Appliqué à la courbe brute, `robust_elbow` renvoie k = 6 ou 7, exactement là où
-la construction de Kneedle place elle aussi le coude. Appliqué à
-`log(inertie)`, il renvoie exactement 8, le vrai nombre d'amas, sur chacune des
-graines testées. Tracer une telle courbe sur un axe logarithmique revient déjà
-à regarder la forme transformée : autant confier la même au détecteur.
+L'inertie des k-moyennes est le cas courant : sur huit amas bien séparés, elle tombe d'environ 80000 à environ 500 avant même que la queue ne commence.
+
+- Appliqué à la courbe brute, `robust_elbow` renvoie k = 6 ou 7 — exactement là où la construction de Kneedle place elle aussi le coude.
+- Appliqué à `log(inertie)`, il renvoie exactement 8, le vrai nombre d'amas, sur chacune des graines testées.
+
+Tracer une telle courbe sur un axe logarithmique revient déjà à regarder la forme transformée : autant confier la même au détecteur.
 
 ```python
 result = robust_elbow(k_values, np.log(inertie))
@@ -180,7 +190,11 @@ RobustKneeConfig(bootstrap_replicates=100, null_replicates=200)
 config.with_(bootstrap_replicates=500, null_replicates=1000)
 ```
 
-`min_samples` vaut 20 par défaut. Ce plancher est délibéré plutôt qu'arbitraire : les portes de persistance et de bootstrap ont besoin d'un espace d'échelles pour travailler et, en dessous d'une vingtaine de points, elles mesurent du bruit. Une courbe d'erreur de reconstruction à seize points reste une chose légitime sur laquelle chercher un coude, aussi ce plancher n'est-il pas un mur : passez `config.with_(min_samples=8)` et le pipeline s'exécute. Lisez alors le résultat comme une indication plutôt que comme une confirmation. Les portes s'appliquent toujours ; elles disposent simplement de moins de matière. L'abstention `INSUFFICIENT_DATA` dit tout cela dans son `detail`.
+`min_samples` vaut 20 par défaut. Ce plancher est délibéré plutôt qu'arbitraire : les portes de persistance puis de bootstrap ont besoin d'un espace d'échelles pour travailler, puis en dessous d'une vingtaine de points elles mesurent du bruit.
+
+Une courbe d'erreur de reconstruction à seize points reste une chose légitime sur laquelle chercher un coude, aussi ce plancher n'est-il pas un mur : passez `config.with_(min_samples=8)` puis le pipeline s'exécute.
+
+Lisez alors le résultat comme une indication plutôt que comme une confirmation. Les portes s'appliquent toujours ; elles disposent simplement de moins de matière, puis l'abstention `INSUFFICIENT_DATA` dit tout cela dans son `detail`.
 
 Une précision sur ces seuils : ce sont des valeurs par défaut calibrées et prudentes, pas des constantes universelles. `cluster_tolerance` et `max_neighbor_shift` dépassent légèrement les 0,05 du plan de référence, pour absorber la gigue de discrétisation d'un ou deux échantillons propre au repéreur, aux tailles d'échantillon modestes (n de l'ordre de 60 à 100). N'hésitez pas à les recalibrer sur votre propre famille de courbes et de bruit.
 
@@ -269,15 +283,11 @@ print(result)
 Knees(k=2, x=[0.2929, 0.6465])
 ```
 
-Les deux ruptures repérées tombent près des vrais changements de régime de
-la courbe, à 0,3 et 0,65. Contrairement à `robust_knee`, un résultat vide
-ici n'est pas une abstention : c'est la conclusion assurée du pipeline que
-la courbe n'a pas de vraie rupture, après avoir survécu aux mêmes filtres
-de recherche et de faux positifs qu'un résultat non vide aurait dû
-franchir. Seul un échec du prétraitement (entrée invalide, trop peu de
-données, intervalle nul) renvoie `InvalidKnees` plutôt que `Knees`. Voir
-`research/multiknee/RESULTS.md` et `doc/ELBOW-en.tex` (sections 5 à 20)
-pour la validation derrière ce choix.
+Les deux ruptures repérées tombent près des vrais changements de régime de la courbe, à 0,3 puis 0,65.
+
+Contrairement à `robust_knee`, un résultat vide ici n'est **pas** une abstention. C'est la conclusion assurée du pipeline que la courbe n'a pas de vraie rupture, après avoir survécu aux mêmes filtres de recherche puis de faux positifs qu'un résultat non vide aurait dû franchir. Seul un échec du prétraitement — entrée invalide, trop peu de données, intervalle nul — renvoie `InvalidKnees` plutôt que `Knees`.
+
+Voir `research/multiknee/RESULTS.md` puis `doc/ELBOW-en.tex` (sections 5 à 20) pour la validation derrière ce choix.
 
 ## Mathématiques
 
