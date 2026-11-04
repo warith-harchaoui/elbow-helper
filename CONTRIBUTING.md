@@ -3,7 +3,7 @@
 ## Setup
 
 ```bash
-pip install -e ".[cli,api,mcp,dev]"
+pip install -e ".[api,mcp,dev]"
 ```
 
 Or via conda: `conda env create -f environment.yaml && conda activate elbow-helper`.

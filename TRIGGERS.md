@@ -19,7 +19,7 @@ forecasting.
 | Several knees on one curve | n/a | `robust_knees` | n/a |
 | Raw point estimate, no decision | `elbow-helper locator` | `KneeLocator` | `POST /locator` |
 | SVG explaining the verdict | `elbow-helper diagnostics` | `elbow_helper.plotting` | `POST /diagnostics` |
-| Tune the decision procedure | `--config` flags | `RobustKneeConfig`, `RobustKneesConfig` | request body |
+| Tune the decision procedure | `--config-json` (`RobustKneeConfig` fields) | `RobustKneeConfig`, `RobustKneesConfig` | `config_overrides` in the request body |
 
 Every command is also reachable through the CLI (`elbow-helper …`,
 same flags), and the MCP surface mounts on the same FastAPI app at `/mcp`.

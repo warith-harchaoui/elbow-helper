@@ -37,7 +37,7 @@ want that, and say so to the user.
 
 ### Dependencies
 
-`numpy` and `os-helper`, nothing else. No scipy, no scikit-learn, no
+`numpy`, `os-helper` and `click`, nothing else. No scipy, no scikit-learn, no
 statsmodels, no joblib. `elbow_helper.plotting` writes hand-authored SVG, so
 even the diagnostic figure needs no matplotlib.
 
@@ -50,7 +50,7 @@ even the diagnostic figure needs no matplotlib.
 
 ```bash
 pip install 'elbow-helper[api]'
-python -m elbow_helper.api          # 127.0.0.1:8000, OpenAPI docs at /docs
+python -m elbow_helper.api          # 127.0.0.1:8020, OpenAPI docs at /docs
 ```
 
 | Method | Route | `operation_id` |
@@ -60,7 +60,11 @@ python -m elbow_helper.api          # 127.0.0.1:8000, OpenAPI docs at /docs
 | POST | `/locator` | `locator` |
 | POST | `/diagnostics` | `diagnostics` |
 
-Each takes a JSON body of two arrays and returns the verdict. The explicit
+`/knee`, `/diagnostics` and `/locator` take `x` and `y` (`y` optional on the
+first two: a lone `x` is read as y-values over `0, 1, …`); `/elbow` takes `k`
+and `inertia`. `config_overrides` carries `RobustKneeConfig` fields;
+`/diagnostics` returns the SVG itself. `robust_knees` (several knees) has no
+HTTP or MCP door: it is library-only. The explicit
 `operation_id`s are what the MCP tools are named after — they are a public
 contract, not an implementation detail.
 
@@ -68,7 +72,7 @@ contract, not an implementation detail.
 
 ```bash
 pip install 'elbow-helper[mcp]'
-elbow-helper-mcp                    # same app, MCP mounted at /mcp
+elbow-helper-mcp                    # same app on 127.0.0.1:8021, MCP at /mcp
 ```
 
 `elbow_helper.mcp_server` takes the FastAPI app from `elbow_helper.api` and
@@ -78,7 +82,7 @@ surfaces cannot drift.
 Register it with Claude Code:
 
 ```bash
-claude mcp add elbow-helper --transport http http://127.0.0.1:8000/mcp
+claude mcp add elbow-helper --transport http http://127.0.0.1:8021/mcp
 ```
 
 Every tool is read-only: the package computes a verdict and writes nothing

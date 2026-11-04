@@ -14,7 +14,7 @@ The design priority is to minimise false-positive knees, even at the cost of mor
 
 ## Status
 
-Published on [PyPI](https://pypi.org/project/elbow-helper/), six semantic-versioned releases so far (`v0.1.0` through `v0.1.5`, see `git tag`), with CI green on every commit (Python 3.12, plus a weekly sweep across 3.10 to 3.13) and 85 tests (96% line coverage) covering the pipeline end to end plus the CLI, HTTP API and MCP surfaces. Still an early release (v0.1.x): treat the calibrated thresholds in `RobustKneeConfig` as a validated starting point, not a universal constant, see Configuration and Limitations below.
+Published on [PyPI](https://pypi.org/project/elbow-helper/), semantic-versioned releases tagged in git (see `git tag`; 0.4.1 at the time of writing), with CI green on every commit (Python 3.12, plus a weekly sweep across 3.10 to 3.13) and 103 tests (96% line coverage) covering the pipeline end to end plus the CLI, HTTP API and MCP surfaces. Still a 0.x release: treat the calibrated thresholds in `RobustKneeConfig` as a validated starting point, not a universal constant, see Configuration and Limitations below.
 
 ## Documentation
 
@@ -32,7 +32,7 @@ A knee, on a curve of diminishing returns, marks the point past which extra inpu
 
 ## Dependencies
 
-The whole package depends on `numpy` and [`os-helper`](https://github.com/warith-harchaoui/os-helper) only: nothing else, not even for the diagnostic figure. The knee-locating algorithm is implemented from scratch, in NumPy only, so there is no `scipy`, `scikit-learn`, `statsmodels`, or `joblib` runtime dependency. `elbow_helper.plotting` writes hand-authored SVG (see Diagnostics below) rather than reaching for matplotlib, so it needs no extra install. See Acknowledgements below for the implementation this algorithm follows.
+The whole package depends on `numpy`, [`os-helper`](https://github.com/warith-harchaoui/os-helper) and `click` (for the command line) only: nothing else, not even for the diagnostic figure. The knee-locating algorithm is implemented from scratch, in NumPy only, so there is no `scipy`, `scikit-learn`, `statsmodels`, or `joblib` runtime dependency. `elbow_helper.plotting` writes hand-authored SVG (see Diagnostics below) rather than reaching for matplotlib, so it needs no extra install. See Acknowledgements below for the implementation this algorithm follows.
 
 ## How it works
 
@@ -41,7 +41,7 @@ The whole package depends on `numpy` and [`os-helper`](https://github.com/warith
 ## Installation
 
 ```bash
-pip install -e .            # everything: numpy + os-helper, diagnostics included
+pip install -e .            # everything: numpy + os-helper + click, diagnostics included
 pip install -e ".[dev]"     # + pytest
 ```
 
@@ -302,11 +302,11 @@ pip install -e ".[mcp]"          # + the MCP server (pulls in [api] too)
 
 ```bash
 # CLI
-elbow-helper knee --y-values 0,0.1,0.3,0.6,0.85,0.9,0.92,0.93,0.94,0.95
+elbow-helper knee --y-values 0,0.17,0.34,0.51,0.67,0.84,1.01,1.01,1.02,1.02,1.02,1.02,1.02,1.03,1.03,1.03,1.03,1.03,1.04,1.04,1.04,1.04,1.04,1.05,1.05   # 25 points: min_samples is 20
 
 # HTTP API
 uvicorn elbow_helper.api:app --reload
-curl -X POST localhost:8000/knee -d '{"x": [0,0.1,0.3,0.6,0.85,0.9]}'
+curl -X POST localhost:8000/knee -H 'Content-Type: application/json' -d '{"x": [0, 0.17, 0.34, 0.51, 0.67, 0.84, 1.01, 1.01, 1.02, 1.02, 1.02, 1.02, 1.02, 1.03, 1.03, 1.03, 1.03, 1.03, 1.04, 1.04, 1.04, 1.04, 1.04, 1.05, 1.05]}'
 
 # MCP (fastapi-mcp mounted on the same app, at /mcp)
 uvicorn elbow_helper.mcp_server:app --port 8021

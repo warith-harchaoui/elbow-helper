@@ -41,20 +41,20 @@ more abstentions**. An answer of `NoClearKnee` is a result, not a failure.
 ## Before anything: verify it is installed
 
 ```bash
-elbow-helper --help                # argparse CLI (ships with the package)
+elbow-helper --help                # click CLI (ships with the package)
 python -c "import elbow_helper"    # library import check
 ```
 
 Install:
 
 ```bash
-pip install elbow-helper                   # numpy + os-helper, diagnostics included
+pip install elbow-helper                   # numpy + os-helper + click, diagnostics included
 pip install 'elbow-helper[api]'            # + FastAPI HTTP surface
 pip install 'elbow-helper[mcp]'            # + MCP tools over the same app
 ```
 
-The whole package depends on **numpy and os-helper only** — no scipy, no
-scikit-learn, no matplotlib. The diagnostic figure is hand-authored SVG.
+The whole package depends on **numpy, os-helper and click only** — no scipy,
+no scikit-learn, no matplotlib. The diagnostic figure is hand-authored SVG.
 
 ## What it does, and how to invoke it
 
@@ -76,13 +76,13 @@ inertia = ...                       # k-means WCSS for each k
 result = robust_elbow(k, inertia)
 match result:
     case ClearKnee():
-        print("k =", result.x, "±", result.uncertainty)
+        print("k =", result.knee_x, "90% interval:", result.ci90)
     case NoClearKnee():
         print("no defensible elbow:", result.reason)
 ```
 
 **The return type is the answer.** `ClearKnee` carries the location and its
-uncertainty; `NoClearKnee` carries a `Reason`. Code that reads `.x` without
+uncertainty; `NoClearKnee` carries a `Reason`. Code that reads `.knee_x` without
 matching on the type has thrown away the whole point of the package.
 
 For the decision criteria, the config knobs and the flag matrix, read
@@ -106,7 +106,7 @@ read `references/surfaces.md`. For the exhaustive trigger list, read
   explicitly want a point estimate with no decision procedure attached, and
   say so to the user.
 - **The thresholds in `RobustKneeConfig` are a validated starting point, not
-  a universal constant** — this is a v0.1.x package. If a domain curve is
+  a universal constant** — this is a 0.x package. If a domain curve is
   systematically mis-called, tune the config and say which knob moved.
 - **Render the diagnostic SVG when the verdict surprises the user.** It shows
   *why* a candidate was rejected, which settles the argument faster than

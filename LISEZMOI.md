@@ -14,7 +14,7 @@ La priorité, dès la conception, a été de limiter les faux coudes, quitte à 
 
 ## État
 
-Publié sur [PyPI](https://pypi.org/project/elbow-helper/), six versions numérotées selon le versionnage sémantique à ce jour (`v0.1.0` à `v0.1.5`, voir `git tag`), CI verte à chaque commit (Python 3.12, plus un balayage hebdomadaire sur 3.10 à 3.13), 85 tests (96 % de couverture) qui couvrent le pipeline de bout en bout ainsi que la CLI, l'API HTTP et la surface MCP. Version encore jeune (0.1.x) : les seuils calibrés dans `RobustKneeConfig` sont un point de départ validé, pas une constante universelle, voir Configuration et Limites plus bas.
+Publié sur [PyPI](https://pypi.org/project/elbow-helper/), des versions numérotées selon le versionnage sémantique, étiquetées dans git (voir `git tag` ; 0.4.1 à l'heure où ces lignes sont écrites), CI verte à chaque commit (Python 3.12, plus un balayage hebdomadaire sur 3.10 à 3.13), 103 tests (96 % de couverture) qui couvrent le pipeline de bout en bout ainsi que la CLI, l'API HTTP et la surface MCP. Version encore 0.x : les seuils calibrés dans `RobustKneeConfig` sont un point de départ validé, pas une constante universelle, voir Configuration et Limites plus bas.
 
 ## Documentation
 
@@ -36,7 +36,7 @@ Les outils de détection existants savent très bien proposer un point ; ce qui 
 
 ## Dépendances
 
-Le paquet entier ne dépend que de `numpy` et de [`os-helper`](https://github.com/warith-harchaoui/os-helper), y compris pour la figure de diagnostic. Le repérage du coude est codé de zéro, en NumPy pur : aucune dépendance à `scipy`, `scikit-learn`, `statsmodels` ni `joblib`. `elbow_helper.plotting` dessine du SVG à la main (voir Diagnostics plus bas) au lieu de passer par matplotlib, donc rien à installer en plus pour tracer une figure. La section Remerciements, en bas de page, détaille l'implémentation dont s'inspire l'algorithme.
+Le paquet entier ne dépend que de `numpy`, de [`os-helper`](https://github.com/warith-harchaoui/os-helper) et de `click` (pour la ligne de commande), y compris pour la figure de diagnostic. Le repérage du coude est codé de zéro, en NumPy pur : aucune dépendance à `scipy`, `scikit-learn`, `statsmodels` ni `joblib`. `elbow_helper.plotting` dessine du SVG à la main (voir Diagnostics plus bas) au lieu de passer par matplotlib, donc rien à installer en plus pour tracer une figure. La section Remerciements, en bas de page, détaille l'implémentation dont s'inspire l'algorithme.
 
 ## Comment ça marche
 
@@ -45,7 +45,7 @@ Le paquet entier ne dépend que de `numpy` et de [`os-helper`](https://github.co
 ## Installation
 
 ```bash
-pip install -e .            # tout : numpy + os-helper, diagnostics compris
+pip install -e .            # tout : numpy + os-helper + click, diagnostics compris
 pip install -e ".[dev]"     # + pytest
 ```
 
@@ -316,11 +316,11 @@ pip install -e ".[mcp]"          # + le serveur MCP (inclut [api])
 
 ```bash
 # CLI
-elbow-helper knee --y-values 0,0.1,0.3,0.6,0.85,0.9,0.92,0.93,0.94,0.95
+elbow-helper knee --y-values 0,0.17,0.34,0.51,0.67,0.84,1.01,1.01,1.02,1.02,1.02,1.02,1.02,1.03,1.03,1.03,1.03,1.03,1.04,1.04,1.04,1.04,1.04,1.05,1.05   # 25 points: min_samples is 20
 
 # API HTTP
 uvicorn elbow_helper.api:app --reload
-curl -X POST localhost:8000/knee -d '{"x": [0,0.1,0.3,0.6,0.85,0.9]}'
+curl -X POST localhost:8000/knee -H 'Content-Type: application/json' -d '{"x": [0, 0.17, 0.34, 0.51, 0.67, 0.84, 1.01, 1.01, 1.02, 1.02, 1.02, 1.02, 1.02, 1.03, 1.03, 1.03, 1.03, 1.03, 1.04, 1.04, 1.04, 1.04, 1.04, 1.05, 1.05]}'
 
 # MCP (fastapi-mcp monté sur la même app, sur /mcp)
 uvicorn elbow_helper.mcp_server:app --port 8021
