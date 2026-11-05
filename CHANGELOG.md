@@ -6,6 +6,15 @@ All notable changes to `elbow-helper` are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-11-05
+
+### Fixed
+
+- **The published package no longer cites a machine path.** A docstring in
+  `elbow_helper._core_cli` named a directory on the author's machine; it now
+  names the suite's coding charter by title, and a test refuses any machine
+  path or hard-coded absolute path in the repository.
+
 ## [0.4.1] - 2026-10-31
 
 ### Fixed
