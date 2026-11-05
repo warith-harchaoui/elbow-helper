@@ -14,7 +14,7 @@ La priorité, dès la conception, a été de limiter les faux coudes, quitte à 
 
 ## État
 
-Publié sur [PyPI](https://pypi.org/project/elbow-helper/), des versions numérotées selon le versionnage sémantique, étiquetées dans git (voir `git tag` ; 0.4.2 à l'heure où ces lignes sont écrites), 106 tests (96 % de couverture) qui couvrent le pipeline de bout en bout ainsi que la CLI, l'API HTTP et la surface MCP. La CI est verte à chaque commit : les 83 tests rapides sur Python 3.12, tandis que les 23 marqués `slow` passent dans le hook pre-push puis dans un balayage hebdomadaire de toute la suite sur 3.10 à 3.13. Version encore 0.x : les seuils calibrés dans `RobustKneeConfig` sont un point de départ validé, pas une constante universelle, voir Configuration et Limites plus bas.
+Publié sur [PyPI](https://pypi.org/project/elbow-helper/), des versions numérotées selon le versionnage sémantique, étiquetées dans git (voir `git tag` ; 0.4.3 à l'heure où ces lignes sont écrites), 106 tests (96 % de couverture) qui couvrent le pipeline de bout en bout ainsi que la CLI, l'API HTTP et la surface MCP. La CI est verte à chaque commit : les 83 tests rapides sur Python 3.12, tandis que les 23 marqués `slow` passent dans le hook pre-push puis dans un balayage hebdomadaire de toute la suite sur 3.10 à 3.13. Version encore 0.x : les seuils calibrés dans `RobustKneeConfig` sont un point de départ validé, pas une constante universelle, voir Configuration et Limites plus bas.
 
 ## Documentation
 

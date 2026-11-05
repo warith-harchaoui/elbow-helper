@@ -14,7 +14,7 @@ The design priority is to minimise false-positive knees, even at the cost of mor
 
 ## Status
 
-Published on [PyPI](https://pypi.org/project/elbow-helper/), semantic-versioned releases tagged in git (see `git tag`; 0.4.2 at the time of writing), and 106 tests (96% line coverage) covering the pipeline end to end plus the CLI, HTTP API and MCP surfaces. CI is green on every commit: the 83 fast tests on Python 3.12, while the 23 marked `slow` run in the pre-push hook and in a weekly sweep of the whole suite across 3.10 to 3.13. Still a 0.x release: treat the calibrated thresholds in `RobustKneeConfig` as a validated starting point, not a universal constant, see Configuration and Limitations below.
+Published on [PyPI](https://pypi.org/project/elbow-helper/), semantic-versioned releases tagged in git (see `git tag`; 0.4.3 at the time of writing), and 106 tests (96% line coverage) covering the pipeline end to end plus the CLI, HTTP API and MCP surfaces. CI is green on every commit: the 83 fast tests on Python 3.12, while the 23 marked `slow` run in the pre-push hook and in a weekly sweep of the whole suite across 3.10 to 3.13. Still a 0.x release: treat the calibrated thresholds in `RobustKneeConfig` as a validated starting point, not a universal constant, see Configuration and Limitations below.
 
 ## Documentation
 

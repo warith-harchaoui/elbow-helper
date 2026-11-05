@@ -6,6 +6,8 @@ All notable changes to `elbow-helper` are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-11-05
+
 ### Fixed
 
 - **`elbow-helper-mcp --help` started a server on 8021 and never returned.**
