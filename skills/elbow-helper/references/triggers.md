@@ -1,17 +1,17 @@
-# elbow-helper skill — exhaustive trigger catalogue
+# TRIGGERS: elbow-helper
 
-Auditable superset of the phrasings that should fire this skill. The
-`description:` in `SKILL.md` is what a host model actually sees and is capped at
-1024 characters; this file carries the full list. Keep the two in sync — and
-keep this file in sync with the repo-root `TRIGGERS.md`, the user-facing
-catalogue it mirrors.
-
+This is the exhaustive catalogue of what `elbow-helper` can do and the
+natural-language phrasings, commands, functions, and situations that should
+invoke it. It exists twice, identical: `TRIGGERS.md` at the repo root for
+users and `skills/elbow-helper/references/triggers.md` for agents. The
+`description:` in the skill's `SKILL.md` is what a host model actually sees and
+is capped at 1024 characters; this file carries the full list.
 
 `elbow-helper` decides **whether a curve has a defensible knee or elbow**, and
 if so where, with uncertainty. It abstains when the evidence is weak. It is
-pure NumPy, local, and depends on nothing but `numpy` and `os-helper`. It does
-**not** do change-point detection, peak finding, curve fitting, clustering, or
-forecasting.
+pure NumPy, local, and depends on nothing but `numpy`, `os-helper` and `click`
+(the API and MCP doors are extras). It does **not** do change-point detection,
+peak finding, curve fitting, clustering, or forecasting.
 
 ## Operations → how to invoke
 
@@ -57,7 +57,10 @@ same flags), and the MCP surface mounts on the same FastAPI app at `/mcp`.
   coverage) → `robust_knee`.
 - **Decreasing** curves (k-means inertia / WCSS, training loss, error vs
   capacity) → `robust_elbow`.
-- A CSV of two columns via the CLI, or a JSON body of two arrays via the API.
+- On the CLI, `x` and `y` each as comma-separated values (`--x-values`), a
+  1-D `.npy` file (`--x-npy`) or one column of a CSV
+  (`--x-csv PATH:COLUMN_INDEX`); through the API, a JSON body of two arrays
+  (`x`/`y`, or `k`/`inertia` for `/elbow`).
 
 Choosing the wrong direction does not raise; it answers a different question.
 

@@ -6,6 +6,19 @@ All notable changes to `elbow-helper` are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- **`elbow-helper-mcp --help` started a server on 8021 and never returned.**
+  The entry point called uvicorn straight away and ignored its arguments. It
+  is now a click command: `--help` answers, `--host` / `--port` override the
+  bind, and a bare run serves on `127.0.0.1:8021` exactly as before. A test
+  runs every console script with `--help`.
+- **`TRIGGERS.md` and the skill's `references/triggers.md` are identical
+  again**, and `scripts/check_triggers.py` and the skill test now fail when
+  they differ. The catalogue also stops claiming the CLI reads "a CSV of two
+  columns" (it takes `x` and `y` separately, as values, a `.npy` file or a
+  CSV column) and names `click` among the core dependencies.
+
 ## [0.4.2] - 2026-11-05
 
 ### Fixed

@@ -54,11 +54,19 @@ def test_progressive_disclosure_references_resolve() -> None:
 
 
 def test_triggers_catalogue_is_mirrored() -> None:
-    """The catalogue exists for both audiences: repo root and skill references."""
-    assert (_REPO / "TRIGGERS.md").exists(), "TRIGGERS.md missing at the repo root"
-    assert (_SKILL_DIR / "references" / "triggers.md").exists(), (
-        "skills/elbow-helper/references/triggers.md missing"
-    )
+    """The catalogue exists for both audiences: repo root and skill references.
+
+    And is identical, because two catalogues that have drifted are worse than
+    one: each audience believes the copy it reads.
+    """
+    root = _REPO / "TRIGGERS.md"
+    mirror = _SKILL_DIR / "references" / "triggers.md"
+    assert root.exists(), "TRIGGERS.md missing at the repo root"
+    assert mirror.exists(), "skills/elbow-helper/references/triggers.md missing"
+    assert (
+        root.read_text(encoding="utf-8").strip()
+        == mirror.read_text(encoding="utf-8").strip()
+    ), "the root catalogue and its mirror have drifted apart"
 
 
 def test_trigger_buckets_are_covered() -> None:
