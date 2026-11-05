@@ -18,12 +18,15 @@ from __future__ import annotations
 
 import doctest
 
+import pytest
+
 
 def _assert_doctests_pass(module) -> None:
     results = doctest.testmod(module, verbose=False)
     assert results.failed == 0, f"{module.__name__}: {results.failed} doctest(s) failed"
 
 
+@pytest.mark.slow
 def test_every_module_with_doctests_stays_accurate() -> None:
     """Run every module's ``>>> ...`` doctest examples in one place.
 

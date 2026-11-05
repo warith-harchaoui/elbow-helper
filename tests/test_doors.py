@@ -267,6 +267,7 @@ def _all_doors(capsys) -> list:
     return doors
 
 
+@pytest.mark.slow
 def test_knee_clear_is_accepted_across_every_door(capsys) -> None:
     """A clear-knee curve returns ``is_clear: true`` with a CI, everywhere."""
     x, y = clear_knee_curve(seed=2, noise=0.02)
@@ -288,6 +289,7 @@ def test_knee_abstains_on_a_straight_line_across_every_door(capsys) -> None:
         assert "reason" in r.payload, door.name
 
 
+@pytest.mark.slow
 def test_knee_y_only_shorthand_works_across_every_door(capsys) -> None:
     """A bare y series (x omitted) triggers ``robust_knee(y)`` everywhere."""
     _, y = clear_knee_curve(seed=1, noise=0.0, n=60)
@@ -297,6 +299,7 @@ def test_knee_y_only_shorthand_works_across_every_door(capsys) -> None:
         assert "is_clear" in r.payload, door.name
 
 
+@pytest.mark.slow
 def test_elbow_is_accepted_across_every_door(capsys) -> None:
     """A clear elbow curve routes through ``robust_elbow`` everywhere."""
     x, y = elbow_curve(seed=1, noise=0.02)
@@ -317,6 +320,7 @@ def test_elbow_and_locator_reject_the_y_only_shorthand_across_every_door(
         assert not door.locator(x=y).ok, f"{door.name}: locator"
 
 
+@pytest.mark.slow
 def test_diagnostics_returns_an_svg_document_across_every_door(capsys) -> None:
     """Every door's ``diagnostics`` returns a real, parseable SVG document."""
     x, y = clear_knee_curve(seed=1, noise=0.02)
@@ -351,6 +355,7 @@ def test_root_help_lists_every_subcommand() -> None:
         assert cmd in result.output
 
 
+@pytest.mark.slow
 def test_cli_loads_series_from_every_file_format(tmp_path, capsys) -> None:
     """``--y-npy``, and ``--y-csv`` with or without a header row, all load
     the same series (three input formats beyond the plain ``--y-values``
@@ -468,6 +473,7 @@ def test_cli_main_wraps_a_library_exception_as_a_clean_error(
     assert "Traceback" not in err
 
 
+@pytest.mark.slow
 def test_api_diagnostics_language_fr_and_validation_errors(capsys) -> None:
     """The FR chrome-text switch, and the two 4xx edge cases the app-level
     abstention gate doesn't cover: a schema-invalid body (422) and a

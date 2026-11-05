@@ -15,6 +15,7 @@ Warith Harchaoui, <warithmetics@deraison.ai>
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from elbow_helper import RobustKneesConfig
 from elbow_helper.plotting import (
@@ -28,6 +29,7 @@ from elbow_helper.plotting import (
 from conftest import clear_knee_curve, noisy_line
 
 
+@pytest.mark.slow
 def test_render_svg_clear_knee_shows_the_legend(fast_config) -> None:
     """A clear-knee curve renders the evidence legend, not the abstain card."""
     x, y = clear_knee_curve(seed=1, noise=0.02)
@@ -59,6 +61,7 @@ def test_render_svg_prepared_none_still_renders_a_card(fast_config) -> None:
     assert "INCOMPATIBLE_GLOBAL_SHAPE" in svg
 
 
+@pytest.mark.slow
 def test_render_svg_raw_axis_and_log_y(fast_config) -> None:
     """``raw_axis=True`` with ``log_y=True`` maps back to data-unit, log-scaled ticks."""
     x = np.linspace(1.0, 100.0, 80)
@@ -129,6 +132,7 @@ def test_plot_multi_diagnostics_writes_svg(tmp_path) -> None:
     assert out_path.read_text(encoding="utf-8") == svg
 
 
+@pytest.mark.slow
 def test_render_svg_panels_nests_every_panel(fast_config) -> None:
     """``render_svg_panels`` nests N standalone SVGs side by side."""
     x, y = clear_knee_curve(seed=1, noise=0.0, n=60)

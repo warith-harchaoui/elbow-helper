@@ -8,6 +8,7 @@ Warith Harchaoui, <warithmetics@deraison.ai>
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from elbow_helper import ClearKnee, robust_elbow, robust_knee
 from elbow_helper.preprocessing import infer_curve_direction
@@ -39,6 +40,7 @@ def test_infer_convex_increasing():
     assert (curve, direction) == ("convex", "increasing")
 
 
+@pytest.mark.slow
 def test_robust_knee_auto_matches_explicit(fast_config):
     x, y = clear_knee_curve(seed=1, knee_frac=0.3, noise=0.02)
     auto = robust_knee(x, y, config=fast_config)
@@ -50,6 +52,7 @@ def test_robust_knee_auto_matches_explicit(fast_config):
     assert auto.diagnostics["direction"] == "increasing"
 
 
+@pytest.mark.slow
 def test_robust_knee_single_list_matches_explicit_x(fast_config):
     _, y = clear_knee_curve(seed=1, knee_frac=0.3, n=80, noise=0.02)
     x = np.arange(80, dtype=float)

@@ -8,6 +8,7 @@ Warith Harchaoui, <warithmetics@deraison.ai>
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from elbow_helper import NoClearKnee, Reason, robust_knee
 
@@ -102,6 +103,7 @@ def test_every_abstention_says_what_closed_the_gate():
     assert len(seen) >= 3, seen
 
 
+@pytest.mark.slow
 def test_an_early_knee_on_a_long_curve_is_not_a_boundary_artefact():
     """A fixed *fraction* is the wrong margin once the curve is long.
 

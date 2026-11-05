@@ -61,6 +61,10 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+# `slow`: tests over ~2 s each (bootstrap sweeps, every-door round trips,
+# doctests). CI deselects them with -m "not slow" to stay under a minute;
+# .githooks/pre-push runs the whole suite with -m "" before every push.
+markers = ["slow: over ~2 s; skipped by CI, run by the pre-push hook"]
 
 # Ruff is a blocking gate: .githooks/pre-push refuses to push on a failing
 # `ruff check .` or `ruff format --check .`. A gate with no configuration is

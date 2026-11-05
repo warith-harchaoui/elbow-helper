@@ -11,6 +11,7 @@ Warith Harchaoui, <warithmetics@deraison.ai>
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from elbow_helper import ClearKnee, RobustKneeConfig, robust_elbow
 
@@ -140,6 +141,7 @@ def pca_scree_curve(
     return components.astype(float), eigvals
 
 
+@pytest.mark.slow
 def test_kmeans_inertia_elbow_detects_true_cluster_count():
     """The true k is recovered from log inertia, which is how it is plotted.
 
@@ -173,6 +175,7 @@ def test_kmeans_inertia_elbow_detects_true_cluster_count():
         assert 5.0 <= raw.knee_x <= 8.0, (seed, raw.knee_x)
 
 
+@pytest.mark.slow
 def test_pca_scree_elbow_detects_true_signal_dimension():
     true_d = 6
     for seed in range(5):

@@ -143,6 +143,7 @@ def subtle_knee_curve(seed, n=150, noise=0.05):
     return x, y
 
 
+@pytest.mark.slow
 def test_alternating_slope_mountain_recovers_three_sign_changing_breakpoints():
     cfg = RobustKneesConfig(random_seed=0, k_max=4, fwer_permutations=300)
     for seed in range(5):
@@ -161,6 +162,7 @@ def test_alternating_slope_mountain_recovers_three_sign_changing_breakpoints():
         assert slopes[-1] < -0.01  # ends heading down out of breakpoint 3
 
 
+@pytest.mark.slow
 def test_subtle_knee_detected_at_low_noise_mostly_abstains_at_high_noise():
     cfg = RobustKneesConfig(random_seed=0, k_max=3, fwer_permutations=300)
     low_detections = sum(
@@ -179,6 +181,7 @@ def test_subtle_knee_detected_at_low_noise_mostly_abstains_at_high_noise():
     assert high_detections <= 3
 
 
+@pytest.mark.slow
 def test_sigmoid_staircase_brackets_each_rise_with_a_breakpoint_pair():
     # k_max=6 with only 100 permutations would make the Bonferroni-corrected
     # threshold (alpha/6) smaller than the best achievable p-value
