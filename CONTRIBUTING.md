@@ -18,17 +18,28 @@ git config core.hooksPath .githooks
 
 This activates `.githooks/pre-push`, which blocks a push on a lint or test
 failure so a red local state never reaches CI: `ruff check`, `ruff format
---check`, then the full `pytest` suite (every marker, not just the default
-subset). Bypass only when deliberate: `git push --no-verify`.
+--check`, then the full `pytest` suite with the marker filter cleared
+(`-m ""`), so the tests marked `slow` that CI skips run here. Bypass only when deliberate: `git push --no-verify`.
 
 ## What CI checks
 
-`.github/workflows/test.yml` runs two fast, blocking jobs on every push and
-pull request: `pytest` on Python 3.12, and `ruff check` plus `ruff format
---check`. A third job, `compat`, sweeps the full supported range (Python
-3.10 through 3.13, matching `requires-python` in `pyproject.toml`) on a
-weekly schedule and on manual dispatch, rather than on every push, so the
-default gate stays fast while compatibility drift still gets caught.
+`.github/workflows/test.yml` runs two blocking jobs on every push and pull
+request:
+
+- `pytest`: on Python 3.12, `ruff check`, `ruff format --check`, then
+  `pytest -m "not slow"`. Tests over about 2 s each (bootstrap sweeps,
+  every-door round trips, doctests) carry the `slow` marker declared in
+  `pyproject.toml`; CI skips them and the pre-push hook runs them.
+- `floor`: on Python 3.10, `pip install .` then `import elbow_helper`, the
+  promise `requires-python = ">=3.10"` makes. Install and import only, not
+  the tests.
+
+A third job, `compat`, runs the whole suite (`-m ""`) on Python 3.10 through
+3.13 on a weekly schedule and on manual dispatch, rather than on every push,
+so the default gate stays fast while compatibility drift still gets caught.
+
+To reproduce the CI subset locally: `pytest -m "not slow"`; the whole suite:
+`pytest -m ""`.
 
 ## Style
 

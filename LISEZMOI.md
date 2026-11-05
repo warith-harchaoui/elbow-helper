@@ -14,7 +14,7 @@ La priorité, dès la conception, a été de limiter les faux coudes, quitte à 
 
 ## État
 
-Publié sur [PyPI](https://pypi.org/project/elbow-helper/), des versions numérotées selon le versionnage sémantique, étiquetées dans git (voir `git tag` ; 0.4.1 à l'heure où ces lignes sont écrites), CI verte à chaque commit (Python 3.12, plus un balayage hebdomadaire sur 3.10 à 3.13), 103 tests (96 % de couverture) qui couvrent le pipeline de bout en bout ainsi que la CLI, l'API HTTP et la surface MCP. Version encore 0.x : les seuils calibrés dans `RobustKneeConfig` sont un point de départ validé, pas une constante universelle, voir Configuration et Limites plus bas.
+Publié sur [PyPI](https://pypi.org/project/elbow-helper/), des versions numérotées selon le versionnage sémantique, étiquetées dans git (voir `git tag` ; 0.4.1 à l'heure où ces lignes sont écrites), 103 tests (96 % de couverture) qui couvrent le pipeline de bout en bout ainsi que la CLI, l'API HTTP et la surface MCP. La CI est verte à chaque commit : les 80 tests rapides sur Python 3.12, tandis que les 23 marqués `slow` passent dans le hook pre-push puis dans un balayage hebdomadaire de toute la suite sur 3.10 à 3.13. Version encore 0.x : les seuils calibrés dans `RobustKneeConfig` sont un point de départ validé, pas une constante universelle, voir Configuration et Limites plus bas.
 
 ## Documentation
 
@@ -326,7 +326,7 @@ curl -X POST localhost:8000/knee -H 'Content-Type: application/json' -d '{"x": [
 uvicorn elbow_helper.mcp_server:app --port 8021
 ```
 
-Chaque surface expose les quatre mêmes opérations, `knee`, `elbow`, `diagnostics` et `locator`, qui correspondent une à une à `robust_knee`, `robust_elbow`, `plot_diagnostics` et au `KneeLocator` autonome. Les données entrent en valeurs inline séparées par des virgules, en fichier `.npy` ou en colonne CSV (CLI) ou en corps JSON (`x`/`y` en listes, HTTP). Les surcharges de `RobustKneeConfig` passent en `--config-json '{"bootstrap_replicates": 500}'` (CLI) ou en objet `config_overrides` (HTTP). L'opération `diagnostics` renvoie le SVG lui-même, pas un objet JSON qui l'enveloppe.
+Chaque surface expose les quatre mêmes opérations, `knee`, `elbow`, `diagnostics` et `locator`, qui correspondent une à une à `robust_knee`, `robust_elbow`, `plot_diagnostics` et au `KneeLocator` autonome. Les données entrent en valeurs inline séparées par des virgules, en fichier `.npy` ou en colonne CSV (CLI) ou en corps JSON (listes `x`/`y`, `k`/`inertia` pour `/elbow`, HTTP). Les surcharges de `RobustKneeConfig` passent en `--config-json '{"bootstrap_replicates": 500}'` (CLI) ou en objet `config_overrides` (HTTP). L'opération `diagnostics` renvoie le SVG lui-même, pas un objet JSON qui l'enveloppe.
 
 ### En tant que skill d'agent
 

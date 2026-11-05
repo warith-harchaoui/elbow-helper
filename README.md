@@ -14,7 +14,7 @@ The design priority is to minimise false-positive knees, even at the cost of mor
 
 ## Status
 
-Published on [PyPI](https://pypi.org/project/elbow-helper/), semantic-versioned releases tagged in git (see `git tag`; 0.4.1 at the time of writing), with CI green on every commit (Python 3.12, plus a weekly sweep across 3.10 to 3.13) and 103 tests (96% line coverage) covering the pipeline end to end plus the CLI, HTTP API and MCP surfaces. Still a 0.x release: treat the calibrated thresholds in `RobustKneeConfig` as a validated starting point, not a universal constant, see Configuration and Limitations below.
+Published on [PyPI](https://pypi.org/project/elbow-helper/), semantic-versioned releases tagged in git (see `git tag`; 0.4.1 at the time of writing), and 103 tests (96% line coverage) covering the pipeline end to end plus the CLI, HTTP API and MCP surfaces. CI is green on every commit: the 80 fast tests on Python 3.12, while the 23 marked `slow` run in the pre-push hook and in a weekly sweep of the whole suite across 3.10 to 3.13. Still a 0.x release: treat the calibrated thresholds in `RobustKneeConfig` as a validated starting point, not a universal constant, see Configuration and Limitations below.
 
 ## Documentation
 
@@ -312,7 +312,7 @@ curl -X POST localhost:8000/knee -H 'Content-Type: application/json' -d '{"x": [
 uvicorn elbow_helper.mcp_server:app --port 8021
 ```
 
-Every surface exposes the same four operations (`knee`, `elbow`, `diagnostics`, `locator`), matching `robust_knee`, `robust_elbow`, `plot_diagnostics`, and the standalone `KneeLocator` one-to-one. Data goes in as inline comma-separated values, a `.npy` file, or a CSV column (CLI), or a JSON body (`x`/`y` lists, HTTP). `RobustKneeConfig` overrides travel as `--config-json '{"bootstrap_replicates": 500}'` (CLI) or a `config_overrides` object (HTTP). The `diagnostics` operation returns the SVG itself, not a JSON wrapper around it.
+Every surface exposes the same four operations (`knee`, `elbow`, `diagnostics`, `locator`), matching `robust_knee`, `robust_elbow`, `plot_diagnostics`, and the standalone `KneeLocator` one-to-one. Data goes in as inline comma-separated values, a `.npy` file, or a CSV column (CLI), or a JSON body (`x`/`y` lists, `k`/`inertia` for `/elbow`, HTTP). `RobustKneeConfig` overrides travel as `--config-json '{"bootstrap_replicates": 500}'` (CLI) or a `config_overrides` object (HTTP). The `diagnostics` operation returns the SVG itself, not a JSON wrapper around it.
 
 ### Use it as an agent skill
 
