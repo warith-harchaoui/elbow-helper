@@ -499,7 +499,7 @@ First public release: tagged, GitHub-released, and published to PyPI.
   combinations, and false-positive rate on flat data), citing
   `research/multiknee/compare.py` instead of the static summary file.
 - **CLI, HTTP API, and MCP surfaces**, mirroring the `ai-helpers` suite's
-  standard architecture (`~/ai-helpers/.private/CODING.md` §19-§23): a new
+  standard architecture (the suite's `CODING.md` §19-§23): a new
   `elbow_helper._core_cli` shared core (`do_knee`/`do_elbow`/
   `do_diagnostics`/`do_locator`, JSON-safe serialization of `ClearKnee`/
   `NoClearKnee` including numpy-scalar coercion) backs four adapters:

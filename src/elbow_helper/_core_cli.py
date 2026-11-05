@@ -1,7 +1,6 @@
 """Shared business logic — one core behind every delivery surface.
 
-The suite convention (see this repo's `CODING.md` reference, `~/ai-helpers/
-.private/CODING.md` §19) is that every surface (the click CLI, the FastAPI
+The suite convention (the suite's coding charter, `CODING.md` §19) is that every surface (the click CLI, the FastAPI
 app, the MCP tools mounted on it) must call the *same* library
 functions, never re-implement the decision logic. This module is that
 shared core: thin functions that take already-parsed, primitive arguments
