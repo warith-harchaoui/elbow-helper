@@ -116,7 +116,10 @@ for sha in $SHAS; do
     else
       echo "[pre-push]   note: pytest-timeout not installed; a hung test will not be named."
     fi
-    python -m pytest -q -m "" $TIMEOUT_ARGS || {
+    # src layout: the editable install points at the main checkout's src/, so
+    # put this worktree's src/ first, or the gate tests the working tree
+    # instead of the commit being pushed.
+    PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}" python -m pytest -q -m "" $TIMEOUT_ARGS || {
       echo "[pre-push] tests failed - push aborted."; exit 1;
     }
   ) || exit 1
