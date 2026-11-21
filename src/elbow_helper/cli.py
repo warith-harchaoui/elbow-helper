@@ -200,7 +200,10 @@ def _data_options(func):
 
 
 # ``-h`` beside ``--help``: the short form is the one people type.
-@click.group(context_settings={"help_option_names": ["-h", "--help"]})
+@click.group(
+    context_settings={"help_option_names": ["-h", "--help"]},
+    epilog="⭐️ on GitHub: https://github.com/warith-harchaoui/elbow-helper",
+)
 # ``-V`` beside ``--version``, as the argparse door offered. ``-v`` is already
 # --verbose, hence the capital.
 @click.version_option(__version__, "-V", "--version", package_name="elbow-helper")

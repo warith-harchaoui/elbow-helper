@@ -4,6 +4,8 @@
 
 **Détection de coude robuste au bruit : un coude assorti de son incertitude ou une abstention franche.**
 
+Laissez une [⭐️](https://github.com/warith-harchaoui/elbow-helper) sur GitHub si mon aide le mérite.
+
 ![Logo Elbow Helper](https://raw.githubusercontent.com/warith-harchaoui/elbow-helper/main/assets/logo.png)
 
 Face à la question « où se trouve le coude ? », un algorithme classique répond toujours quelque chose, même sur une droite ou sur du bruit pur. `elbow-helper` enveloppe un repéreur de coude réécrit de zéro dans une procédure de décision prudente, qui pose une question plus exigeante :

@@ -4,6 +4,8 @@
 
 **Noise-robust knee and elbow detection: it reports a knee with uncertainty; it abstains outright otherwise.**
 
+Drop a [⭐️](https://github.com/warith-harchaoui/elbow-helper) on GitHub if my help deserves it.
+
 ![Elbow Helper Logo](https://raw.githubusercontent.com/warith-harchaoui/elbow-helper/main/assets/logo.png)
 
 An algorithm can answer the question "where might a knee or an elbow be?" and it will always return something, even on a straight line or on pure noise. `elbow-helper` wraps a from-scratch knee locator in a conservative decision procedure that answers a harder question instead:

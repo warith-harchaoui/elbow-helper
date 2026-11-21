@@ -6,6 +6,10 @@ All notable changes to `elbow-helper` are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Every command line ends its `--help` on one line, after a blank one: `⭐️ on GitHub: https://github.com/warith-harchaoui/elbow-helper`. A test checks it for each console script. README.md and LISEZMOI.md carry one invitation to star the repository, right after the paragraph that says what the tool does.
+
 ## [0.4.3] - 2026-11-05
 
 ### Fixed
