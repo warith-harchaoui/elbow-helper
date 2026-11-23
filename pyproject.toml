@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "elbow-helper"
-version = "0.4.3"
+version = "0.5.0"
 description = "Noise-robust knee/elbow detection: a conservative wrapper around a from-scratch locator that either returns a knee with uncertainty or explicitly abstains."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -98,15 +98,6 @@ select = ["E4", "E7", "E9", "W", "F", "I", "B", "BLE", "C4", "UP", "RUF"]
 
 # Deliberately not enforced, with reasons:
 #
-# UP006/UP035/UP045 want `list[int]`, `collections.abc`, and `int | None` in
-# place of `List[int]`, `typing.List`, and `Optional[int]`. The package is
-# written the other way throughout -- every module opens with
-# `from __future__ import annotations` and annotates with `typing` generics --
-# and that is internally consistent, valid at the supported floor of Python
-# 3.10, and 242 findings wide. Converting it would be a six-thousand-line
-# diff that buries every real change made alongside it. Picking one style and
-# holding it is worth more here than picking the newer one.
-#
 # BLE (blind `except Exception`) is selected rather than ignored, which is why
 # it appears in the list above: three files already carried `# noqa: BLE001`
 # with a reason attached, so the convention was the author's, not an
@@ -141,9 +132,6 @@ select = ["E4", "E7", "E9", "W", "F", "I", "B", "BLE", "C4", "UP", "RUF"]
 # computed arguments that produced one 250-character line out of a readable
 # seven-line block. Left to the author to do where it reads better.
 ignore = [
-    "UP006",
-    "UP035",
-    "UP045",
     "UP032",
     "B905",
     "RUF001",

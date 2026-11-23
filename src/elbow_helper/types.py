@@ -14,7 +14,6 @@ Warith Harchaoui, <warithmetics@deraison.ai>
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -130,7 +129,7 @@ class KneeCandidate:
     local_noise: float = 0.0
     noise_prominence_ratio: float = 0.0
     boundary_distance: float = 0.0
-    rejected: Optional[str] = None
+    rejected: str | None = None
 
 
 @dataclass
@@ -175,7 +174,7 @@ class CandidateCluster:
 
     median_knee: float
     mad: float
-    members: List[KneeCandidate]
+    members: list[KneeCandidate]
     n_windows: int
     consecutive_scales: int
     sensitivity_support: float
@@ -185,7 +184,7 @@ class CandidateCluster:
     median_prominence: float
     median_noise_prominence_ratio: float
     persistent: bool = False
-    stable_window: Optional[int] = None
+    stable_window: int | None = None
 
 
 @dataclass
@@ -216,7 +215,7 @@ class SegmentEvidence:
     m_right: float
     bic_improvement: float
     cv_improvement: float
-    reason: Optional[str] = None
+    reason: str | None = None
 
 
 @dataclass
@@ -251,13 +250,13 @@ class BootstrapEvidence:
 
     passes: bool
     detection_rate: float
-    ci90: Tuple[float, float]
+    ci90: tuple[float, float]
     ci90_width: float
     primary_cluster_rate: float
     secondary_cluster_rate: float
     median_shift: float
-    knees: List[float]
-    reason: Optional[str] = None
+    knees: list[float]
+    reason: str | None = None
 
 
 @dataclass
@@ -282,7 +281,7 @@ class NullEvidence:
     p_value: float
     observed_statistic: tuple
     null_replicates: int
-    reason: Optional[str] = None
+    reason: str | None = None
 
 
 @dataclass
@@ -290,7 +289,7 @@ class KneeResult:
     """Base class for the tagged union returned by :func:`robust_knee`."""
 
     reason: str
-    diagnostics: Dict = field(default_factory=dict)
+    diagnostics: dict = field(default_factory=dict)
 
     @property
     def is_clear(self) -> bool:
@@ -332,7 +331,7 @@ class ClearKnee(KneeResult):
     knee_x: float = 0.0
     knee_x_norm: float = 0.0
     knee_index: int = 0
-    ci90: Tuple[float, float] = (0.0, 0.0)
+    ci90: tuple[float, float] = (0.0, 0.0)
     detection_rate: float = 0.0
     smoothing_window: int = 1
     sensitivity: float = 1.0
@@ -404,7 +403,7 @@ class KneeEstimate:
     index: int
     slope_left: float
     slope_right: float
-    fwer_p_value: Optional[float] = None
+    fwer_p_value: float | None = None
 
     def __repr__(self) -> str:  # pragma: no cover - cosmetic
         return (
@@ -418,7 +417,7 @@ class MultiKneeResult:
     """Base class for the tagged union returned by :func:`elbow_helper.robust_knees`."""
 
     reason: str
-    diagnostics: Dict = field(default_factory=dict)
+    diagnostics: dict = field(default_factory=dict)
 
     @property
     def is_valid(self) -> bool:
@@ -436,7 +435,7 @@ class Knees(MultiKneeResult):
     gates a nonempty result would have to survive.
     """
 
-    knees: List[KneeEstimate] = field(default_factory=list)
+    knees: list[KneeEstimate] = field(default_factory=list)
 
     @property
     def k(self) -> int:

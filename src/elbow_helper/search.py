@@ -13,7 +13,6 @@ Warith Harchaoui, <warithmetics@deraison.ai>
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional, Tuple
 
 from .candidates import generate_candidates
 from .clustering import cluster_candidates, select_unique_cluster
@@ -29,12 +28,12 @@ class SearchResult:
     """Outcome of one inner detection pass over a (prepared) curve."""
 
     detected: bool
-    reason: Optional[str] = None
-    knee_x_norm: Optional[float] = None
-    window: Optional[int] = None
-    cluster: Optional[CandidateCluster] = None
-    segment: Optional[SegmentEvidence] = None
-    statistic: Tuple[int, float, float] = (0, 0.0, 0.0)
+    reason: str | None = None
+    knee_x_norm: float | None = None
+    window: int | None = None
+    cluster: CandidateCluster | None = None
+    segment: SegmentEvidence | None = None
+    statistic: tuple[int, float, float] = (0, 0.0, 0.0)
     n_candidates: int = 0
     n_filtered: int = 0
     # Plain-language account of the gate that closed, for an abstention; see

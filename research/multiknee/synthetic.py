@@ -7,8 +7,6 @@ Warith Harchaoui, <warithmetics@deraison.ai>
 
 from __future__ import annotations
 
-from typing import List, Tuple
-
 import numpy as np
 
 # Breakpoint fractions and per-segment slopes for each true k, chosen to
@@ -26,7 +24,7 @@ _PROFILES = {
 
 def make_piecewise_curve(
     true_k: int, n: int = 100, noise_sigma: float = 0.05, seed: int = 0
-) -> Tuple[np.ndarray, np.ndarray, List[int]]:
+) -> tuple[np.ndarray, np.ndarray, list[int]]:
     """A piecewise-linear curve with exactly ``true_k`` real breakpoints.
 
     Parameters

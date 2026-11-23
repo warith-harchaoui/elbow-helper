@@ -32,7 +32,6 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import numpy as np
 
@@ -51,7 +50,7 @@ try:
     from _svg import svg_open, xml_escape  # type: ignore
 except ImportError:
 
-    def load_palette(accessibility: str = "universal") -> Dict[str, str]:
+    def load_palette(accessibility: str = "universal") -> dict[str, str]:
         return {
             "Blue": "#007AFF",
             "Red": "#FF3B30",
@@ -205,7 +204,7 @@ _CAT_LOGP = np.log(_CAT_P)
 _CAT_MU = float((_CAT_P * _CAT_LOGP).sum())
 
 
-def rate_function(a: float, iters: int = 200) -> Tuple[float, float]:
+def rate_function(a: float, iters: int = 200) -> tuple[float, float]:
     """I(a) = sup_theta [theta*a - Lambda(theta)] via ternary search (Lambda convex)."""
 
     def obj(theta: float) -> float:
@@ -224,7 +223,7 @@ def rate_function(a: float, iters: int = 200) -> Tuple[float, float]:
     return obj(theta_star), theta_star
 
 
-def simulate_cramer(rng: np.random.Generator) -> Tuple[np.ndarray, np.ndarray, float]:
+def simulate_cramer(rng: np.random.Generator) -> tuple[np.ndarray, np.ndarray, float]:
     ns = np.array([10, 30, 100, 300, 1000, 3000, 10000])
     reps = 20000
     eps = 0.1
@@ -238,7 +237,7 @@ def simulate_cramer(rng: np.random.Generator) -> Tuple[np.ndarray, np.ndarray, f
 
 def simulate_rate_convergence(
     rng: np.random.Generator,
-) -> Tuple[np.ndarray, np.ndarray, float]:
+) -> tuple[np.ndarray, np.ndarray, float]:
     """Empirical -ln(P_hat)/n at growing n, next to the exact Legendre-transform rate."""
     eps = 0.1
     i_hi, _ = rate_function(_CAT_MU + eps)
@@ -271,7 +270,7 @@ def build_cramer_svg(lang: str, rng: np.random.Generator) -> str:
     ph = height - m_top - m_bottom
     py = m_top
 
-    parts: List[str] = []
+    parts: list[str] = []
     parts.append(svg_open(width, height, "cr-title", "cr-desc"))
     parts.append(f'<title id="cr-title">{xml_escape(t["cramer_title"])}</title>')
     parts.append(
@@ -454,7 +453,7 @@ def build_cramer_svg(lang: str, rng: np.random.Generator) -> str:
 # ----------------------------------------------------------------------
 def simulate_wald(
     rng: np.random.Generator,
-) -> Tuple[List[np.ndarray], List[np.ndarray], float, float]:
+) -> tuple[list[np.ndarray], list[np.ndarray], float, float]:
     p0, p1 = 0.3, 0.7
     alpha = beta = 0.05
     a_hi = math.log((1 - beta) / alpha)
@@ -497,7 +496,7 @@ def build_wald_svg(lang: str, rng: np.random.Generator) -> str:
     def sy(v: float) -> float:
         return plot_y + (y_max - v) / (y_max - y_min) * plot_h
 
-    parts: List[str] = []
+    parts: list[str] = []
     parts.append(svg_open(width, height, "wd-title", "wd-desc"))
     parts.append(f'<title id="wd-title">{xml_escape(t["wald_title"])}</title>')
     parts.append(
@@ -618,7 +617,7 @@ def build_wald_svg(lang: str, rng: np.random.Generator) -> str:
 # ----------------------------------------------------------------------
 def simulate_convergence(
     rng: np.random.Generator,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, float, float]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, float, float]:
     l_inf = 1.0 / math.sqrt(2 * math.pi * math.e)
     sigma_z2 = 0.5
     ns = np.array([5, 10, 20, 50, 100, 200, 500, 1000])
@@ -635,7 +634,7 @@ def simulate_convergence(
 
 
 def _loglog_panel(
-    parts: List[str],
+    parts: list[str],
     px: float,
     py: float,
     pw: float,
@@ -752,7 +751,7 @@ def build_convergence_svg(lang: str, rng: np.random.Generator) -> str:
     ph = height - m_top - m_bottom
     py = m_top
 
-    parts: List[str] = []
+    parts: list[str] = []
     parts.append(svg_open(width, height, "cv-title", "cv-desc"))
     parts.append(f'<title id="cv-title">{xml_escape(t["conv_title"])}</title>')
     parts.append(f'<desc id="cv-desc">{xml_escape(t["conv_title"])}</desc>')

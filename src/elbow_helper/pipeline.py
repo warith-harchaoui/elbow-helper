@@ -12,10 +12,9 @@ Warith Harchaoui, <warithmetics@deraison.ai>
 
 from __future__ import annotations
 
-from typing import Optional
+import logging
 
 import numpy as np
-import os_helper as oh
 
 from .bootstrap import bootstrap_knee
 from .config import RobustKneeConfig
@@ -25,13 +24,15 @@ from .preprocessing import Abstain, prepare_curve
 from .search import run_search
 from .types import ClearKnee, KneeResult, NoClearKnee, Reason
 
+logger = logging.getLogger(__name__)
+
 
 def robust_knee(
     x,
     y=None,
-    curve: Optional[str] = None,
-    direction: Optional[str] = None,
-    config: Optional[RobustKneeConfig] = None,
+    curve: str | None = None,
+    direction: str | None = None,
+    config: RobustKneeConfig | None = None,
 ) -> KneeResult:
     """Detect a knee conservatively or abstain with a reason.
 
@@ -155,7 +156,7 @@ def robust_knee(
             else 1.0
         )
 
-        oh.info(
+        logger.info(
             f"[elbow-helper] CLEAR_KNEE at x={knee_x:.4g} "
             f"(detection_rate={boot.detection_rate:.2f}, null_p={null.p_value:.3g})"
         )
@@ -179,7 +180,7 @@ def robust_knee(
         diagnostics.update(a.diagnostics)
         return _abstain(a.reason, diagnostics, a.diagnostics.get("detail", ""))
     except Exception as exc:  # noqa: BLE001 — numerical safety net, never crash the caller
-        oh.warning(f"[elbow-helper] internal failure: {exc}")
+        logger.warning(f"[elbow-helper] internal failure: {exc}")
         diagnostics["error"] = str(exc)
         return _abstain(Reason.INTERNAL_NUMERICAL_FAILURE, diagnostics, str(exc))
 
@@ -209,13 +210,13 @@ def _abstain(reason: str, diagnostics: dict, detail: str) -> NoClearKnee:
     """
     if detail:
         diagnostics["detail"] = detail
-        oh.info(f"[elbow-helper] abstain: {reason} -- {detail}")
+        logger.info(f"[elbow-helper] abstain: {reason} -- {detail}")
     else:
-        oh.info(f"[elbow-helper] abstain: {reason}")
+        logger.info(f"[elbow-helper] abstain: {reason}")
     return NoClearKnee(reason=reason, diagnostics=diagnostics, detail=detail)
 
 
-def robust_elbow(x, y=None, config: Optional[RobustKneeConfig] = None) -> KneeResult:
+def robust_elbow(x, y=None, config: RobustKneeConfig | None = None) -> KneeResult:
     """Convenience wrapper for the classic convex-decreasing *elbow*.
 
     Equivalent to :func:`robust_knee` with ``curve="convex"`` and

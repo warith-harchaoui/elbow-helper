@@ -29,8 +29,6 @@ Warith Harchaoui, <warithmetics@deraison.ai>
 
 from __future__ import annotations
 
-from typing import List, Optional
-
 from .config import RobustKneeConfig
 from .types import (
     BootstrapEvidence,
@@ -303,7 +301,7 @@ def _at(prepared: PreparedCurve, x_norm: float) -> str:
 
 
 def explain_candidates(
-    candidates: List[KneeCandidate],
+    candidates: list[KneeCandidate],
     prepared: PreparedCurve,
     config: RobustKneeConfig,
 ) -> str:
@@ -355,7 +353,7 @@ def explain_candidates(
 
 
 def explain_clusters(
-    clusters: List[CandidateCluster],
+    clusters: list[CandidateCluster],
     reason: str,
     prepared: PreparedCurve,
     config: RobustKneeConfig,
@@ -630,12 +628,12 @@ def explain_insufficient(n: int, min_samples: int, language: str = "en") -> str:
 
 def detail_for(
     reason: str,
-    prepared: Optional[PreparedCurve],
+    prepared: PreparedCurve | None,
     config: RobustKneeConfig,
     *,
-    seg: Optional[SegmentEvidence] = None,
-    boot: Optional[BootstrapEvidence] = None,
-    null: Optional[NullEvidence] = None,
+    seg: SegmentEvidence | None = None,
+    boot: BootstrapEvidence | None = None,
+    null: NullEvidence | None = None,
 ) -> str:
     """Render the detail for a pipeline-stage abstention.
 

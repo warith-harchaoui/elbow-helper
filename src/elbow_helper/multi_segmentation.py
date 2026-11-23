@@ -15,7 +15,6 @@ Warith Harchaoui, <warithmetics@deraison.ai>
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Tuple
 
 import numpy as np
 
@@ -38,8 +37,8 @@ class Segmentation:
         Number of points in the curve this segmentation was fit to.
     """
 
-    breakpoints: Tuple[int, ...]
-    boundaries: Tuple[int, ...]
+    breakpoints: tuple[int, ...]
+    boundaries: tuple[int, ...]
     sse: float
     n: int
 
@@ -49,7 +48,7 @@ class Segmentation:
         return len(self.breakpoints)
 
     @property
-    def segment_lengths(self) -> Tuple[int, ...]:
+    def segment_lengths(self) -> tuple[int, ...]:
         """Length, in points, of each segment in ``boundaries`` order."""
         b = self.boundaries
         return tuple(b[i + 1] - b[i] for i in range(len(b) - 1))
@@ -111,7 +110,7 @@ class SegmentCostTable:
         rss = syy - a * sy - b * sxy
         return float(max(rss, 0.0))
 
-    def fit(self, i: int, j: int) -> Tuple[float, float]:
+    def fit(self, i: int, j: int) -> tuple[float, float]:
         """OLS ``(intercept, slope)`` on points ``i..j-1``.
 
         Parameters
@@ -140,7 +139,7 @@ class SegmentCostTable:
 
 def dp_optimal_partition(
     x: np.ndarray, y: np.ndarray, k_max: int, min_seg: int = 3
-) -> List[Segmentation]:
+) -> list[Segmentation]:
     """Exact optimal-partitioning DP: the best segmentation for every k = 0..k_max.
 
     See ``ELBOW-en.tex`` section 7 for the recursion and complexity, and
@@ -192,7 +191,7 @@ def dp_optimal_partition(
             C[k][t] = best_cost
             back[k][t] = best_s
 
-    results: List[Segmentation] = []
+    results: list[Segmentation] = []
     for k in range(max_k + 1):
         if not np.isfinite(C[k][n]):
             break

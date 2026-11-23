@@ -35,7 +35,6 @@ from __future__ import annotations
 import math
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import numpy as np
 
@@ -57,7 +56,7 @@ from generate_experiment_figures import (  # noqa: E402
 # ----------------------------------------------------------------------
 # Data and from-scratch GP
 # ----------------------------------------------------------------------
-def load_subset(n: int = 50, seed: int = 0) -> Tuple[np.ndarray, np.ndarray]:
+def load_subset(n: int = 50, seed: int = 0) -> tuple[np.ndarray, np.ndarray]:
     from sklearn.datasets import fetch_california_housing
 
     data = fetch_california_housing()
@@ -103,7 +102,7 @@ def worst_case_mse(y: np.ndarray) -> float:
     return float(d2.mean(axis=0).max())
 
 
-def fit_gp(x: np.ndarray, y: np.ndarray) -> Dict[str, object]:
+def fit_gp(x: np.ndarray, y: np.ndarray) -> dict[str, object]:
     """Type-II maximum likelihood by grid search: sigma_f2 is fixed to the
     sample variance of y (the standard, data-driven default for the signal
     scale), and (ell, sigma_n2) are chosen to maximize the log marginal
@@ -162,8 +161,8 @@ def fit_gp(x: np.ndarray, y: np.ndarray) -> Dict[str, object]:
 
 
 def predict(
-    x: np.ndarray, y: np.ndarray, fit: Dict[str, object], x_grid: np.ndarray
-) -> Tuple[np.ndarray, np.ndarray]:
+    x: np.ndarray, y: np.ndarray, fit: dict[str, object], x_grid: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
     mu_x, sd_x = fit["mu_x"], fit["sd_x"]
     sigma_f2, ell, sigma_n2 = fit["sigma_f2"], fit["ell_star"], fit["sigma_n2_star"]
     xs = (x - mu_x) / sd_x
@@ -184,7 +183,7 @@ def predict(
 # ----------------------------------------------------------------------
 # Figure 1 -- posterior mean and uncertainty band
 # ----------------------------------------------------------------------
-def build_posterior_svg(x: np.ndarray, y: np.ndarray, fit: Dict[str, object]) -> str:
+def build_posterior_svg(x: np.ndarray, y: np.ndarray, fit: dict[str, object]) -> str:
     x_grid = np.linspace(x.min() - 0.5, x.max() + 0.5, 200)
     mu_star, std_star = predict(x, y, fit, x_grid)
 
@@ -206,7 +205,7 @@ def build_posterior_svg(x: np.ndarray, y: np.ndarray, fit: Dict[str, object]) ->
     def sy(v: float) -> float:
         return py + (y_max - v) / (y_max - y_min) * plot_h
 
-    parts: List[str] = []
+    parts: list[str] = []
     parts.append(svg_open(width, height, "gp-title", "gp-desc"))
     title = "California housing: a Gaussian process instead of one fitted curve"
     sub = (
@@ -322,7 +321,7 @@ def build_posterior_svg(x: np.ndarray, y: np.ndarray, fit: Dict[str, object]) ->
 # ----------------------------------------------------------------------
 # Figure 2 -- bounded score Q_gp vs lengthscale
 # ----------------------------------------------------------------------
-def build_lml_svg(fit: Dict[str, object]) -> str:
+def build_lml_svg(fit: dict[str, object]) -> str:
     ells, q_gp = fit["ells"], fit["q_gp"]
 
     width, height = 1050, 600
@@ -341,7 +340,7 @@ def build_lml_svg(fit: Dict[str, object]) -> str:
     def sy(v: float) -> float:
         return py + (y_max - v) / (y_max - y_min) * plot_h
 
-    parts: List[str] = []
+    parts: list[str] = []
     parts.append(svg_open(width, height, "lml-title", "lml-desc"))
     title = "The bounded score Qgp, profiled over the kernel's lengthscale"
     sub = (

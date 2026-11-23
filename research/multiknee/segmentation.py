@@ -26,7 +26,6 @@ Warith Harchaoui, <warithmetics@deraison.ai>
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Tuple
 
 import numpy as np
 
@@ -37,8 +36,8 @@ _EPS = 1e-12
 class Segmentation:
     """A concrete k-breakpoint segmentation of ``x, y``."""
 
-    breakpoints: Tuple[int, ...]  # sorted interior cut indices, 0 < b < n
-    boundaries: Tuple[int, ...]  # 0, *breakpoints, n  (len = k + 2)
+    breakpoints: tuple[int, ...]  # sorted interior cut indices, 0 < b < n
+    boundaries: tuple[int, ...]  # 0, *breakpoints, n  (len = k + 2)
     sse: float  # total residual sum of squares across all segments
     n: int
 
@@ -48,7 +47,7 @@ class Segmentation:
         return len(self.breakpoints)
 
     @property
-    def segment_lengths(self) -> Tuple[int, ...]:
+    def segment_lengths(self) -> tuple[int, ...]:
         b = self.boundaries
         return tuple(b[i + 1] - b[i] for i in range(len(b) - 1))
 
@@ -103,7 +102,7 @@ class SegmentCostTable:
 
 def dp_optimal_partition(
     x: np.ndarray, y: np.ndarray, k_max: int, min_seg: int = 3
-) -> List[Segmentation]:
+) -> list[Segmentation]:
     """Exact optimal-partitioning DP: the best segmentation for every k = 0..k_max.
 
     Standard "segment neighbourhood" dynamic program. ``C[k][t]`` = minimal
@@ -161,7 +160,7 @@ def dp_optimal_partition(
             C[k][t] = best_cost
             back[k][t] = best_s
 
-    results: List[Segmentation] = []
+    results: list[Segmentation] = []
     for k in range(max_k + 1):
         if not np.isfinite(C[k][n]):
             break
@@ -183,7 +182,7 @@ def dp_optimal_partition(
 
 def greedy_binary_segmentation(
     x: np.ndarray, y: np.ndarray, k_max: int, min_seg: int = 3
-) -> List[Segmentation]:
+) -> list[Segmentation]:
     """Greedy binary segmentation: repeatedly split the segment that most
     reduces total RSS, up to ``k_max`` breakpoints.
 

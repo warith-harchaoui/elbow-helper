@@ -27,7 +27,7 @@ Warith Harchaoui, <warithmetics@deraison.ai>
 
 from __future__ import annotations
 
-from typing import List, Sequence
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -187,7 +187,7 @@ class _ForwardTables:
             -0.5 * cost / self.sigma2 - 0.5 * m * np.log(2 * np.pi * self.sigma2)
         )
 
-    def sample_segmentation(self, K: int, rng: np.random.Generator) -> List[int]:
+    def sample_segmentation(self, K: int, rng: np.random.Generator) -> list[int]:
         """Backward-sample one segmentation with exactly ``K`` segments."""
         cuts = []
         t = self.n
@@ -223,7 +223,7 @@ def icl_scores(
     min_seg: int = 3,
     n_samples: int = 200,
     seed: int = 0,
-) -> List[float]:
+) -> list[float]:
     """ICL-style score for each DP-optimal segmentation in ``dp_results``.
 
     Lower is better, matching the BIC/mBIC sign convention. Biernacki, Celeux

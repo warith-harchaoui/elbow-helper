@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional
 
 import numpy as np
 
@@ -126,7 +125,7 @@ def _kmeans_inertia(
     return best
 
 
-def compute() -> Dict[str, object]:
+def compute() -> dict[str, object]:
     from sklearn.datasets import load_wine
 
     data = load_wine()
@@ -165,7 +164,7 @@ def _single_panel_svg(
     xs: np.ndarray,
     ys: np.ndarray,
     note: str,
-    candidate_x: Optional[float] = None,
+    candidate_x: float | None = None,
     candidate_label: str = "",
 ) -> str:
     width, height = 1000, 580
@@ -183,7 +182,7 @@ def _single_panel_svg(
     def sy(v: float) -> float:
         return plot_y + (y_max - v) / (y_max - y_min) * plot_h
 
-    parts: List[str] = []
+    parts: list[str] = []
     parts.append(svg_open(width, height, "ew-title", "ew-desc"))
     parts.append(f'<title id="ew-title">{xml_escape(title)}</title>')
     parts.append(f'<desc id="ew-desc">{xml_escape(title + ". " + sub)}</desc>')

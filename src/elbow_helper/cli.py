@@ -23,7 +23,6 @@ from __future__ import annotations
 import json
 import logging
 import sys
-from typing import Optional
 
 import click
 import numpy as np
@@ -34,8 +33,8 @@ from . import _core_cli as core
 
 
 def _load_series(
-    values: Optional[str], npy: Optional[str], csv_column: Optional[str]
-) -> Optional[list]:
+    values: str | None, npy: str | None, csv_column: str | None
+) -> list | None:
     """Load one numeric series from whichever of three flags was given.
 
     Parameters
@@ -103,13 +102,13 @@ def _emit(result: dict | str) -> None:
 
 
 def _resolve_xy(
-    x_values: Optional[str],
-    x_npy: Optional[str],
-    x_csv: Optional[str],
-    y_values: Optional[str],
-    y_npy: Optional[str],
-    y_csv: Optional[str],
-) -> tuple[list, Optional[list]]:
+    x_values: str | None,
+    x_npy: str | None,
+    x_csv: str | None,
+    y_values: str | None,
+    y_npy: str | None,
+    y_csv: str | None,
+) -> tuple[list, list | None]:
     """Resolve x/y series from the click data options, with the y-only shorthand.
 
     Resolves the x / y inputs for the click

@@ -11,8 +11,6 @@ Warith Harchaoui, <warithmetics@deraison.ai>
 
 from __future__ import annotations
 
-from typing import List
-
 import numpy as np
 
 from .config import RobustKneeConfig
@@ -40,7 +38,7 @@ def _nearest_odd(v: float) -> int:
     return w
 
 
-def smoothing_grid(n: int, config: RobustKneeConfig) -> List[int]:
+def smoothing_grid(n: int, config: RobustKneeConfig) -> list[int]:
     """Odd smoothing windows for ``n`` samples, sorted ascending, deduplicated.
 
     Parameters

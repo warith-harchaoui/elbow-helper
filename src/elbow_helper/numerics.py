@@ -11,8 +11,6 @@ Warith Harchaoui, <warithmetics@deraison.ai>
 
 from __future__ import annotations
 
-from typing import Tuple
-
 import numpy as np
 
 _EPS = 1e-12
@@ -172,7 +170,7 @@ def theil_sen_slope(x: np.ndarray, y: np.ndarray) -> float:
     return float(np.median(slopes))
 
 
-def ols_rss(design: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, float]:
+def ols_rss(design: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, float]:
     """Ordinary least squares fit; return ``(coefficients, residual_sum_sq)``.
 
     Parameters

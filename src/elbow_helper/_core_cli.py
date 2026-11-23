@@ -21,16 +21,19 @@ Warith Harchaoui, <warithmetics@deraison.ai>
 from __future__ import annotations
 
 import dataclasses
-from typing import Any, Optional, Sequence
+import logging
+from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
-import os_helper as oh
 
 from .config import RobustKneeConfig
 from .locator import KneeLocator
 from .pipeline import robust_elbow, robust_knee
 from .plotting import plot_diagnostics
 from .types import KneeResult
+
+logger = logging.getLogger(__name__)
 
 
 def _jsonable(value: Any) -> Any:
@@ -102,7 +105,7 @@ def _result_to_dict(result: KneeResult) -> dict:
     return _jsonable(payload)
 
 
-def _config_from_overrides(overrides: Optional[dict]) -> RobustKneeConfig:
+def _config_from_overrides(overrides: dict | None) -> RobustKneeConfig:
     """Build a :class:`RobustKneeConfig`, applying caller overrides on top of defaults.
 
     Parameters
@@ -133,11 +136,11 @@ def _config_from_overrides(overrides: Optional[dict]) -> RobustKneeConfig:
 
 def do_knee(
     x: Sequence[float],
-    y: Optional[Sequence[float]] = None,
+    y: Sequence[float] | None = None,
     *,
-    curve: Optional[str] = None,
-    direction: Optional[str] = None,
-    config_overrides: Optional[dict] = None,
+    curve: str | None = None,
+    direction: str | None = None,
+    config_overrides: dict | None = None,
 ) -> dict:
     """Run :func:`elbow_helper.robust_knee` and return a JSON-ready result.
 
@@ -173,7 +176,7 @@ def do_knee(
         direction=direction,
         config=config,
     )
-    oh.info(f"[elbow-helper] knee: is_clear={result.is_clear}")
+    logger.info(f"[elbow-helper] knee: is_clear={result.is_clear}")
     return _result_to_dict(result)
 
 
@@ -181,7 +184,7 @@ def do_elbow(
     k: Sequence[float],
     inertia: Sequence[float],
     *,
-    config_overrides: Optional[dict] = None,
+    config_overrides: dict | None = None,
 ) -> dict:
     """Run :func:`elbow_helper.robust_elbow` and return a JSON-ready result.
 
@@ -210,18 +213,18 @@ def do_elbow(
     result = robust_elbow(
         np.asarray(k, dtype=float), np.asarray(inertia, dtype=float), config=config
     )
-    oh.info(f"[elbow-helper] elbow: is_clear={result.is_clear}")
+    logger.info(f"[elbow-helper] elbow: is_clear={result.is_clear}")
     return _result_to_dict(result)
 
 
 def do_diagnostics(
     x: Sequence[float],
-    y: Optional[Sequence[float]] = None,
+    y: Sequence[float] | None = None,
     *,
-    curve: Optional[str] = None,
-    direction: Optional[str] = None,
-    config_overrides: Optional[dict] = None,
-    out: Optional[str] = None,
+    curve: str | None = None,
+    direction: str | None = None,
+    config_overrides: dict | None = None,
+    out: str | None = None,
     language: str = "en",
 ) -> str:
     """Render the diagnostic SVG for a curve, optionally saving it.
@@ -268,8 +271,8 @@ def do_locator(
     y: Sequence[float],
     *,
     sensitivity: float = 1.0,
-    curve: Optional[str] = None,
-    direction: Optional[str] = None,
+    curve: str | None = None,
+    direction: str | None = None,
     online: bool = True,
 ) -> dict:
     """Run the standalone locator (no bootstrap, no null test, no abstention gate).

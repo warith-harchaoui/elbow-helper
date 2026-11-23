@@ -13,7 +13,6 @@ Warith Harchaoui, <warithmetics@deraison.ai>
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import List
 
 import numpy as np
 
@@ -23,7 +22,7 @@ from .smoothing import signal_and_noise
 from .types import BootstrapEvidence, PreparedCurve, Reason
 
 
-def _greedy_1d_clusters(values: np.ndarray, tol: float) -> List[int]:
+def _greedy_1d_clusters(values: np.ndarray, tol: float) -> list[int]:
     """Sizes of greedy 1-D clusters (sorted values, running-median centers)."""
     if values.size == 0:
         return []
@@ -92,7 +91,7 @@ def bootstrap_knee(
     )
 
     rng = np.random.default_rng(config.random_seed)
-    knees: List[float] = []
+    knees: list[float] = []
     b = config.bootstrap_replicates
     for _ in range(b):
         resampled = rng.choice(residuals, size=residuals.size, replace=True)

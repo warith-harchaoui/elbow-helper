@@ -31,8 +31,6 @@ Warith Harchaoui, <warithmetics@deraison.ai>
 
 from __future__ import annotations
 
-from typing import Optional
-
 try:
     from fastapi import FastAPI, Request, Response
     from fastapi.responses import JSONResponse
@@ -55,10 +53,10 @@ class CurveRequest(BaseModel):
     """
 
     x: list[float]
-    y: Optional[list[float]] = None
-    curve: Optional[str] = None
-    direction: Optional[str] = None
-    config_overrides: Optional[dict] = None
+    y: list[float] | None = None
+    curve: str | None = None
+    direction: str | None = None
+    config_overrides: dict | None = None
 
 
 class ElbowRequest(BaseModel):
@@ -66,7 +64,7 @@ class ElbowRequest(BaseModel):
 
     k: list[float]
     inertia: list[float]
-    config_overrides: Optional[dict] = None
+    config_overrides: dict | None = None
 
 
 class DiagnosticsRequest(CurveRequest):
@@ -81,8 +79,8 @@ class LocatorRequest(BaseModel):
     x: list[float]
     y: list[float]
     sensitivity: float = 1.0
-    curve: Optional[str] = None
-    direction: Optional[str] = None
+    curve: str | None = None
+    direction: str | None = None
     online: bool = True
 
 

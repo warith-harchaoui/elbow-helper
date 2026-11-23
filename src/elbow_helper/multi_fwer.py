@@ -13,7 +13,7 @@ Warith Harchaoui, <warithmetics@deraison.ai>
 
 from __future__ import annotations
 
-from typing import List, Sequence, Tuple
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -92,7 +92,7 @@ def sequential_fwer_gate(
     n_permutations: int,
     min_seg: int,
     seed: int,
-) -> Tuple[int, List[float]]:
+) -> tuple[int, list[float]]:
     """Bonferroni-gated sequential test over a nested segmentation sequence.
 
     Parameters
@@ -130,7 +130,7 @@ def sequential_fwer_gate(
     alpha_corrected = alpha / k_max
 
     accepted_k = 0
-    p_values: List[float] = []
+    p_values: list[float] = []
     for k in range(1, k_max + 1):
         prev = segmentations[k - 1]
         cur = segmentations[k]

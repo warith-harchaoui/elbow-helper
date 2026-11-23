@@ -11,16 +11,17 @@ Warith Harchaoui, <warithmetics@deraison.ai>
 
 from __future__ import annotations
 
-from typing import Optional
+import logging
 
 import numpy as np
-import os_helper as oh
 
 from .config import RobustKneeConfig
 from .explain import explain_insufficient, explain_shape
 from .numerics import spearman
 from .smoothing import smooth_curve
 from .types import PreparedCurve, Reason
+
+logger = logging.getLogger(__name__)
 
 
 class Abstain(Exception):
@@ -198,7 +199,7 @@ def _clean_and_normalize(
 
 
 def prepare_curve(
-    x, y, curve: Optional[str], direction: Optional[str], config: RobustKneeConfig
+    x, y, curve: str | None, direction: str | None, config: RobustKneeConfig
 ) -> PreparedCurve:
     """Clean, sort, deduplicate, normalize, and screen a curve.
 
@@ -262,7 +263,7 @@ def prepare_curve(
             detail=explain_shape(rho, viol, config),
         )
 
-    oh.info(
+    logger.info(
         f"[elbow-helper] prepared curve: n={n}, spearman={rho:.3f}, "
         f"violation_rate={viol:.3f}"
     )

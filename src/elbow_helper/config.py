@@ -16,7 +16,6 @@ Warith Harchaoui, <warithmetics@deraison.ai>
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from typing import Optional, Tuple
 
 
 @dataclass(frozen=True)
@@ -48,7 +47,7 @@ class RobustKneeConfig:
     positional_floor_samples: float = 2.0
 
     # --- scale-space search ---
-    smoothing_fractions: Tuple[float, ...] = (
+    smoothing_fractions: tuple[float, ...] = (
         0.0,
         0.02,
         0.03,
@@ -58,7 +57,7 @@ class RobustKneeConfig:
         0.18,
         0.25,
     )
-    sensitivity_fractions: Tuple[float, ...] = (0.0, 0.01, 0.02, 0.05)
+    sensitivity_fractions: tuple[float, ...] = (0.0, 0.01, 0.02, 0.05)
 
     # How many smoothing scales beyond the finest one a cluster appears at are
     # read for its *location*. Persistence is judged across the whole scale
@@ -126,8 +125,8 @@ class RobustKneeConfig:
     min_dominance_ratio: float = 2.0
 
     # --- slope / model confirmation ---
-    slope_left_window: Tuple[float, float] = (0.15, 0.03)  # (far, near) offsets
-    slope_right_window: Tuple[float, float] = (0.03, 0.15)  # (near, far) offsets
+    slope_left_window: tuple[float, float] = (0.15, 0.03)  # (far, near) offsets
+    slope_right_window: tuple[float, float] = (0.03, 0.15)  # (near, far) offsets
     min_slope_contrast: float = 0.30
     min_cv_improvement: float = 0.10
     min_bic_improvement: float = 10.0
@@ -160,10 +159,10 @@ class RobustKneeConfig:
     language: str = "en"
 
     # --- reproducibility ---
-    random_seed: Optional[int] = None
+    random_seed: int | None = None
 
     def positional(
-        self, threshold: float, n: int, samples: Optional[float] = None
+        self, threshold: float, n: int, samples: float | None = None
     ) -> float:
         """Widen a positional threshold to at least the x sampling resolution.
 
@@ -235,7 +234,7 @@ class RobustKneesConfig:
     require_fwer_confirmation: bool = True
 
     # --- reproducibility ---
-    random_seed: Optional[int] = None
+    random_seed: int | None = None
 
     def with_(self, **changes) -> RobustKneesConfig:
         """Return a copy of this config with ``changes`` applied."""

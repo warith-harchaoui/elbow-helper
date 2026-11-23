@@ -24,7 +24,6 @@ from __future__ import annotations
 import math
 import sys
 from pathlib import Path
-from typing import List, Tuple
 
 import numpy as np
 
@@ -73,7 +72,7 @@ def build_temperature_sweep_svg() -> str:
     ph = height - m_top - m_bottom
     py = m_top
 
-    parts: List[str] = []
+    parts: list[str] = []
     parts.append(svg_open(width, height, "ts-title", "ts-desc"))
     parts.append(
         '<title id="ts-title">Jensen\'s inequality and the temperature sweep</title>'
@@ -238,7 +237,7 @@ def build_temperature_sweep_svg() -> str:
 
 def simulate_classification(
     rng: np.random.Generator,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     centroids = np.array([[0.0, 0.0], [3.2, 0.3], [1.5, 2.6]])
     covs = [
         np.array([[1.1, 0.3], [0.3, 1.0]]) * 0.9,
@@ -276,7 +275,7 @@ def build_classification_density_svg(rng: np.random.Generator) -> str:
     ph = height - m_top - m_bottom
     py = m_top
 
-    parts: List[str] = []
+    parts: list[str] = []
     parts.append(svg_open(width, height, "cd-title", "cd-desc"))
     parts.append(
         '<title id="cd-title">Classification confidence, geometric mean of the true-class probabilities</title>'
@@ -459,7 +458,7 @@ def build_regression_density_svg(rng: np.random.Generator) -> str:
     def sy(v: float) -> float:
         return py + (y_max - v) / (y_max - y_min) * plot_h
 
-    parts: List[str] = []
+    parts: list[str] = []
     parts.append(svg_open(width, height, "rd-title", "rd-desc"))
     parts.append(
         '<title id="rd-title">The likelihood as a geometric mean of curve heights</title>'

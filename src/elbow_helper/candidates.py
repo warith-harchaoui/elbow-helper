@@ -12,10 +12,9 @@ Warith Harchaoui, <warithmetics@deraison.ai>
 
 from __future__ import annotations
 
-from typing import List
+import logging
 
 import numpy as np
-import os_helper as oh
 
 from .config import RobustKneeConfig
 from .locator import KneeLocator
@@ -23,8 +22,10 @@ from .metrics import evaluate_candidate
 from .smoothing import smooth_curve, smoothing_grid
 from .types import KneeCandidate, PreparedCurve
 
+logger = logging.getLogger(__name__)
 
-def sensitivity_grid(n: int, config: RobustKneeConfig) -> List[float]:
+
+def sensitivity_grid(n: int, config: RobustKneeConfig) -> list[float]:
     """Distinct sensitivities ``S`` from ``sensitivity_fractions``."""
     values = set()
     for frac in config.sensitivity_fractions:
@@ -34,7 +35,7 @@ def sensitivity_grid(n: int, config: RobustKneeConfig) -> List[float]:
 
 def generate_candidates(
     prepared: PreparedCurve, config: RobustKneeConfig
-) -> List[KneeCandidate]:
+) -> list[KneeCandidate]:
     """Run the full scale-space × sensitivity locator sweep.
 
     Parameters
@@ -55,7 +56,7 @@ def generate_candidates(
     windows = smoothing_grid(n, config)
     sensitivities = sensitivity_grid(n, config)
 
-    candidates: List[KneeCandidate] = []
+    candidates: list[KneeCandidate] = []
     for window in windows:
         y_smooth = smooth_curve(y, window, method="gaussian")
         for s in sensitivities:
@@ -76,7 +77,7 @@ def generate_candidates(
                 # numerical-safety-net convention this should still leave a
                 # trace, otherwise every combination failing looks identical
                 # to "no knee found" with zero diagnostic signal.
-                oh.debug(
+                logger.debug(
                     f"[elbow-helper] candidate generation skipped "
                     f"window={window} S={s}: {exc}"
                 )

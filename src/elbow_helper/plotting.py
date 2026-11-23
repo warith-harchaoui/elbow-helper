@@ -27,9 +27,10 @@ Warith Harchaoui, <warithmetics@deraison.ai>
 
 from __future__ import annotations
 
+import logging
 import math
+from collections.abc import Sequence
 from pathlib import Path
-from typing import List, Optional, Sequence, Tuple
 from xml.sax.saxutils import escape
 
 import numpy as np
@@ -43,6 +44,8 @@ from .preprocessing import Abstain, prepare_curve
 from .segmented import _design_broken
 from .smoothing import smooth_curve
 from .types import Knees
+
+logger = logging.getLogger(__name__)
 
 # ------------------------------------------------------------------
 # Canvas + house-style tokens (fixed, no CVD-accessibility variants or
@@ -136,7 +139,7 @@ def _nice_step(raw_step: float) -> float:
     return nice * (10**exponent)
 
 
-def _linear_ticks(lo: float, hi: float, target: int = 5) -> List[float]:
+def _linear_ticks(lo: float, hi: float, target: int = 5) -> list[float]:
     """Evenly spaced, round tick values covering a raw (non-log) ``[lo, hi]`` span."""
     if hi <= lo:
         return [lo]
@@ -150,7 +153,7 @@ def _linear_ticks(lo: float, hi: float, target: int = 5) -> List[float]:
     return ticks
 
 
-def _log_ticks(lo: float, hi: float) -> List[float]:
+def _log_ticks(lo: float, hi: float) -> list[float]:
     """1-3-10-per-decade tick values covering a positive ``[lo, hi]`` span."""
     lo = max(lo, 1e-12)
     exp_lo, exp_hi = math.floor(math.log10(lo)), math.ceil(math.log10(hi))
@@ -170,7 +173,7 @@ def _fmt_tick(v: float) -> str:
     return f"{v:,.2f}"
 
 
-def _catmull_rom(pts: Sequence[Tuple[float, float]], tension: float = 6.0) -> str:
+def _catmull_rom(pts: Sequence[tuple[float, float]], tension: float = 6.0) -> str:
     """SVG ``C`` commands for a smooth Catmull-Rom spline through ``pts``.
 
     Assumes the caller already emitted the initial ``M`` to ``pts[0]``.
@@ -333,14 +336,14 @@ def render_svg(
     x,
     y=None,
     *,
-    curve: Optional[str] = None,
-    direction: Optional[str] = None,
-    config: Optional[RobustKneeConfig] = None,
+    curve: str | None = None,
+    direction: str | None = None,
+    config: RobustKneeConfig | None = None,
     language: str = "en",
     raw_axis: bool = False,
     log_y: bool = False,
-    x_label: Optional[str] = None,
-    y_label: Optional[str] = None,
+    x_label: str | None = None,
+    y_label: str | None = None,
 ) -> str:
     """Build the robust-knee diagnostic as a complete, standalone SVG string.
 
@@ -394,7 +397,7 @@ def render_svg(
         x, y, curve=inferred_curve, direction=inferred_direction, config=config
     )
 
-    p: List[str] = []
+    p: list[str] = []
     if isinstance(result, ClearKnee) and prepared is not None:
         title_txt = strings["title_clear"]
         subtitle_txt = strings["subtitle_clear"].format(x=f"{result.knee_x:.3g}")
@@ -590,7 +593,7 @@ def render_svg(
 
 
 def _emit_legend(
-    p: List[str], result: ClearKnee, strings: dict, fit_score: float
+    p: list[str], result: ClearKnee, strings: dict, fit_score: float
 ) -> None:
     """Append a compact evidence legend: detection probability, null p, slope
     contrast, BIC-derived posterior probability, and worst-case-normalized fit
@@ -638,13 +641,13 @@ def _emit_legend(
         )
 
 
-def _emit_abstain_card(p: List[str], strings: dict, reason: Optional[str]) -> None:
+def _emit_abstain_card(p: list[str], strings: dict, reason: str | None) -> None:
     """Append the "no clear knee" reason as plain wrapped text in the legend
     gutter (no card, no background): the main title above the plot already
     says "No clear knee", so this only needs to add the why."""
     body = reason or strings["hint_abstain"]
     words = str(body).split()
-    lines: List[str] = []
+    lines: list[str] = []
     cur = ""
     for w in words:
         trial = f"{cur} {w}".strip()
@@ -670,15 +673,15 @@ def plot_diagnostics(
     x,
     y=None,
     *,
-    curve: Optional[str] = None,
-    direction: Optional[str] = None,
-    config: Optional[RobustKneeConfig] = None,
-    out: Optional[str] = None,
+    curve: str | None = None,
+    direction: str | None = None,
+    config: RobustKneeConfig | None = None,
+    out: str | None = None,
     language: str = "en",
     raw_axis: bool = False,
     log_y: bool = False,
-    x_label: Optional[str] = None,
-    y_label: Optional[str] = None,
+    x_label: str | None = None,
+    y_label: str | None = None,
 ) -> str:
     """Render the robust-knee diagnostic SVG and optionally save it.
 
@@ -731,7 +734,7 @@ def plot_diagnostics(
     if out:
         oh.make_directory(oh.folder_name_ext(out)[0])
         Path(out).write_text(svg, encoding="utf-8")
-        oh.info(f"[elbow-helper] saved diagnostics to {out}")
+        logger.info(f"[elbow-helper] saved diagnostics to {out}")
     return svg
 
 
@@ -739,10 +742,10 @@ def render_svg_multi(
     x,
     y=None,
     *,
-    config: Optional[RobustKneesConfig] = None,
+    config: RobustKneesConfig | None = None,
     language: str = "en",
-    x_label: Optional[str] = None,
-    y_label: Optional[str] = None,
+    x_label: str | None = None,
+    y_label: str | None = None,
 ) -> str:
     """Build the robust-knees (plural) diagnostic as a standalone SVG string.
 
@@ -822,7 +825,7 @@ def render_svg_multi(
     def sy(v: float) -> float:
         return _PB - (v - y_lo) / (y_hi - y_lo) * _PLOT_H
 
-    p: List[str] = []
+    p: list[str] = []
     p.append(_svg_open("kn-title", "kn-desc"))
     p.append(f'<title id="kn-title">{escape(title_txt)}</title>')
     p.append(f'<desc id="kn-desc">{escape(desc_txt)}</desc>')
@@ -909,11 +912,11 @@ def plot_multi_diagnostics(
     x,
     y=None,
     *,
-    config: Optional[RobustKneesConfig] = None,
-    out: Optional[str] = None,
+    config: RobustKneesConfig | None = None,
+    out: str | None = None,
     language: str = "en",
-    x_label: Optional[str] = None,
-    y_label: Optional[str] = None,
+    x_label: str | None = None,
+    y_label: str | None = None,
 ) -> str:
     """Render the robust-knees (plural) diagnostic SVG and optionally save it.
 
@@ -954,7 +957,7 @@ def plot_multi_diagnostics(
     if out:
         oh.make_directory(oh.folder_name_ext(out)[0])
         Path(out).write_text(svg, encoding="utf-8")
-        oh.info(f"[elbow-helper] saved diagnostics to {out}")
+        logger.info(f"[elbow-helper] saved diagnostics to {out}")
     return svg
 
 
@@ -1014,7 +1017,7 @@ def render_svg_panels(svgs: Sequence[str], *, gap: float = 24.0) -> str:
 def plot_diagnostics_panels(
     svgs: Sequence[str],
     *,
-    out: Optional[str] = None,
+    out: str | None = None,
     gap: float = 24.0,
 ) -> str:
     """Render :func:`render_svg_panels` and optionally save it.
@@ -1038,5 +1041,5 @@ def plot_diagnostics_panels(
     if out:
         oh.make_directory(oh.folder_name_ext(out)[0])
         Path(out).write_text(svg, encoding="utf-8")
-        oh.info(f"[elbow-helper] saved diagnostics to {out}")
+        logger.info(f"[elbow-helper] saved diagnostics to {out}")
     return svg

@@ -24,7 +24,7 @@ Warith Harchaoui, <warithmetics@deraison.ai>
 
 from __future__ import annotations
 
-from typing import Iterable, Optional, Tuple
+from collections.abc import Iterable
 
 import numpy as np
 
@@ -242,7 +242,7 @@ class KneeLocator:
             y = np.flip(y.max() - y)
         return y
 
-    def find_knee(self) -> Tuple[Optional[float], Optional[float]]:
+    def find_knee(self) -> tuple[float | None, float | None]:
         """Traverse the difference curve and return ``(knee, norm_knee)``.
 
         Returns

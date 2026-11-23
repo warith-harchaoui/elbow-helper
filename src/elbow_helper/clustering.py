@@ -13,7 +13,6 @@ Warith Harchaoui, <warithmetics@deraison.ai>
 from __future__ import annotations
 
 import itertools
-from typing import List, Optional, Tuple
 
 import numpy as np
 
@@ -22,7 +21,7 @@ from .smoothing import smoothing_grid
 from .types import CandidateCluster, KneeCandidate, PreparedCurve, Reason
 
 
-def _longest_consecutive_run(ranks: List[int]) -> int:
+def _longest_consecutive_run(ranks: list[int]) -> int:
     """Longest run of consecutive integers present in ``ranks``.
 
     Parameters
@@ -46,10 +45,10 @@ def _longest_consecutive_run(ranks: List[int]) -> int:
 
 
 def cluster_candidates(
-    candidates: List[KneeCandidate],
+    candidates: list[KneeCandidate],
     prepared: PreparedCurve,
     config: RobustKneeConfig,
-) -> List[CandidateCluster]:
+) -> list[CandidateCluster]:
     """Cluster candidates by location and score each cluster's persistence.
 
     Parameters
@@ -73,8 +72,8 @@ def cluster_candidates(
     window_rank = {w: i for i, w in enumerate(windows)}
 
     ordered = sorted(candidates, key=lambda c: c.knee_x_norm)
-    clusters_members: List[List[KneeCandidate]] = []
-    current: List[KneeCandidate] = [ordered[0]]
+    clusters_members: list[list[KneeCandidate]] = []
+    current: list[KneeCandidate] = [ordered[0]]
     center = ordered[0].knee_x_norm
     for cand in ordered[1:]:
         if abs(cand.knee_x_norm - center) <= config.cluster_tolerance:
@@ -88,7 +87,7 @@ def cluster_candidates(
 
     total = len(candidates)
     all_sensitivities = float(len(_sensitivity_values(config, prepared.n)))
-    clusters: List[CandidateCluster] = []
+    clusters: list[CandidateCluster] = []
     for members in clusters_members:
         locs = np.array([m.knee_x_norm for m in members])
         mad = float(np.median(np.abs(locs - np.median(locs))))
@@ -127,7 +126,7 @@ def cluster_candidates(
     return clusters
 
 
-def _sensitivity_values(config: RobustKneeConfig, n: int) -> List[float]:
+def _sensitivity_values(config: RobustKneeConfig, n: int) -> list[float]:
     """The sensitivity grid (kept in sync with :mod:`candidates`).
 
     Parameters
@@ -148,7 +147,7 @@ def _sensitivity_values(config: RobustKneeConfig, n: int) -> List[float]:
     return sorted(values)
 
 
-def _neighbor_shift(members: List[KneeCandidate], window_rank: dict) -> float:
+def _neighbor_shift(members: list[KneeCandidate], window_rank: dict) -> float:
     """Max shift in per-window median location between adjacent windows.
 
     Parameters
@@ -175,7 +174,7 @@ def _neighbor_shift(members: List[KneeCandidate], window_rank: dict) -> float:
 
 
 def _fine_scale_location(
-    members: List[KneeCandidate], window_rank: dict, config: RobustKneeConfig
+    members: list[KneeCandidate], window_rank: dict, config: RobustKneeConfig
 ) -> float:
     """Locate a cluster from its finest smoothing scales only.
 
@@ -254,7 +253,7 @@ def _is_persistent(cluster: CandidateCluster, config: RobustKneeConfig, n: int) 
 
 
 def _smallest_stable_window(
-    cluster: CandidateCluster, windows: List[int], config: RobustKneeConfig
+    cluster: CandidateCluster, windows: list[int], config: RobustKneeConfig
 ) -> int:
     """Smallest window in the cluster's stable run with enough sensitivity support.
 
@@ -289,8 +288,8 @@ def _smallest_stable_window(
 
 
 def select_unique_cluster(
-    clusters: List[CandidateCluster], config: RobustKneeConfig
-) -> Tuple[Optional[CandidateCluster], Optional[str]]:
+    clusters: list[CandidateCluster], config: RobustKneeConfig
+) -> tuple[CandidateCluster | None, str | None]:
     """Pick the single dominant persistent cluster, or explain the abstention.
 
     Parameters

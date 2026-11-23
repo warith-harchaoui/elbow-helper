@@ -18,10 +18,9 @@ Warith Harchaoui, <warithmetics@deraison.ai>
 
 from __future__ import annotations
 
-from typing import Optional
+import logging
 
 import numpy as np
-import os_helper as oh
 
 from .config import RobustKneesConfig
 from .multi_criteria import modified_bic
@@ -30,10 +29,10 @@ from .multi_segmentation import SegmentCostTable, dp_optimal_partition
 from .preprocessing import Abstain, prepare_curve_unconstrained
 from .types import InvalidKnees, KneeEstimate, Knees, MultiKneeResult, Reason
 
+logger = logging.getLogger(__name__)
 
-def robust_knees(
-    x, y=None, config: Optional[RobustKneesConfig] = None
-) -> MultiKneeResult:
+
+def robust_knees(x, y=None, config: RobustKneesConfig | None = None) -> MultiKneeResult:
     """Detect zero or more knees, with the same abstain-rather-than-guess discipline.
 
     Unlike :func:`robust_knee`, an empty result is not an abstention: it is
@@ -130,11 +129,11 @@ def robust_knees(
                 )
             )
 
-        oh.info(f"[elbow-helper] robust_knees: k={len(knees)}")
+        logger.info(f"[elbow-helper] robust_knees: k={len(knees)}")
         return Knees(reason=Reason.KNEES_FOUND, diagnostics=diagnostics, knees=knees)
 
     except Exception as exc:  # noqa: BLE001 — numerical safety net, never crash the caller
-        oh.warning(f"[elbow-helper] internal failure: {exc}")
+        logger.warning(f"[elbow-helper] internal failure: {exc}")
         diagnostics["error"] = str(exc)
         return InvalidKnees(
             reason=Reason.INTERNAL_NUMERICAL_FAILURE, diagnostics=diagnostics

@@ -17,7 +17,6 @@ from __future__ import annotations
 import time
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Dict, List
 
 import numpy as np
 
@@ -41,13 +40,13 @@ N_REPLICATES = 25
 ALPHA = 0.05
 
 
-def _argmin_k(scores: List[float]) -> int:
+def _argmin_k(scores: list[float]) -> int:
     return int(np.argmin(scores))
 
 
 def _criterion_methods(
-    segs: List[Segmentation], x, y, label_prefix: str
-) -> Dict[str, int]:
+    segs: list[Segmentation], x, y, label_prefix: str
+) -> dict[str, int]:
     out = {}
     out[f"{label_prefix}+BIC"] = _argmin_k([plain_bic(s) for s in segs])
     out[f"{label_prefix}+mBIC_add"] = _argmin_k(
@@ -70,9 +69,9 @@ class Trial:
 
 def run_one_curve(
     true_k: int, noise: float, noise_label: str, seed: int
-) -> List[Trial]:
+) -> list[Trial]:
     x, y, _true_idx = make_piecewise_curve(true_k, n=N, noise_sigma=noise, seed=seed)
-    trials: List[Trial] = []
+    trials: list[Trial] = []
 
     t0 = time.perf_counter()
     dp_segs = dp_optimal_partition(x, y, k_max=K_MAX, min_seg=MIN_SEG)
@@ -139,8 +138,8 @@ def run_one_curve(
     return trials
 
 
-def run_all() -> List[Trial]:
-    all_trials: List[Trial] = []
+def run_all() -> list[Trial]:
+    all_trials: list[Trial] = []
     seed = 0
     total = len(TRUE_KS) * len(NOISE_LEVELS) * N_REPLICATES
     done = 0
@@ -155,8 +154,8 @@ def run_all() -> List[Trial]:
     return all_trials
 
 
-def summarize(trials: List[Trial]) -> str:
-    by_method: Dict[str, List[Trial]] = defaultdict(list)
+def summarize(trials: list[Trial]) -> str:
+    by_method: dict[str, list[Trial]] = defaultdict(list)
     for t in trials:
         by_method[t.method].append(t)
 

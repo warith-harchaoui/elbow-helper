@@ -39,7 +39,6 @@ from __future__ import annotations
 import math
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -106,7 +105,7 @@ LANG = {
 # ----------------------------------------------------------------------
 # Training
 # ----------------------------------------------------------------------
-def train_penguins() -> Dict[str, object]:
+def train_penguins() -> dict[str, object]:
     from sklearn.model_selection import train_test_split
 
     df = pd.read_csv(PENGUINS_URL).dropna().reset_index(drop=True)
@@ -164,7 +163,7 @@ def train_penguins() -> Dict[str, object]:
     }
 
 
-def train_housing() -> Dict[str, object]:
+def train_housing() -> dict[str, object]:
     from sklearn.datasets import fetch_california_housing
     from sklearn.model_selection import train_test_split
 
@@ -206,7 +205,7 @@ def train_housing() -> Dict[str, object]:
 
 def train_housing_mlp(
     hidden: int = 30, lr: float = 0.1, n_iters: int = 3000
-) -> Dict[str, object]:
+) -> dict[str, object]:
     """One hidden ReLU layer (He init) plus a linear output unit, the
     architecture Geron (2019) uses for this exact dataset, trained here by
     hand-written forward and backward passes rather than a Keras call, on
@@ -233,7 +232,7 @@ def train_housing_mlp(
     W2 = rng.standard_normal((hidden, 1)) * np.sqrt(2.0 / hidden)
     b2 = np.array([float(ytr.mean())])
 
-    def forward(Xs: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def forward(Xs: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         Z1 = Xs @ W1 + b1
         A1 = np.maximum(Z1, 0.0)
         pred = (A1 @ W2 + b2).ravel()
@@ -283,7 +282,7 @@ def train_housing_mlp(
 # Shared two-panel training-curve figure
 # ----------------------------------------------------------------------
 def _curve_panel(
-    parts: List[str],
+    parts: list[str],
     px: float,
     py: float,
     pw: float,
@@ -298,7 +297,7 @@ def _curve_panel(
     val_label: str,
     *,
     log_y: bool,
-    y_range: Optional[Tuple[float, float]] = None,
+    y_range: tuple[float, float] | None = None,
 ) -> None:
     xs = np.arange(1, n_iters + 1)
 
@@ -405,7 +404,7 @@ def _two_panel_figure(
     ph = height - m_top - m_bottom
     py = m_top
 
-    parts: List[str] = []
+    parts: list[str] = []
     parts.append(svg_open(width, height, "rd-title", "rd-desc"))
     parts.append(f'<title id="rd-title">{xml_escape(title)}</title>')
     parts.append(f'<desc id="rd-desc">{xml_escape(title + ". " + sub)}</desc>')
@@ -425,7 +424,7 @@ def _two_panel_figure(
     return "\n".join(parts)
 
 
-def build_classification_svg(lang: str, res: Dict[str, object]) -> str:
+def build_classification_svg(lang: str, res: dict[str, object]) -> str:
     t = LANG[lang]
     n_iters = res["n_iters"]
     q_train = 1 - res["train_ce"] / res["ln_k"]
@@ -459,7 +458,7 @@ def build_classification_svg(lang: str, res: Dict[str, object]) -> str:
     )
 
 
-def build_regression_svg(lang: str, res: Dict[str, object]) -> str:
+def build_regression_svg(lang: str, res: dict[str, object]) -> str:
     t = LANG[lang]
     n_iters = res["n_iters"]
     mse_worst = res["mse_worst"]
@@ -496,7 +495,7 @@ def build_regression_svg(lang: str, res: Dict[str, object]) -> str:
     )
 
 
-def build_regression_mlp_svg(lang: str, res: Dict[str, object]) -> str:
+def build_regression_mlp_svg(lang: str, res: dict[str, object]) -> str:
     t = LANG[lang]
     n_iters = res["n_iters"]
     mse_worst = res["mse_worst"]
